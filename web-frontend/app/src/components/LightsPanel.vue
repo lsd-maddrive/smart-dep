@@ -1,28 +1,25 @@
 <template>
-  <div class="card" >
+  <div class="card">
     <div class="card-header">Управление светом</div>
-    <div class="card-body lights-panel" >
-      <light-bulb v-for="light in lights" :key="light.id" :enabled="light.enabled"></light-bulb>
+    <div class="card-body lights-panel">
+      <light-unit v-for="unit in units" :key="unit.id" :id="unit.id"></light-unit>
     </div>
   </div>
 </template>
 
 <script>
-import LightBulb from '@/components/LightBulb'
+import LightUnit from "@/components/LightUnit";
 
 export default {
-  props: {
-    states: Array
-  },
-  data () {
+  data() {
     return {
-      lights: this.$store.state.light.units
-    }
+      units: this.$store.state.light.units
+    };
   },
   components: {
-    'light-bulb': LightBulb
+    "light-unit": LightUnit
   }
-}
+};
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
@@ -30,5 +27,9 @@ export default {
 .lights-panel {
   flex-direction: column;
   display: flex; /* Make the buttons appear below each other */
+}
+
+light-unit {
+  padding: 6px 10px;
 }
 </style>

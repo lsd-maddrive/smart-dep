@@ -2,40 +2,37 @@
 const state = {
   units: [{
       enabled: true,
-      id: 0
+      id: "0"
     },
     {
       enabled: true,
-      id: 1
+      id: "1"
     }
   ]
 }
 
 // getters
-const getters = {}
+const getters = {
+  enabled: (state, getters, rootState) => (id) => {
+    let unit = state.units.find(unit => unit.id == id)
+    return unit.enabled
+  }
+}
 
 // actions
 const actions = {
-  getAllProducts({
+  setState({
     commit
-  }) {
-    shop.getProducts(products => {
-      commit('setProducts', products)
-    })
+  }, payload) {
+    commit('setState', payload)
   }
 }
 
 // mutations
 const mutations = {
-  setProducts(state, products) {
-    state.all = products
-  },
-
-  decrementProductInventory(state, {
-    id
-  }) {
-    const product = state.all.find(product => product.id === id)
-    product.inventory--
+  setState: (state, payload) => {
+    let unit = state.units.find(unit => unit.id == payload.id)
+    unit.enabled = payload.state
   }
 }
 

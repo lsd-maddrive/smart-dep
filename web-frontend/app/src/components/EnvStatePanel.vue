@@ -30,7 +30,7 @@ export default {
   padding: 6px 10px;
 }
 
-.state-data ion-icon {
+ion-icon {
   float: left;
   font-size: 24px;
 }

@@ -10,29 +10,10 @@ const state = {
 const getters = {}
 
 // actions
-const actions = {
-  getAllProducts({
-    commit
-  }) {
-    shop.getProducts(products => {
-      commit('setProducts', products)
-    })
-  }
-}
+const actions = {}
 
 // mutations
-const mutations = {
-  setProducts(state, products) {
-    state.all = products
-  },
-
-  decrementProductInventory(state, {
-    id
-  }) {
-    const product = state.all.find(product => product.id === id)
-    product.inventory--
-  }
-}
+const mutations = {}
 
 export default {
   namespaced: true,

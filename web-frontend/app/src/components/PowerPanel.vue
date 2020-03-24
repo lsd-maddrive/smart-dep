@@ -2,7 +2,7 @@
   <div class="card">
     <div class="card-header">Управление электричеством</div>
     <div class="card-body power-panel">
-      <power-unit v-for="unit in units" :key="unit.id" :enabled="unit.enabled"></power-unit>
+      <power-unit v-for="unit in units" :key="unit.id" :id="unit.id"></power-unit>
     </div>
   </div>
 </template>
@@ -29,7 +29,7 @@ export default {
   display: flex; /* Make the buttons appear below each other */
 }
 
-.power-panel power-unit {
+power-unit {
   padding: 6px 10px;
 }
 </style>

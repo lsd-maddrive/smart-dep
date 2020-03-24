@@ -2,8 +2,8 @@
   <div class="main">
     <b-button block :pressed="!enabled" variant="outline-dark" @click="enabled=!enabled">
       <div class="data">
-        <span>Модуль '{{ id }}' {{ enabled ? 'включен' : 'выключен' }}</span>
-        <ion-icon name="flash-outline"></ion-icon>
+        <span>Свет '{{ id }}' {{ enabled ? 'включен' : 'выключен' }}</span>
+        <ion-icon name="bulb-outline"></ion-icon>
       </div>
     </b-button>
   </div>
@@ -20,10 +20,10 @@ export default {
   computed: {
     enabled: {
       get() {
-        return this.$store.getters["power/enabled"](this.id);
+        return this.$store.getters["light/enabled"](this.id);
       },
       set(value) {
-        this.$store.dispatch("power/setState", { id: this.id, state: value });
+        this.$store.dispatch("light/setState", { id: this.id, state: value });
       }
     }
   },
