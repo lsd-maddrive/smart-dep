@@ -1,59 +1,38 @@
 <template>
-  <div>
-    <b-container class="bv-example-row">
-      <b-row>
-        <b-col md="4">
-          <lights-panel v-bind:states="sample_lights"></lights-panel>
-        </b-col>
-        <b-col md="4">
-          <power-panel v-bind:states="sample_power_units"></power-panel>
-        </b-col>
-      </b-row>
-    </b-container>
-  </div>
+  <b-container>
+    <b-row>
+      <b-col md="4">
+        <lights-panel></lights-panel>
+      </b-col>
+      <b-col md="4">
+        <power-panel></power-panel>
+      </b-col>
+      <b-col md="4">
+        <env-state-panel></env-state-panel>
+      </b-col>
+    </b-row>
+  </b-container>
 </template>
 
 <script>
-import LightsPanel from '@/components/LightsPanel'
-import PowerPanel from '@/components/PowerPanel'
+import LightsPanel from "@/components/LightsPanel";
+import PowerPanel from "@/components/PowerPanel";
+import EnvStatePanel from "@/components/EnvStatePanel";
 
 export default {
-  name: 'RoomControl',
-  data () {
-    return {
-      sample_power_units: [
-        {
-          enabled: true,
-          id: 0
-        },
-        {
-          enabled: true,
-          id: 1
-        }
-      ],
-      sample_lights: [
-        {
-          enabled: true,
-          id: 0
-        },
-        {
-          enabled: true,
-          id: 1
-        }
-      ]
-    }
+  name: "RoomControl",
+  data() {
+    return {};
   },
-  computed: {
-
-  },
+  computed: {},
   components: {
-    'lights-panel': LightsPanel,
-    'power-panel': PowerPanel
+    "lights-panel": LightsPanel,
+    "power-panel": PowerPanel,
+    "env-state-panel": EnvStatePanel
   }
-}
+};
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-
 </style>

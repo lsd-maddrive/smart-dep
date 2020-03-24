@@ -1,28 +1,25 @@
 <template>
-  <div class="card" >
+  <div class="card">
     <div class="card-header">Управление электричеством</div>
-    <div class="card-body power-panel" >
-      <power-unit v-for="unit in units" :key="unit.id" v-bind:enabled="unit.enabled"></power-unit>
+    <div class="card-body power-panel">
+      <power-unit v-for="unit in units" :key="unit.id" :enabled="unit.enabled"></power-unit>
     </div>
   </div>
 </template>
 
 <script>
-import PowerUnit from '@/components/PowerUnit'
+import PowerUnit from "@/components/PowerUnit";
 
 export default {
-  props: {
-    states: Array
-  },
-  data () {
+  data() {
     return {
-      units: this.states
-    }
+      units: this.$store.state.power.units
+    };
   },
   components: {
-    'power-unit': PowerUnit
+    "power-unit": PowerUnit
   }
-}
+};
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
@@ -30,5 +27,9 @@ export default {
 .power-panel {
   flex-direction: column;
   display: flex; /* Make the buttons appear below each other */
+}
+
+.power-panel power-unit {
+  padding: 6px 10px;
 }
 </style>

@@ -2,7 +2,7 @@
   <div class="card" >
     <div class="card-header">Управление светом</div>
     <div class="card-body lights-panel" >
-      <light-bulb v-for="light in lights" :key="light.id" v-bind:enabled="light.enabled"></light-bulb>
+      <light-bulb v-for="light in lights" :key="light.id" :enabled="light.enabled"></light-bulb>
     </div>
   </div>
 </template>
@@ -15,9 +15,8 @@ export default {
     states: Array
   },
   data () {
-    console.log(this.states)
     return {
-      lights: this.states
+      lights: this.$store.state.light.units
     }
   },
   components: {

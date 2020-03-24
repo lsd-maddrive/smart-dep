@@ -1,6 +1,6 @@
 <template>
-    <div class="power_button_main">
-      <b-button block :pressed="!this.on" variant="outline-dark" class="power_button" v-on:click="pressed()" >
+    <div class="main">
+      <b-button block :pressed="!this.on" variant="outline-dark" @click="pressed()" >
         <div class="data">
           <span>
             Модуль {{ this.on ? 'включен' : 'выключен' }}
@@ -34,7 +34,7 @@ export default {
   vertical-align: center;
 }
 
-.power_button_main {
+.main {
   padding: 1px 0px;
 }
 
@@ -43,7 +43,4 @@ export default {
   font-size: 24px;
 }
 
-.power_button {
-  padding: 6px 10px;
-}
 </style>
