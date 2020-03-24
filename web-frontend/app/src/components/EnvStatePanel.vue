@@ -4,22 +4,28 @@
     <div class="card-body" >
       <div class="state-data">
         <ion-icon name="thermometer-outline"></ion-icon>
-        <span>Температура: {{ state.temp }}</span> 
+        <span>Температура: {{ envState.temp }}</span> 
       </div>
       <div class="state-data">
         <ion-icon name="water-outline"></ion-icon>
-        <span>Влажность: {{ state.humid }} %</span> 
+        <span>Влажность: {{ envState.humid }} %</span> 
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import { mapState } from 'vuex';
+
 export default {
   data () {
     return {
-      state: this.$store.state.environ.data
     }
+  },
+  computed: {
+    ...mapState({
+      envState: state => state.environ.data
+    })
   }
 }
 </script>
