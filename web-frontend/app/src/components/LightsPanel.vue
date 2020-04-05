@@ -9,6 +9,7 @@
 
 <script>
 import LightUnit from "@/components/LightUnit";
+import Services from "@/services/Services";
 
 export default {
   data() {
@@ -18,6 +19,12 @@ export default {
   },
   components: {
     "light-unit": LightUnit
+  },
+  methods: {
+
+  },
+  beforeMount() {
+    this.$store.dispatch("light/syncUnits");
   }
 };
 </script>

@@ -23,13 +23,12 @@ export default {
         return this.$store.getters["light/enabled"](this.id);
       },
       set(value) {
-        this.$store.dispatch("light/setState", { id: this.id, state: value });
+        this.$store.dispatch("light/setState", { id: this.id, enabled: value });
       }
     }
   },
   methods: {},
-  mounted() {
-  }
+  mounted() {}
 };
 </script>
 

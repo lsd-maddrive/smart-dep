@@ -1,14 +1,26 @@
+import Services from "@/services/Services";
+
+// convertion functions
+function extData2Internal(payload) {
+  return {
+    id: payload.device_id,
+    enabled: payload.state.enabled
+  }
+}
+
+function internal2ExtData(payload) {
+  return {
+    device_id: payload.id,
+    type: "light",
+    state: {
+      enabled: payload.enabled
+    }
+  }
+}
+
 // initial state
 const state = {
-  units: [{
-      enabled: true,
-      id: "0"
-    },
-    {
-      enabled: true,
-      id: "1"
-    }
-  ]
+  units: []
 }
 
 // getters
@@ -21,18 +33,37 @@ const getters = {
 
 // actions
 const actions = {
+  syncUnits({
+    commit
+  }) {
+    Services.getLights().then(response => {
+      for (let unit of response.data) {
+        commit('setState', extData2Internal(payload))
+      }
+    })
+  },
+
   setState({
     commit
   }, payload) {
     commit('setState', payload)
+    this._vm.$socket.emit('set_state', internal2ExtData(payload));
   }
 }
 
 // mutations
 const mutations = {
   setState: (state, payload) => {
+    console.log("Light " + payload.id + " is " + payload.enabled)
     let unit = state.units.find(unit => unit.id == payload.id)
-    unit.enabled = payload.state
+    if (unit === undefined) {
+      state.units.push({
+        id: payload.id,
+        enabled: payload.enabled
+      })
+    } else {
+      unit.enabled = payload.enabled
+    }
   }
 }
 
