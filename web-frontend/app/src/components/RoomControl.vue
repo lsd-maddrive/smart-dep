@@ -5,14 +5,14 @@
     </div>
     <b-container>
       <b-row>
-        <b-col md="4">
-          <lights-panel></lights-panel>
+        <b-col md="6">
+          <lights-panel class="my-2"></lights-panel>
         </b-col>
-        <b-col md="4">
-          <power-panel></power-panel>
+        <b-col md="6">
+          <power-panel class="my-2"></power-panel>
         </b-col>
-        <b-col md="4">
-          <env-state-panel></env-state-panel>
+        <b-col md="6">
+          <env-state-panel class="my-2"></env-state-panel>
         </b-col>
       </b-row>
     </b-container>
@@ -34,7 +34,11 @@ export default {
       let id = this.$route.params.id;
       console.log(this.$store.state.rooms)
       let room = this.$store.state.rooms.find(room => room.id == id);
-      return room.name;
+      if (room === undefined) {
+        return ''
+      } else {
+        return room.name;
+      }
     }
   },
   components: {

@@ -1,9 +1,15 @@
 <template>
-  <div class="card">
-    <div class="card-header">Управление светом</div>
-    <div class="card-body lights-panel">
-      <light-unit v-for="unit in units" :key="unit.id" :id="unit.id"></light-unit>
-    </div>
+  <div>
+    <b-card no-body>
+      <b-card-header>
+        <b-button block href="#" v-b-toggle.light-panel-data>Управление светом</b-button>
+      </b-card-header>
+      <b-collapse id="light-panel-data" visible role="tabpanel">
+        <b-card-body class="card-body power-panel">
+          <power-unit v-for="unit in units" :key="unit.id" :id="unit.id"></power-unit>
+        </b-card-body>
+      </b-collapse>
+    </b-card>
   </div>
 </template>
 
