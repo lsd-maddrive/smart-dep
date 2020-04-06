@@ -50,7 +50,7 @@ class PlaceStateSender(Thread):
             state['state']['enabled'] = bool(random.getrandbits(1))
 
             logger.debug(f'Send {state} to {self.place_id}')
-            socketio.emit('state', state, room=self.place_id)
+            socketio.emit('state', [state], room=self.place_id)
 
             passed_time = time.time() - time_start
             sleep_time = self.period_s - passed_time
@@ -132,10 +132,11 @@ _model_lights = api.model('Light', {
 })
 
 
-@api.route('/lights', endpoint='lights')
+@api.route('/room/<string:place_id>/lights', endpoint='lights')
+@api.param('place_id', 'ID of place')
 class Rooms(Resource):
     @api.marshal_with(_model_lights, as_list=True)
-    def get(self):
+    def get(self, place_id):
         data = _lights_db
         logger.debug(f'Send lights: {data}')
         return data
@@ -153,6 +154,7 @@ _model_rooms = api.model('Room', {
     'id': fields.String,
     'name': fields.String,
 })
+
 
 @api.route('/rooms', endpoint='rooms')
 class Rooms(Resource):
