@@ -35,12 +35,24 @@ const getters = {
 const actions = {
   syncUnits({
     commit
-  }) {
-    Services.getLights().then(response => {
-      for (let unit of response.data) {
-        commit('setState', extData2Internal(payload))
+  }, payload) {
+    commit('clearStates')
+
+    Services.getLights({
+      place_id: payload.place_id
+    }).then(
+      response => {
+        // console.log("Received response: ");
+        // console.log(response.data)
+        for (let unit of response.data) {
+          commit('setState', extData2Internal(unit))
+        }
+      },
+      error => {
+        console.log("Failed to request lights")
+        console.log(error)
       }
-    })
+    )
   },
 
   setState({
@@ -53,6 +65,10 @@ const actions = {
 
 // mutations
 const mutations = {
+  clearStates: (state) => {
+    state.units = [];
+  },
+
   setState: (state, payload) => {
     console.log("Light " + payload.id + " is " + payload.enabled)
     let unit = state.units.find(unit => unit.id == payload.id)

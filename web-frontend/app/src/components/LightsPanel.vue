@@ -20,12 +20,8 @@ export default {
   components: {
     "light-unit": LightUnit
   },
-  methods: {
-
-  },
-  beforeMount() {
-    this.$store.dispatch("light/syncUnits");
-  }
+  methods: {},
+  beforeMount() {}
 };
 </script>
 

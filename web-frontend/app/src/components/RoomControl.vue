@@ -39,11 +39,16 @@ export default {
     "power-panel": PowerPanel,
     "env-state-panel": EnvStatePanel
   },
-  mounted: function() {
-    console.log("mounted()");
+  beforeMount: function() {
+    console.log("beforeMounted()");
     console.log('Send emit on "start_states"');
     this.$socket.emit("start_states", {
       period: 1,
+      place_id: this.place_id
+    });
+
+    console.log('Update light units')
+    this.$store.dispatch("light/syncUnits", {
       place_id: this.place_id
     });
   },

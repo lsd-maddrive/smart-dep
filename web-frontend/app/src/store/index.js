@@ -11,7 +11,8 @@ const debug = process.env.NODE_ENV !== 'production'
 
 export default new Vuex.Store({
   state: {
-    isConnected: false
+    isConnected: false,
+    isNavOpen: false
   },
   modules: {
     light,
@@ -27,12 +28,14 @@ export default new Vuex.Store({
 
     socket_state({commit}, payload) {
       console.log(payload)
-
-      if (payload.type == "light") {
-        commit('light/setState', {
-          id: payload.device_id,
-          enabled: payload.state.enabled
-        })
+      
+      for (let unit of payload) {
+        if (unit.type == "light") {
+          commit('light/setState', {
+            id: unit.device_id,
+            enabled: unit.state.enabled
+          })
+        }
       }
     },
   },
@@ -46,6 +49,11 @@ export default new Vuex.Store({
     SOCKET_DISCONNECT(state) {
       state.isConnected = false;
     },
+
+    toggleNav(state) {
+      console.log('>>>')
+      state.isNavOpen = !state.isNavOpen
+    }
   },
 
   strict: debug,
