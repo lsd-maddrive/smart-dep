@@ -15,22 +15,16 @@ import Services from "@/services/Services";
 
 export default {
   name: "RoomsSelector",
-  data() {
-    return {
-      rooms: []
-    };
-  },
-  methods: {
-    async updateRooms() {
-      const response = await Services.getRooms();
-      this.rooms = response.data;
+  data() {},
+  computed: {
+    rooms() {
+      return this.$store.state.rooms;
     }
   },
+  methods: {},
   computed: {},
   components: {},
-  beforeMount() {
-    this.updateRooms();
-  }
+  beforeMount() {}
 };
 </script>
 

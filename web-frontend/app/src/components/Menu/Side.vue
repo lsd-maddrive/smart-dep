@@ -1,29 +1,29 @@
 <template>
   <div class="sidebar">
-    <div class="sidebar-backdrop" @click="closeSidebarPanel" v-if="isPanelOpen"></div>
+    <div class="sidebar-backdrop" @click="closeSidebarPanel" v-if="isActive"></div>
     <transition name="slide">
-      <div v-if="isPanelOpen" class="sidebar-panel">
+      <div v-if="isActive" class="sidebar-panel">
         <slot></slot>
       </div>
     </transition>
   </div>
 </template>
-
 <script>
 export default {
+  data: () => ({
+  }),
   computed: {
-    isPanelOpen() {
-      return this.$store.state.isNavOpen;
+    isActive() {
+      return this.$store.state.isSidemenuOpen;
     }
   },
   methods: {
     closeSidebarPanel() {
-      this.$store.commit("toggleNav");
+      this.$store.commit("toggleSidemenu");
     }
   }
 };
 </script>
-
 <style>
 .slide-enter-active,
 .slide-leave-active {
@@ -43,6 +43,7 @@ export default {
   position: fixed;
   top: 0;
   left: 0;
+  z-index: 998;
   cursor: pointer;
 }
 

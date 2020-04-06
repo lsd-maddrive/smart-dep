@@ -1,8 +1,7 @@
 <template>
-  <div id="burger" :class="{ 'active' : isBurgerActive }" @click.prevent="toggle">
+  <div id="burger" :class="{ 'active' : isActive }" @click.prevent="toggle">
     <slot>
       <button type="button" class="burger-button" title="Menu">
-        <span class="hidden">Toggle menu</span>
         <span class="burger-bar burger-bar--1"></span>
         <span class="burger-bar burger-bar--2"></span>
         <span class="burger-bar burger-bar--3"></span>
@@ -10,22 +9,21 @@
     </slot>
   </div>
 </template>
-
 <script>
 export default {
+  data: () => ({}),
   computed: {
-    isBurgerActive() {
-      return this.$store.state.isNavOpen;
+    isActive() {
+      return this.$store.state.isSidemenuOpen;
     }
   },
   methods: {
     toggle() {
-      this.$store.commit("toggleNav");
+      this.$store.commit("toggleSidemenu");
     }
   }
 };
 </script>
-
 <style>
 .hidden {
   visibility: hidden;
@@ -54,7 +52,8 @@ button:focus {
 }
 
 .burger-bar {
-  background-color: #130f40;
+  /* background-color: #130f40; */
+  background-color: #ffffff;
   position: absolute;
   top: 50%;
   right: 6px;

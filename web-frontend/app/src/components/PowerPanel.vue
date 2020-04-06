@@ -1,8 +1,10 @@
 <template>
-  <div class="card">
-    <div class="card-header">Управление электричеством</div>
-    <div class="card-body power-panel">
-      <power-unit v-for="unit in units" :key="unit.id" :id="unit.id"></power-unit>
+  <div>
+    <div class="card">
+      <div class="card-header">Управление электричеством</div>
+      <div class="card-body power-panel">
+        <power-unit v-for="unit in units" :key="unit.id" :id="unit.id"></power-unit>
+      </div>
     </div>
   </div>
 </template>

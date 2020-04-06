@@ -9,10 +9,13 @@ import environ from './modules/environ'
 
 const debug = process.env.NODE_ENV !== 'production'
 
+import Services from "@/services/Services";
+
 export default new Vuex.Store({
   state: {
     isConnected: false,
-    isNavOpen: false
+    isSidemenuOpen: false,
+    rooms: []
   },
   modules: {
     light,
@@ -20,15 +23,21 @@ export default new Vuex.Store({
     environ
   },
   actions: {
-    // startStatesReceive({
-    //   commit
-    // }, payload) {
+    syncRooms({ commit }) {
+      Services.getRooms().then(
+        response => {
+          commit('setRooms', response.data)
+        },
+        error => {
+          console.log("Failed to request rooms")
+          console.log(error)
+        }
+      )
+    },
 
-    // }
-
-    socket_state({commit}, payload) {
+    socket_state({ commit }, payload) {
       console.log(payload)
-      
+
       for (let unit of payload) {
         if (unit.type == "light") {
           commit('light/setState', {
@@ -50,9 +59,12 @@ export default new Vuex.Store({
       state.isConnected = false;
     },
 
-    toggleNav(state) {
-      console.log('>>>')
-      state.isNavOpen = !state.isNavOpen
+    toggleSidemenu(state) {
+      state.isSidemenuOpen = !state.isSidemenuOpen
+    },
+
+    setRooms(state, rooms) {
+      state.rooms = rooms
     }
   },
 
