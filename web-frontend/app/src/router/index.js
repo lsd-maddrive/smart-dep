@@ -18,6 +18,7 @@ export default new Router({
     },
     {
       path: '/room/:id',
+      name: 'RoomControl',
       component: RoomControl
     },
     {

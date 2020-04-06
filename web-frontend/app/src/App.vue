@@ -1,34 +1,43 @@
 <template>
   <div id="app">
-    <Navbar>
-      <MenuButton />
-    </Navbar>
+    <b-navbar toggleable="lg" type="dark" variant="dark">
+      <!-- <b-container> -->
+        <MenuButton />
+      <!-- </b-container> -->
+    </b-navbar>
+
 
     <Sidebar>
-      <ul class="sidebar-panel-nav">
-        <li v-for="room in this.$store.state.rooms" :key="room.id">
-          <a href="#home">Комната {{ room.name }}</a>
-        </li>
-      </ul>
+      <b-button :to="{path: '/'}" class="my-2 w-100">Главная</b-button>
+      <b-dropdown id="dropdown-1" text="Доступные комнаты" class="my-2 w-100">
+        <b-dropdown-item v-for="room in this.$store.state.rooms" :key="room.id">
+          <b-button  :to="{name: 'RoomControl', params: {id: room.id}}">Комната {{ room.name }} [{{ room.id }}]</b-button>
+        </b-dropdown-item>
+      </b-dropdown>
     </Sidebar>
+    
+    
     <router-view />
   </div>
 </template>
 
 <script>
-import Navbar from "@/components/Menu/Navbar.vue";
 import Sidebar from "@/components/Menu/Side.vue";
 import MenuButton from "@/components/Menu/Button.vue";
 
 export default {
   name: "App",
   components: {
-    Navbar,
     MenuButton,
     Sidebar
   },
+  computed: {
+    rooms() {
+      return this.$store.state.rooms;
+    }
+  },
   beforeMount() {
-    this.$store.dispatch('syncRooms')
+    this.$store.dispatch("syncRooms");
   }
 };
 </script>
@@ -42,4 +51,6 @@ export default {
   color: #2c3e50;
   /* margin-top: 60px; */
 }
+
+
 </style>

@@ -31,6 +31,16 @@ export default new Vuex.Store({
         error => {
           console.log("Failed to request rooms")
           console.log(error)
+          commit('setRooms', [
+            {
+              id: '8201',
+              name: 'KEMZ',
+            },
+            {
+              id: '8203',
+              name: 'ELESI'
+            }
+          ])
         }
       )
     },

@@ -3,15 +3,16 @@
     <div class="sidebar-backdrop" @click="closeSidebarPanel" v-if="isActive"></div>
     <transition name="slide">
       <div v-if="isActive" class="sidebar-panel">
-        <slot></slot>
+        <div class="slot-wrapper">
+          <slot></slot>
+        </div>
       </div>
     </transition>
   </div>
 </template>
 <script>
 export default {
-  data: () => ({
-  }),
+  data: () => ({}),
   computed: {
     isActive() {
       return this.$store.state.isSidemenuOpen;
@@ -24,7 +25,7 @@ export default {
   }
 };
 </script>
-<style>
+<style scoped>
 .slide-enter-active,
 .slide-leave-active {
   transition: transform 0.2s ease;
@@ -43,19 +44,23 @@ export default {
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 998;
+  z-index: 1;
   cursor: pointer;
 }
 
 .sidebar-panel {
   overflow-y: auto;
-  background-color: #130f40;
+  background-color: rgb(34, 34, 34);
   position: fixed;
   left: 0;
   top: 0;
   height: 100vh;
-  z-index: 999;
+  z-index: 1;
   padding: 3rem 20px 2rem 20px;
   width: 300px;
+}
+
+.slot-wrapper {
+  width: 100%;
 }
 </style>

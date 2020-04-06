@@ -1,22 +1,22 @@
 <template>
-  <b-container>
-    <b-row>
-      <div>
-        <span>Комната '{{ place_id }}'</span>
-      </div>
-    </b-row>
-    <b-row>
-      <b-col md="4">
-        <lights-panel></lights-panel>
-      </b-col>
-      <b-col md="4">
-        <power-panel></power-panel>
-      </b-col>
-      <b-col md="4">
-        <env-state-panel></env-state-panel>
-      </b-col>
-    </b-row>
-  </b-container>
+  <div>
+    <div id="main">
+      <h3>Комната {{ place_name }}</h3>
+    </div>
+    <b-container>
+      <b-row>
+        <b-col md="4">
+          <lights-panel></lights-panel>
+        </b-col>
+        <b-col md="4">
+          <power-panel></power-panel>
+        </b-col>
+        <b-col md="4">
+          <env-state-panel></env-state-panel>
+        </b-col>
+      </b-row>
+    </b-container>
+  </div>
 </template>
 
 <script>
@@ -30,8 +30,11 @@ export default {
     return {};
   },
   computed: {
-    place_id() {
-      return this.$route.params.id;
+    place_name() {
+      let id = this.$route.params.id;
+      console.log(this.$store.state.rooms)
+      let room = this.$store.state.rooms.find(room => room.id == id);
+      return room.name;
     }
   },
   components: {
@@ -47,13 +50,13 @@ export default {
       place_id: this.place_id
     });
 
-    console.log('Update light units')
+    console.log("Update light units");
     this.$store.dispatch("light/syncUnits", {
       place_id: this.place_id
     });
   },
   beforeDestroy: function() {
-    console.log("beforeDestroy()")
+    console.log("beforeDestroy()");
   },
   watch: {
     $route(to, from) {
@@ -66,4 +69,8 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+h3 {
+  text-align: center;
+  padding: 10px;
+}
 </style>
