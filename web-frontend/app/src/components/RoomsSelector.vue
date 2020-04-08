@@ -1,6 +1,8 @@
 <template>
   <div>
     <h3>Привет! Это интерфейс умной кафедры!</h3>
+    <!-- <h4 v-if="isProd">Production</h4> -->
+    <!-- <h4 v-else>Not Production</h4> -->
     <h4>Вот доступные команты:</h4>
     <b-container>
       <div>
@@ -16,7 +18,7 @@
           <b-card-text>Комната {{ room.name }} [{{ room.id }}]</b-card-text>
           <b-button :to="{name: 'RoomControl', params: {id: room.id}}" variant="dark">Пройдем-с</b-button>
         </b-card>
-        <!-- 
+        <!--
         <b-button-group size="lg" class="my-2 w-75" vertical>
           <b-button
             class="my-2 w-100"
@@ -37,7 +39,9 @@ import Services from "@/services/Services";
 export default {
   name: "RoomsSelector",
   data() {
-    return {};
+    return {
+      // isProd: process.env.NODE_ENV == 'production'
+    };
   },
   computed: {
     rooms() {
