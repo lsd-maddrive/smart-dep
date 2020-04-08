@@ -59,6 +59,11 @@ export default {
     this.$store.dispatch("light/syncUnits", {
       place_id: this.place_id
     });
+
+    console.log("Update power units");
+    this.$store.dispatch("power/syncUnits", {
+      place_id: this.place_id
+    });
   },
   beforeDestroy: function() {
     console.log("beforeDestroy()");

@@ -55,6 +55,12 @@ export default new Vuex.Store({
             enabled: unit.state.enabled
           })
         }
+        else if (unit.type == "power") {
+          commit('power/setState', {
+            id: unit.device_id,
+            enabled: unit.state.enabled
+          })
+        }
       }
     },
   },

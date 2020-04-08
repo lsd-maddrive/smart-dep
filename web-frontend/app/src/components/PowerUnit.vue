@@ -23,7 +23,7 @@ export default {
         return this.$store.getters["power/enabled"](this.id);
       },
       set(value) {
-        this.$store.dispatch("power/setState", { id: this.id, state: value });
+        this.$store.dispatch("power/setState", { id: this.id, enabled: value });
       }
     }
   },

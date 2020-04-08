@@ -42,22 +42,23 @@ const actions = {
       place_id: payload.place_id
     }).then(
       response => {
-        // console.log("Received response: ");
-        // console.log(response.data)
         for (let unit of response.data) {
           commit('setState', extData2Internal(unit))
         }
       },
       error => {
-        console.log("Failed to request lights")
+        console.log("Failed to request light units")
         console.log(error)
+        // Debug light
+        commit('setState', {
+          id: '0',
+          enabled: true
+        })
       }
     )
   },
 
-  setState({
-    commit
-  }, payload) {
+  setState({ commit }, payload) {
     commit('setState', payload)
     this._vm.$socket.emit('set_state', internal2ExtData(payload));
   }
