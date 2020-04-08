@@ -31,14 +31,15 @@ export default {
   },
   computed: {
     place_name() {
-      let id = this.$route.params.id;
-      console.log(this.$store.state.rooms)
-      let room = this.$store.state.rooms.find(room => room.id == id);
+      let room = this.$store.state.rooms.find(room => room.id == this.place_id);
       if (room === undefined) {
         return ''
       } else {
         return room.name;
       }
+    },
+    place_id() {
+      return this.$route.params.id;
     }
   },
   components: {

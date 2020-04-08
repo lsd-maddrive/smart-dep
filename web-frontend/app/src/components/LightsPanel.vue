@@ -6,7 +6,7 @@
       </b-card-header>
       <b-collapse id="light-panel-data" visible role="tabpanel">
         <b-card-body class="card-body power-panel">
-          <power-unit v-for="unit in units" :key="unit.id" :id="unit.id"></power-unit>
+          <light-unit v-for="unit in units" :key="unit.id" :id="unit.id"></light-unit>
         </b-card-body>
       </b-collapse>
     </b-card>
