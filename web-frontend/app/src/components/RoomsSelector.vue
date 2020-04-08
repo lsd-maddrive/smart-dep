@@ -15,7 +15,7 @@
           v-for="room in this.$store.state.rooms"
           :key="room.id"
         >
-          <b-card-text>Комната {{ room.name }} [{{ room.id }}]</b-card-text>
+          <b-card-text>Комната {{ room.name }} [{{ room.id.substring(0,5) }}]</b-card-text>
           <b-button :to="{name: 'RoomControl', params: {id: room.id}}" variant="dark">Пройдем-с</b-button>
         </b-card>
         <!--

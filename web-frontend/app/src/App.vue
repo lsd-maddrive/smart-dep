@@ -11,12 +11,12 @@
       <b-button :to="{path: '/'}" class="my-2 w-100">Главная</b-button>
       <b-dropdown id="dropdown-1" text="Доступные комнаты" class="my-2 w-100">
         <b-dropdown-item v-for="room in this.$store.state.rooms" :key="room.id">
-          <b-button  :to="{name: 'RoomControl', params: {id: room.id}}">Комната {{ room.name }} [{{ room.id }}]</b-button>
+          <b-button  :to="{name: 'RoomControl', params: {id: room.id}}">Комната {{ room.name }} [{{ room.id.substring(0,5) }}]</b-button>
         </b-dropdown-item>
       </b-dropdown>
     </Sidebar>
-    
-    
+
+
     <router-view />
   </div>
 </template>
