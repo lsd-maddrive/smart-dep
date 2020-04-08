@@ -15,7 +15,7 @@ Vue.use(BootstrapVue)
 Vue.use(IconsPlugin)
 
 import VueSocketIO from 'vue-socket.io';
-Vue.use(VueSocketIO, 'http://localhost:5000', store)
+Vue.use(VueSocketIO, process.env.API_URL, store)
 
 import App from './App'
 import store from './store'
