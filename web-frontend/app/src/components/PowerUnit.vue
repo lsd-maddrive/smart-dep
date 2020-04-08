@@ -2,7 +2,7 @@
   <div class="main">
     <b-button block :pressed="!enabled" variant="outline-dark" @click="enabled=!enabled">
       <div class="data">
-        <span>Модуль '{{ id }}' {{ enabled ? 'включен' : 'выключен' }}</span>
+        <span>Модуль '{{ id.substring(0,5) }}' {{ enabled ? 'включен' : 'выключен' }}</span>
         <ion-icon name="flash-outline"></ion-icon>
       </div>
     </b-button>

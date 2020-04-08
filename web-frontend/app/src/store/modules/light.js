@@ -51,7 +51,7 @@ const actions = {
         console.log(error)
         // Debug light
         commit('setState', {
-          id: '0',
+          id: 'sample_0',
           enabled: true
         })
       }

@@ -50,7 +50,7 @@ const actions = {
         console.log("Failed to request power units")
         console.log(error)
         commit('setState', {
-          id: '0',
+          id: 'sample_0',
           enabled: true
         })
       }
