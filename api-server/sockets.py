@@ -2,8 +2,9 @@ import json
 import random
 import time
 from threading import Thread, Event
+import math as m
 
-from flask import request
+from flask import request, current_app
 from flask_socketio import SocketIO, join_room, leave_room
 import logging
 
@@ -23,6 +24,15 @@ _lights_db = [
     }
 ]
 
+_env_state = {
+    'device_id': '0',
+    'type': 'env',
+    'state': {
+        'temperature': 25.0,
+        'humidity': 40.0,
+        'lightness': 35.0
+    }
+}
 
 class PlaceStateSender(Thread):
     def __init__(self, place_id, period_s):
@@ -30,6 +40,8 @@ class PlaceStateSender(Thread):
         self.period_s = period_s
         self.enabled = True
         super(PlaceStateSender, self).__init__()
+
+        self.debug = current_app.debug
 
     def stop(self):
         self.enabled = False
@@ -39,11 +51,19 @@ class PlaceStateSender(Thread):
         while self.enabled:
             time_start = time.time()
 
-            state = _lights_db[0].copy()
-            state['state']['enabled'] = bool(random.getrandbits(1))
+            if self.debug:
+                light_state = _lights_db[0].copy()
+                light_state['state']['enabled'] = bool(random.getrandbits(1))
 
-            logger.debug(f'Send {state} to {self.place_id}')
-            socketio.emit('state', [state], room=self.place_id)
+                env_state = _env_state.copy()
+                env_state['ts'] = time.time()
+                env_state['state']['temperature'] = m.sin(time.time()/10)*3 + 25
+                env_state['state']['humidity'] = m.cos(time.time()/10)*3 + 40
+
+                data = [light_state, env_state]
+
+            logger.debug(f'Send {data} to {self.place_id}')
+            socketio.emit('state', data, room=self.place_id)
 
             passed_time = time.time() - time_start
             sleep_time = self.period_s - passed_time
@@ -57,6 +77,7 @@ class PlaceStateSender(Thread):
 class PlaceStateSenderManager(object):
     def __init__(self):
         self.threads = {}
+        self.threads_started = {}
         self.counters = {}
         self.sid_2_place = {}
 
@@ -65,13 +86,17 @@ class PlaceStateSenderManager(object):
         join_room(place_id)
 
         if place_id not in self.threads:
-            self.threads[place_id] = PlaceStateSender(place_id, 10)
+            self.threads[place_id] = PlaceStateSender(place_id, 3)
+            self.threads_started[place_id] = False
             self.counters[place_id] = 1
         else:
             self.counters[place_id] += 1
 
-        if not self.threads[place_id].is_alive():
+        if not self.threads_started[place_id]:
             self.threads[place_id].start()
+            self.threads_started[place_id] = True
+        elif not self.threads[place_id].is_alive():
+            log.warning(f'Thread for {place_id} not alive!')
 
     def stop_place(self, sid):
         place_id = self.sid_2_place.get(sid)
@@ -87,7 +112,6 @@ class PlaceStateSenderManager(object):
             leave_room(place_id)
             self.threads[place_id].stop()
             del self.threads[place_id]
-            del self.counters[place_id]
 
 
 place_manager = PlaceStateSenderManager()
