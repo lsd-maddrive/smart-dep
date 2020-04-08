@@ -1,0 +1,23 @@
+version: "3"
+services:
+    timescaledb:
+        image: timescale/timescaledb:latest-pg11
+        restart: always
+        environment:
+            POSTGRES_DB: "smart_dep"
+            POSTGRES_USER: "admin"
+            POSTGRES_PASSWORD: 123456
+        volumes:
+        - ./timescaleDB:/var/lib/posgresql/data
+        ports:
+            - "5432:5432"
+    
+    pgadmin:
+        image: dpage/pgadmin4:4.20 
+        environment:
+            PGADMIN_DEFAULT_EMAIL: "seryhelena@gmail.com"
+            PGADMIN_DEFAULT_PASSWORD: 123456
+        restart: always 
+        ports:
+            - "12345:80"
+             
