@@ -8,14 +8,14 @@
         <b-card-body class="card-body power-panel">
           <div class="state-data">
             <ion-icon name="thermometer-outline"></ion-icon>
-            <span>Температура: {{ envState.temp }}</span>
+            <span>Температура: {{ Math.round(temperature) }}&#176;C </span>
           </div>
           <div class="state-data">
             <ion-icon name="water-outline"></ion-icon>
-            <span>Влажность: {{ envState.humid }} %</span>
+            <span>Влажность: {{ Math.round(humidity) }} %</span>
           </div>
           <div class="chart">
-            <TempChart :styles="myStyles" />
+            <TempChart :styles="myStyles" :chart-data="chartData" />
           </div>
         </b-card-body>
       </b-collapse>
@@ -24,21 +24,73 @@
 </template>
 
 <script>
-import { mapState } from "vuex";
 import TempChart from "@/components/TempChart.vue";
+
+import moment from "moment";
 
 export default {
   data() {
-    return {};
+    return {
+      chartData: {
+        datasets: [
+        ]
+      }
+    };
   },
   computed: {
-    ...mapState({
-      envState: state => state.environ.data
-    }),
+    temperature() {
+      this.updateChart();
+      return this.$store.getters["environ/tempVal"];
+    },
+    humidity() {
+      return this.$store.getters["environ/humidVal"];
+    },
+    lightness() {
+      return this.$store.getters["environ/lightVal"];
+    },
+
+    chart_times() {
+      let data = this.$store.getters["environ/times"];
+      return data;
+    },
+
+    temp_vals() {
+      let data = this.$store.getters["environ/temps"];
+      return data;
+    },
+
+    humid_vals() {
+      let data = this.$store.getters["environ/humids"];
+      return data;
+    },
+
     myStyles() {
       return {
         height: "50vh",
         position: "relative"
+      };
+    }
+  },
+  methods: {
+    updateChart() {
+      this.chartData = {
+        labels: this.chart_times,
+        datasets: [
+          {
+            label: "Температура",
+            yAxisID: '1',
+            borderColor: "#ff2f2f8f",
+            fill: false,
+            data: this.temp_vals
+          },
+          {
+            label: "Влажность",
+            yAxisID: '2',
+            borderColor: "#2f2fff8f",
+            fill: false,
+            data: this.humid_vals
+          }
+        ]
       };
     }
   },

@@ -57,6 +57,10 @@ const actions = {
     )
   },
 
+  setExtState: ({ commit }, payload) => {
+    commit('setState', extData2Internal(payload))
+  },
+
   setState({ commit }, payload) {
     commit('setState', payload)
     this._vm.$socket.emit('set_state', internal2ExtData(payload));

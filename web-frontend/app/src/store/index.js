@@ -45,21 +45,18 @@ export default new Vuex.Store({
       )
     },
 
-    socket_state({ commit }, payload) {
+    socket_state({ commit, dispatch }, payload) {
       console.log(payload)
 
       for (let unit of payload) {
         if (unit.type == "light") {
-          commit('light/setState', {
-            id: unit.device_id,
-            enabled: unit.state.enabled
-          })
+          dispatch('light/setExtState', unit)
         }
         else if (unit.type == "power") {
-          commit('power/setState', {
-            id: unit.device_id,
-            enabled: unit.state.enabled
-          })
+          dispatch('power/setExtState', unit)
+        }
+        else if (unit.type == "env") {
+          commit('environ/setExtState', unit)
         }
       }
     },

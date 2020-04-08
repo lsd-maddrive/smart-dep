@@ -11,7 +11,7 @@
         <b-col md="6">
           <power-panel class="my-2"></power-panel>
         </b-col>
-        <b-col md="6">
+        <b-col md="12">
           <env-state-panel class="my-2"></env-state-panel>
         </b-col>
       </b-row>
