@@ -3,16 +3,21 @@ import os
 import sys 
 sys.path.append("../shared/models")
 
-db_config_path = os.path.relpath('../config/sqlalchemy_config.py', os.path.dirname(__file__))
+db_config_path = 'sqlalchemy_config.py' 
 
+from dotenv import load_dotenv
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
 from table_models import db, Commands, Params, States 
 
+load_dotenv()
+
 def create_app():
     app = Flask(__name__)
-    app.config.from_pyfile(db_config_path)
+    app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("SQLALCHEMY_DATABASE_URI")
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = os.getenv("SQLALCHEMY_TRACK_MODIFICATIONS")
+    app.config["DEBUG"] = os.getenv("DEBUG")
     db.init_app(app)
     return app
 
