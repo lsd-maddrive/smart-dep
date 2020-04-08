@@ -74,7 +74,6 @@ const mutations = {
   },
 
   setState: (state, payload) => {
-    console.log("Power " + payload.id + " is " + payload.enabled)
     let unit = state.units.find(unit => unit.id == payload.id)
     if (unit === undefined) {
       state.units.push({

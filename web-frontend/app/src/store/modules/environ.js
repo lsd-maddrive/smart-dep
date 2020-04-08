@@ -44,6 +44,10 @@ const actions = {
 
 // mutations
 const mutations = {
+  clearState: (state) => {
+    state.data = [];
+  },
+
   setExtState: (state, payload) => {
     // console.log('New env data:')
     // console.log(payload)

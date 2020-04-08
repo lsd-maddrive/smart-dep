@@ -49,21 +49,7 @@ export default {
   },
   beforeMount: function() {
     console.log("beforeMounted()");
-    console.log('Send emit on "start_states"');
-    this.$socket.emit("start_states", {
-      period: 1,
-      place_id: this.place_id
-    });
-
-    console.log("Update light units");
-    this.$store.dispatch("light/syncUnits", {
-      place_id: this.place_id
-    });
-
-    console.log("Update power units");
-    this.$store.dispatch("power/syncUnits", {
-      place_id: this.place_id
-    });
+    this.$store.dispatch('switchRoom', { place_id: this.place_id });
   },
   beforeDestroy: function() {
     console.log("beforeDestroy()");
@@ -72,6 +58,7 @@ export default {
     $route(to, from) {
       console.log("Watch $route() called");
       // TODO - reset when updated
+      this.$store.dispatch('switchRoom', { place_id: this.place_id });
     }
   }
 };

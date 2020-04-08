@@ -45,8 +45,31 @@ export default new Vuex.Store({
       )
     },
 
+    switchRoom({ commit, dispatch }, payload) {
+      let place_id = payload.place_id
+      console.log("Update light units");
+      dispatch("light/syncUnits", {
+        place_id: place_id
+      });
+
+      console.log("Update power units");
+      dispatch("power/syncUnits", {
+        place_id: place_id
+      });
+
+      commit("environ/clearState", {
+        place_id: place_id
+      });
+
+      console.log('Send emit on "start_states"');
+      this._vm.$socket.emit("start_states", {
+        period: 3,
+        place_id: place_id
+      });
+    },
+
     socket_state({ commit, dispatch }, payload) {
-      console.log(payload)
+      // console.log(payload)
 
       for (let unit of payload) {
         if (unit.type == "light") {
