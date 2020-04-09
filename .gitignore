@@ -127,4 +127,3 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-web-frontend/app/package-lock.json
