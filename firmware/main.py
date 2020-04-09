@@ -54,7 +54,7 @@ class LightControlDevice(ControlDevice):
         self.last_send_time = time.time()
         self.is_enabled = False
 
-        self.device = machine.Pin(2, machine.Pin.OUT)
+        self.device = Pin(2, Pin.OUT)
 
     def _callback(self, topic, msg):
         data = ujson.loads(msg)
@@ -69,7 +69,7 @@ class LightControlDevice(ControlDevice):
         client.publish(self.state_topic, ujson.dumps(msg))
 
     def step(self, client):
-        if not self.is_enabled:
+        if self.is_enabled:
             self.device.on()
         else:
             self.device.off()
@@ -91,7 +91,7 @@ class EnvironmentDevice(ControlDevice):
         self.unique_id = get_mac()
         client.subscribe(self.cfg_topic)
 
-        self.dev = dht.DHT11(machine.Pin(15))
+        self.dev = dht.DHT11(Pin(15))
 
         self.work_config = {
             'period': 5    # [s]
@@ -162,7 +162,11 @@ devices = [
 ]
 
 while True:
-    for device in devices:
-        device.step(client)
+    try:
+        for device in devices:
+            device.step(client)
+    except Exception as e:
+        print(e)
+        # break
 
-    time.sleep(0.5)
+    time.sleep(1)
