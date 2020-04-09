@@ -2,8 +2,7 @@ FROM node:12 as nodebuild
 
 COPY ./app /app
 WORKDIR /app
-# TODO - remove -f!
-RUN npm install -f
+RUN npm install
 RUN npm run build
 
 RUN ls /app/dist
