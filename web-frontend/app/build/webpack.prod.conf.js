@@ -39,10 +39,13 @@ const webpackConfig = merge(baseWebpackConfig, {
     //     }
     //   }
     // },
+    runtimeChunk: true,
     minimize: true,
     minimizer: [new TerserPlugin({
+      cache: true,
       parallel: true,
     })],
+    splitChunks: { chunks: "all", maxSize: 1200000 }
   },
   plugins: [
     // http://vuejs.github.io/vue-loader/en/workflow/production.html

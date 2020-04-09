@@ -4,6 +4,7 @@ import time
 from threading import Thread, Event
 import math as m
 import pika
+from contextlib import contextmanager
 
 from flask import request, current_app
 from flask_socketio import SocketIO, join_room, leave_room

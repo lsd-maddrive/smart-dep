@@ -66,7 +66,7 @@ export default new Vuex.Store({
       commit("environ/clearState");
 
       console.log('Send emit on "start_states"');
-      this._vm.$socket.emit("start_states", {
+      this._vm.$socket.client.emit("start_states", {
         period: 3,
         place_id: payload.place_id
       });
