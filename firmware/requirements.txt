@@ -1,0 +1,2 @@
+esptool==2.8
+rshell==0.0.27
