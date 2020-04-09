@@ -132,9 +132,8 @@ def delete_all_items(Obj, info=False):
 if __name__ == "__main__":
     app = create_app()
     with app.app_context():
-        print("Here")
         db.create_all()
-        print("created")
+        
     new_command = Commands(id=1, timestamp=datetime.now(), 
                            command={}, device_id="test1", 
                            place_id="8206", type="Power")
@@ -146,14 +145,16 @@ if __name__ == "__main__":
                        place_id="8101", type="Light")
 
     add_new_row(Commands, new_command)
-    # add_new_row(Params, new_param)
-    # add_new_row(States, new_state)
+    add_new_row(Params, new_param)
+    add_new_row(States, new_state)
 
-    # update_item(Commands, 1, 'place_id', "8203-1")
-    # update_item(Params, 1, 'type', 'Power')
-    # update_item(States, 1, 'device_id', "test4")
+    update_item(Commands, 1, 'place_id', "8203-1")
+    update_item(Params, 1, 'type', 'Power')
+    update_item(States, 1, 'device_id', "test4")
 
-    # delete_all_items(Commands, info=True)
-    # delete_item(Params, 1)
-    # delete_all_items(States, info=True)
-    # delete_all_items(Params, info=True)
+    delete_all_items(Commands, info=True)
+    delete_item(Params, 1)
+    delete_all_items(States, info=True)
+    delete_all_items(Params, info=True)
+
+  

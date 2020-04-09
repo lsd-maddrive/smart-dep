@@ -19,5 +19,5 @@ services:
             PGADMIN_DEFAULT_PASSWORD: 123456
         restart: always 
         ports:
-            - "12345:80"
+            - "54321:80"
              
