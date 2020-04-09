@@ -32,11 +32,13 @@ export default {
     Sidebar
   },
   data() {
-    return {
-      places: this.$store.state.places
-    };
+    return {};
   },
-  computed: {},
+  computed: {
+    places() {
+      return this.$store.state.places || [];
+    }
+  },
   beforeMount() {
     this.$store.dispatch("syncPlaces");
   }

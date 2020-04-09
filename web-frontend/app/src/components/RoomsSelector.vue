@@ -7,18 +7,18 @@
     <b-container>
       <div>
         <b-card-group deck>
-        <b-card
-          title="Помещение"
-          tag="article"
-          style="max-width: 20rem;"
-          class="mb-2"
-          v-for="place in this.$store.state.places"
-          :key="place.id"
-        >
-          <b-card-text>Комната {{ place.name }} [{{ place.id.substring(0,5) }}]</b-card-text>
-          <b-button :to="{name: 'RoomControl', params: {id: place.id}}" variant="dark">Пройдем-с</b-button>
-        </b-card>
-        <!--
+          <b-card
+            title="Помещение"
+            tag="article"
+            style="max-width: 20rem;"
+            class="mb-2"
+            v-for="place in this.$store.state.places"
+            :key="place.id"
+          >
+            <b-card-text>Комната {{ place.name }} [{{ place.id.substring(0,5) }}]</b-card-text>
+            <b-button :to="{name: 'RoomControl', params: {id: place.id}}" variant="dark">Пройдем-с</b-button>
+          </b-card>
+          <!--
         <b-button-group size="lg" class="my-2 w-75" vertical>
           <b-button
             class="my-2 w-100"
@@ -26,8 +26,8 @@
             :key="room.id"
             :to="{name: 'RoomControl', params: {id: room.id}}"
           >Комната {{ room.name }}</b-button>
-        </b-button-group>-->
-      </b-card-group>
+          </b-button-group>-->
+        </b-card-group>
       </div>
     </b-container>
   </div>
@@ -45,7 +45,7 @@ export default {
   },
   computed: {
     places() {
-      return this.$store.state.places;
+      return this.$store.state.places || [];
     }
   },
   methods: {},
