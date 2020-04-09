@@ -5,13 +5,9 @@ import Vue from 'vue'
 Vue.config.productionTip = false
 Vue.config.ignoredElements = [/^ion-/]
 
-import {
-  BootstrapVue,
-  IconsPlugin
-} from 'bootstrap-vue'
+import BootstrapVue from 'bootstrap-vue'
 Vue.use(BootstrapVue)
-Vue.use(IconsPlugin)
-import 'bootstrap/dist/css/bootstrap.css'
+import 'bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
 
 import App from './App'
