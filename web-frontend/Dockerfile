@@ -1,4 +1,4 @@
-FROM node:10 as nodebuild
+FROM node:12 as nodebuild
 
 COPY ./app /app
 WORKDIR /app

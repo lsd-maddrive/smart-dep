@@ -17,6 +17,11 @@ Vue.use(IconsPlugin)
 import VueSocketIO from 'vue-socket.io';
 Vue.use(VueSocketIO, process.env.API_URL, store)
 
+import VueSocketIOExt from 'vue-socket.io-extended';
+import io from 'socket.io-client';
+const socket = io(process.env.API_URL);
+Vue.use(VueSocketIOExt, socket, { store });
+
 import App from './App'
 import store from './store'
 import router from './router'

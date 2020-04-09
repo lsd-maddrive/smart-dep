@@ -49,7 +49,7 @@ _powers_db = [
 ]
 
 
-@api.route('/room/<string:place_id>/powers', endpoint='powers')
+@api.route('/place/<string:place_id>/powers', endpoint='powers')
 @api.param('place_id', 'ID of place')
 class PowerUnits(Resource):
     @api.marshal_with(_model_power, as_list=True)
@@ -72,7 +72,7 @@ _lights_db = [
 ]
 
 
-@api.route('/room/<string:place_id>/lights', endpoint='lights')
+@api.route('/place/<string:place_id>/lights', endpoint='lights')
 @api.param('place_id', 'ID of place')
 class LightUnits(Resource):
     @api.marshal_with(_model_light, as_list=True)
@@ -84,7 +84,7 @@ class LightUnits(Resource):
             return {}
 
 
-_rooms_db = [
+_place_db = [
     {
         'id': '8201',
         'name': "KEMZ",
@@ -92,18 +92,18 @@ _rooms_db = [
 ]
 
 
-_model_rooms = api.model('Room', {
+_model_place = api.model('Place', {
     'id': fields.String,
     'name': fields.String,
 })
 
 
-@api.route('/rooms', endpoint='rooms')
-class Rooms(Resource):
-    @api.marshal_with(_model_rooms, as_list=True)
+@api.route('/place', endpoint='place')
+class Places(Resource):
+    @api.marshal_with(_model_place, as_list=True)
     def get(self):
         if current_app.debug:
-            return _rooms_db
+            return _place_db
         else:
             # TODO - db request required
             return {}

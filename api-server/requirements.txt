@@ -6,3 +6,4 @@ Flask-SocketIO==4.2.1
 gunicorn==20.0.4
 gevent==1.5a4
 gevent-websocket==0.10.1
+pika==1.1.0
