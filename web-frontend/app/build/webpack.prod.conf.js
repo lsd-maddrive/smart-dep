@@ -8,19 +8,11 @@ const baseWebpackConfig = require('./webpack.base.conf')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const OptimizeCSSPlugin = require('optimize-css-assets-webpack-plugin')
-// const UglifyJsPlugin = require('uglifyjs-webpack-plugin')
 const TerserPlugin = require('terser-webpack-plugin');
 
 const env = require('../config/prod.env')
 
 const webpackConfig = merge(baseWebpackConfig, {
-  module: {
-    // rules: utils.styleLoaders({
-    //   sourceMap: config.build.productionSourceMap,
-    //   extract: true,
-    //   usePostCSS: true
-    // })
-  },
   mode: "production",
   devtool: config.build.productionSourceMap ? config.build.devtool : false,
   output: {
