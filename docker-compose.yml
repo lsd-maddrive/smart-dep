@@ -6,18 +6,33 @@ services:
         environment:
             POSTGRES_DB: "smart_dep"
             POSTGRES_USER: "admin"
-            POSTGRES_PASSWORD: 123456
+            POSTGRES_PASSWORD: "admin"
         volumes:
-        - ./timescaleDB:/var/lib/posgresql/data
+        - ./volumes/timescaleDB:/var/lib/posgresql/data
         ports:
             - "5432:5432"
-    
+
     pgadmin:
-        image: dpage/pgadmin4:4.20 
+        image: dpage/pgadmin4:4.20
+        restart: always
         environment:
-            PGADMIN_DEFAULT_EMAIL: "seryhelena@gmail.com"
-            PGADMIN_DEFAULT_PASSWORD: 123456
-        restart: always 
+            PGADMIN_DEFAULT_EMAIL: "admin@domain.com"
+            PGADMIN_DEFAULT_PASSWORD: "admin"
         ports:
             - "54321:80"
-             
+
+    rabbitmq:
+        image: "rabbitmq:3-management"
+        restart: always
+        environment:
+            RABBITMQ_ERLANG_COOKIE: "SWQOKODSQALRPCLNMEQG"
+        ports:
+            - "15672:15672" # RabbitWebInterface
+            - "5672:5672"   # AMQP
+            - "1883:1883"   # MQTT
+        labels:
+            NAME: "rabbitmq"
+        volumes:
+            - "./config_rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins"
+            - "./config_rabbitmq/rabbitmq.config:/etc/rabbitmq/rabbitmq.config:ro"
+            #- "./config_rabbitmq/autocluster-0.4.1.ez:/usr/lib/rabbitmq/lib/rabbitmq_server-3.5.5/plugins/autocluster-0.4.1.ez"

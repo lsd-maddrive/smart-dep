@@ -9,7 +9,7 @@ __pycache__/
 
 # Distribution / packaging
 .Python
-build/
+./build/
 develop-eggs/
 dist/
 downloads/
@@ -27,7 +27,6 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
-timescaleDB/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -129,3 +128,5 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+**/.idea
