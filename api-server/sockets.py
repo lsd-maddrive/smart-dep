@@ -126,7 +126,7 @@ def _socket_handle_start_states(config):
     place_manager.start_place(place_id, session_id)
 
 
-@socketio.on('set_state')
+@socketio.on('command')
 def _socket_handle_start_states(state):
     session_id = request.sid
     logger.debug(f'Received state: {state} from {session_id}')
