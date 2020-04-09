@@ -34,6 +34,13 @@ dc-stop:	## Stop running containers without removing them
 dc-up:		## Builds, (re)creates, starts, and attaches to containers for a service
 	docker-compose up 
 
+#-------------------------------------------------
+# Control migrations 
+#-------------------------------------------------
+# not working 
+mg-init-test:	## Create environment for migration [.env.test] 
+	python3 shared/environment_manager.py test
+	python3 shared/migration_manager.py db init
 
 
 
