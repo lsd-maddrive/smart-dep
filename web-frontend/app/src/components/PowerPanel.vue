@@ -19,8 +19,12 @@ import PowerUnit from "@/components/PowerUnit";
 export default {
   data() {
     return {
-      units: this.$store.state.power.units
     };
+  },
+  computed: {
+    units() {
+      return this.$store.state.power.units
+    }
   },
   components: {
     "power-unit": PowerUnit

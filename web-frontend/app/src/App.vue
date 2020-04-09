@@ -2,20 +2,20 @@
   <div id="app">
     <b-navbar toggleable="lg" type="dark" variant="dark">
       <!-- <b-container> -->
-        <MenuButton />
+      <MenuButton />
       <!-- </b-container> -->
     </b-navbar>
-
 
     <Sidebar>
       <b-button :to="{path: '/'}" class="my-2 w-100">Главная</b-button>
       <b-dropdown id="dropdown-1" text="Доступные комнаты" class="my-2 w-100">
-        <b-dropdown-item v-for="room in this.$store.state.rooms" :key="room.id">
-          <b-button  :to="{name: 'RoomControl', params: {id: room.id}}">Комната {{ room.name }} [{{ room.id.substring(0,5) }}]</b-button>
+        <b-dropdown-item v-for="place in places" :key="place.id">
+          <b-button
+            :to="{name: 'RoomControl', params: {id: place.id}}"
+          >Комната {{ place.name }} [{{ place.id.substring(0,5) }}]</b-button>
         </b-dropdown-item>
       </b-dropdown>
     </Sidebar>
-
 
     <router-view />
   </div>
@@ -31,13 +31,14 @@ export default {
     MenuButton,
     Sidebar
   },
-  computed: {
-    rooms() {
-      return this.$store.state.rooms;
-    }
+  data() {
+    return {
+      places: this.$store.state.places
+    };
   },
+  computed: {},
   beforeMount() {
-    this.$store.dispatch("syncRooms");
+    this.$store.dispatch("syncPlaces");
   }
 };
 </script>
@@ -51,6 +52,4 @@ export default {
   color: #2c3e50;
   /* margin-top: 60px; */
 }
-
-
 </style>

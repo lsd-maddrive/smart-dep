@@ -20,8 +20,12 @@ import Services from "@/services/Services";
 export default {
   data() {
     return {
-      units: this.$store.state.light.units
     };
+  },
+  computed: {
+    units() {
+      return this.$store.state.light.units
+    }
   },
   components: {
     "light-unit": LightUnit

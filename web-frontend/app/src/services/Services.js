@@ -1,7 +1,7 @@
 import Api from '@/services/Api'
 
 export default {
-    getRooms (params) {
+    getPlaces (params) {
         return Api().get('/rooms')
     },
     getLights (params) {

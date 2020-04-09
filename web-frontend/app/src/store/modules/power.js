@@ -11,9 +11,11 @@ function extData2Internal(payload) {
 function internal2ExtData(payload) {
   return {
     device_id: payload.id,
+    place_id: payload.place_id,
     type: "power",
-    state: {
-      enabled: payload.enabled
+    ts: Math.round(new Date().getTime() / 1000),
+    cmd: {
+      enable: payload.enabled
     }
   }
 }
@@ -33,13 +35,11 @@ const getters = {
 
 // actions
 const actions = {
-  syncUnits({
-    commit
-  }, payload) {
+  syncUnits({ state, commit, rootState }) {
     commit('clearStates')
 
     Services.getPowers({
-      place_id: payload.place_id
+      place_id: rootState.currentPlaceId
     }).then(
       response => {
         for (let unit of response.data) {

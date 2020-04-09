@@ -15,56 +15,60 @@ export default new Vuex.Store({
   state: {
     isConnected: false,
     isSidemenuOpen: false,
-    rooms: []
+    places: [],
+    currentPlaceId: null
   },
   modules: {
     light,
     power,
     environ
   },
+  getters: {
+    currentPlace: (state, getters) => {
+      return state.places.find(
+        place => place.id == state.currentPlaceId
+      );
+    }
+  },
   actions: {
-    syncRooms({ commit }) {
-      Services.getRooms().then(
-        response => {
-          commit('setRooms', response.data)
-        },
-        error => {
-          console.log("Failed to request rooms")
-          console.log(error)
-          commit('setRooms', [
-            {
-              id: '8201',
-              name: 'KEMZ',
-            },
-            {
-              id: '8203',
-              name: 'ELESI'
-            }
-          ])
-        }
-      )
+    async syncPlaces({ commit }) {
+      try {
+        let response = await Services.getPlaces()
+        console.log(response)
+        commit('setPlaces', response.data)
+      } catch (error) {
+        console.log("Failed to request places")
+        console.log(error)
+        commit('setPlaces', [
+          {
+            id: '8201',
+            name: 'KEMZ',
+          },
+          {
+            id: '8203',
+            name: 'ELESI'
+          }
+        ])
+      }
     },
 
-    switchRoom({ commit, dispatch }, payload) {
-      let place_id = payload.place_id
-      console.log("Update light units");
-      dispatch("light/syncUnits", {
-        place_id: place_id
+    switchPlace({ commit, dispatch }, payload) {
+      commit("setCurrentPlace", {
+        place_id: payload.place_id
       });
+
+      console.log("Update light units");
+      dispatch("light/syncUnits");
 
       console.log("Update power units");
-      dispatch("power/syncUnits", {
-        place_id: place_id
-      });
+      dispatch("power/syncUnits");
 
-      commit("environ/clearState", {
-        place_id: place_id
-      });
+      commit("environ/clearState");
 
       console.log('Send emit on "start_states"');
       this._vm.$socket.emit("start_states", {
         period: 3,
-        place_id: place_id
+        place_id: payload.place_id
       });
     },
 
@@ -99,8 +103,12 @@ export default new Vuex.Store({
       state.isSidemenuOpen = !state.isSidemenuOpen
     },
 
-    setRooms(state, rooms) {
-      state.rooms = rooms
+    setPlaces(state, places) {
+      state.places = places
+    },
+
+    setCurrentPlace(state, payload) {
+      state.currentPlaceId = payload.place_id
     }
   },
 

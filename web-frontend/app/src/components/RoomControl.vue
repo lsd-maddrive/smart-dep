@@ -27,29 +27,28 @@ import EnvStatePanel from "@/components/EnvStatePanel";
 export default {
   name: "RoomControl",
   data() {
-    return {};
+    return {
+      place_id: this.$route.params.id
+    };
   },
   computed: {
     place_name() {
-      let room = this.$store.state.rooms.find(room => room.id == this.place_id);
-      if (room === undefined) {
+      let place = this.$store.getters.currentPlace
+      if (place === undefined) {
         return ''
       } else {
-        return room.name;
+        return place.name;
       }
     },
-    place_id() {
-      return this.$route.params.id;
-    }
   },
   components: {
     "lights-panel": LightsPanel,
     "power-panel": PowerPanel,
     "env-state-panel": EnvStatePanel
   },
-  beforeMount: function() {
-    console.log("beforeMounted()");
-    this.$store.dispatch('switchRoom', { place_id: this.place_id });
+  beforeMount() {
+    console.log("beforeMount()");
+    this.$store.dispatch('switchPlace', { place_id: this.place_id });
   },
   beforeDestroy: function() {
     console.log("beforeDestroy()");
@@ -57,8 +56,7 @@ export default {
   watch: {
     $route(to, from) {
       console.log("Watch $route() called");
-      // TODO - reset when updated
-      this.$store.dispatch('switchRoom', { place_id: this.place_id });
+      this.$store.dispatch('switchPlace', { place_id: this.place_id });
     }
   }
 };
