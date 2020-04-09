@@ -134,8 +134,11 @@ def _socket_handle_start_states(config):
 
 @contextmanager
 def open_rabbit_channel():
+    logger.debug(f"Connect to RabbitMQ {current_app.config['RABBITMQ_URI']}")
     params = pika.URLParameters(current_app.config['RABBITMQ_URI'])
+    logger.debug(f'Parameters: {params}')
     connection = pika.BlockingConnection(params)
+    logger.debug('Connection received!')
     try:
         yield connection.channel()
     finally:
@@ -144,6 +147,7 @@ def open_rabbit_channel():
 
 def send_command(data):
     with open_rabbit_channel() as channel:
+        logger.debug('Channel received!')
         exchange = 'commands'
         channel.exchange_declare(exchange=exchange, exchange_type='topic')
 

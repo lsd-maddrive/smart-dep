@@ -25,5 +25,5 @@ api.add_namespace(ns)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 if __name__ == '__main__':
-    # socketio.run(app, debug=True, use_reloader=True)
-    app.run(debug=True)
+    socketio.run(app, debug=True, use_reloader=True)
+    # app.run(debug=True)
