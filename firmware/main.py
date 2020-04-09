@@ -69,7 +69,7 @@ class LightControlDevice(ControlDevice):
         client.publish(self.state_topic, ujson.dumps(msg))
 
     def step(self, client):
-        if self.is_enabled:
+        if not self.is_enabled:
             self.device.on()
         else:
             self.device.off()
@@ -166,6 +166,8 @@ while True:
         for device in devices:
             device.step(client)
     except Exception as e:
+        if type(e) == KeyboardInterrupt:
+            break
         print(e)
         # break
 
