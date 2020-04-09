@@ -13,7 +13,8 @@ function internal2ExtData(payload) {
     device_id: payload.id,
     place_id: payload.place_id,
     type: "light",
-    ts: Math.round(new Date().getTime()/1000),
+    ts: new Date().getTime()/1000,
+    source_id: 'browser',
     cmd: {
       enable: payload.enabled
     }
@@ -64,8 +65,7 @@ const actions = {
 
   setState({ state, commit, rootState }, payload) {
     commit('setState', payload)
-    console.log(rootState)
-    payload.place_id = rootState.currentPlace.id
+    payload.place_id = rootState.currentPlaceId
     this._vm.$socket.emit('set_state', internal2ExtData(payload));
   }
 }
