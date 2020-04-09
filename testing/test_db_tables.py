@@ -3,8 +3,6 @@ import os
 import sys 
 sys.path.append("../shared/models")
 
-db_config_path = 'sqlalchemy_config.py' 
-
 from dotenv import load_dotenv
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
@@ -133,6 +131,9 @@ def delete_all_items(Obj, info=False):
 
 if __name__ == "__main__":
     app = create_app()
+    with app.app_context():
+        db.create_all()
+        
     new_command = Commands(id=1, timestamp=datetime.now(), 
                            command={}, device_id="test1", 
                            place_id="8206", type="Power")
@@ -155,3 +156,5 @@ if __name__ == "__main__":
     delete_item(Params, 1)
     delete_all_items(States, info=True)
     delete_all_items(Params, info=True)
+
+  
