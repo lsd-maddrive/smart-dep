@@ -3,7 +3,6 @@ import random
 import time
 from threading import Thread, Event
 import math as m
-import pika
 from contextlib import contextmanager
 
 from flask import request, current_app
@@ -130,43 +129,6 @@ def _socket_handle_start_states(config):
     period_s = config['period']
 
     place_manager.start_place(place_id, period_s, session_id)
-
-
-@contextmanager
-def open_rabbit_channel():
-    logger.debug(f"Connect to RabbitMQ {current_app.config['RABBITMQ_URI']}")
-    params = pika.URLParameters(current_app.config['RABBITMQ_URI'])
-    logger.debug(f'Parameters: {params}')
-    connection = pika.BlockingConnection(params)
-    logger.debug('Connection received!')
-    try:
-        yield connection.channel()
-    finally:
-        connection.close()
-
-
-def send_command(data):
-    with open_rabbit_channel() as channel:
-        logger.debug('Channel received!')
-        exchange = 'commands'
-        channel.exchange_declare(exchange=exchange, exchange_type='topic')
-
-        place_id = data['place_id']
-        type_ = data['type']
-        routing_key = f'cmd.{place_id}.{type_}'
-        # TODO - Message update
-        message = json.dumps(data)
-        channel.basic_publish(exchange=exchange,
-                              routing_key=routing_key,
-                              body=message)
-        logger.debug(f'Send command: {message}')
-
-
-@socketio.on('command')
-def _socket_handle_start_states(command):
-    session_id = request.sid
-    logger.debug(f'Received command: {command} from {session_id}')
-    send_command(command)
 
 
 @socketio.on('disconnect')

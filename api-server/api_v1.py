@@ -3,6 +3,8 @@ import random
 import time
 from threading import Thread, Event
 
+from kombu import Connection, Exchange, Producer
+
 from flask import request, current_app
 from flask_restplus import Resource, Namespace, fields
 import logging
@@ -82,6 +84,32 @@ class LightUnits(Resource):
         else:
             # TODO - db request required
             return {}
+
+
+
+
+@api.route('/cmd/<string:place_id>', endpoint='command')
+@api.param('place_id', 'ID of place')
+class CommandResender(Resource):
+    def post(self, place_id):
+        data = request.get_json()
+        logger.debug(f'Received command: {data}')
+
+        uri = current_app.config['RABBITMQ_URI']
+        logger.debug(f"Connect to RabbitMQ {uri}")
+        conn = Connection(uri)
+        logger.debug('>>>>Connection received!')
+        channel = conn.channel()
+        exchange = Exchange('commands', type='topic')
+
+        place_id = data['place_id']
+        type_ = data['type']
+        routing_key = f'cmd.{place_id}.{type_}'
+        # TODO - Message update
+        message = json.dumps(data)
+
+        producer = Producer(exchange=exchange, channel=channel, routing_key=routing_key)
+        producer.publish(message)
 
 
 _place_db = [
