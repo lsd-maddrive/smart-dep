@@ -13,7 +13,7 @@ function internal2ExtData(payload) {
     device_id: payload.id,
     place_id: payload.place_id,
     type: "light",
-    ts: new Date().getTime()/1000,
+    ts: new Date().getTime() / 1000,
     source_id: 'browser',
     cmd: {
       enable: payload.enabled
@@ -64,13 +64,18 @@ const actions = {
   },
 
   setState({ state, commit, rootState }, payload) {
-    commit('setState', payload)
-    payload.place_id = rootState.currentPlaceId
-
     Services.sendCommand({
       place_id: rootState.currentPlaceId,
       data: internal2ExtData(payload)
     })
+      .then((response) => {
+        console.log(response);
+        commit('setState', payload)
+        payload.place_id = rootState.currentPlaceId
+      })
+      .catch((error) => {
+        console.log(error);
+      });
     // this._vm.$socket.client.emit('command', );
   }
 }

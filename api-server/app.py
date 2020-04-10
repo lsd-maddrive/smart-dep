@@ -14,8 +14,6 @@ logger = logging.getLogger(__name__)
 from sockets import socketio
 from api_v1 import api as ns
 
-import pika
-
 app = Flask(__name__)
 app.config.from_object('config')
 

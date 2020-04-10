@@ -21,12 +21,6 @@ export default {
             headers: { 'content-type': 'application/json' }
         }
 
-        Api().post(url, data, config)
-            .then((response) => {
-                console.log(response);
-            })
-            .catch((error) => {
-                console.log(error);
-            });
+        return Api().post(url, data, config)
     }
 }

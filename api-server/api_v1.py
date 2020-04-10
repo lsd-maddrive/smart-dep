@@ -86,8 +86,6 @@ class LightUnits(Resource):
             return {}
 
 
-
-
 @api.route('/cmd/<string:place_id>', endpoint='command')
 @api.param('place_id', 'ID of place')
 class CommandResender(Resource):
@@ -108,8 +106,10 @@ class CommandResender(Resource):
         # TODO - Message update
         message = json.dumps(data)
 
-        producer = Producer(exchange=exchange, channel=channel, routing_key=routing_key)
+        producer = Producer(exchange=exchange,
+                            channel=channel, routing_key=routing_key)
         producer.publish(message)
+        return f'Message sent: {message}'
 
 
 _place_db = [
