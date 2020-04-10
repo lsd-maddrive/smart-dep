@@ -98,7 +98,7 @@ class CommandResender(Resource):
         conn = Connection(uri)
         logger.debug('>>>>Connection received!')
         channel = conn.channel()
-        exchange = Exchange('commands', type='topic')
+        exchange = Exchange('commands', type='topic', durable=True)
 
         place_id = data['place_id']
         type_ = data['type']

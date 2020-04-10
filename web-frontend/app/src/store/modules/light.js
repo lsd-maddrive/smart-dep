@@ -64,14 +64,15 @@ const actions = {
   },
 
   setState({ state, commit, rootState }, payload) {
+    payload.place_id = rootState.currentPlaceId
     Services.sendCommand({
       place_id: rootState.currentPlaceId,
       data: internal2ExtData(payload)
     })
       .then((response) => {
         console.log(response);
+
         commit('setState', payload)
-        payload.place_id = rootState.currentPlaceId
       })
       .catch((error) => {
         console.log(error);

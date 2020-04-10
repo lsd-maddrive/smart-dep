@@ -5,8 +5,6 @@ WORKDIR /app
 RUN npm install
 RUN npm run build
 
-RUN ls /app/dist
-
 # Create new image with files from "nodebuild" image
 FROM nginx:1.17.9-alpine
 
