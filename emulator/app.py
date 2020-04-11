@@ -49,7 +49,7 @@ class ControlDevice(object):
             self._apply_command(data['cmd'])
 
         elif topic == self.cfg_topic:
-            logger.warning(f'Configuration received: {topic} / {data}')
+            logger.debug(f'Configuration received: {topic} / {data}')
             if 'cfg' not in data:
                 logger.warning(f'Message has no \'cfg\' field')
                 return
