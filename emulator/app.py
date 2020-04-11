@@ -5,7 +5,7 @@ import yaml
 
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d/%H:%M:%S')
 logger = logging.getLogger(__name__)
 
 # Definitions
@@ -14,22 +14,53 @@ logger = logging.getLogger(__name__)
 class ControlDevice(object):
     def __init__(self, config, type_):
         self.config = config
-        self.unique_id = config['mac']
+        self.device_id = config['mac']
         self.place_id = config['place_id']
+        self.type = type_
 
-        self.cmd_topic = 'cmd/{}/{}'.format(self.place_id, type_)
-        self.cfg_topic = 'cfg/{}/{}'.format(self.place_id, type_)
-        self.state_topic = 'state/{}/{}'.format(self.place_id, type_)
+        self.cmd_topic = 'cmd/{}/{}'.format(self.place_id, self.type)
+        self.cfg_topic = 'cfg/{}/{}'.format(self.place_id, self.type)
+        self.state_topic = 'state/{}/{}'.format(self.place_id, self.type)
 
     def _send_state(self, state, client):
         msg = {
-            'type': 'env',
-            'device_id': self.unique_id,
+            'type': self.type,
+            'device_id': self.device_id,
             'place_id': self.place_id,
             'state': state,
         }
         logger.debug(f'Send state: {msg}')
         client.publish(self.state_topic, json.dumps(msg))
+
+    def _callback(self, topic, data):
+        if 'device_id' not in data:
+            logger.warning(f'Message has no \'device_id\' field')
+            return
+
+        if data['device_id'] != self.device_id:
+            return
+
+        if topic == self.cmd_topic:
+            logger.debug(f'Command received: {topic} / {data}')
+            if 'cmd' not in data:
+                logger.warning(f'Message has no \'cmd\' field')
+                return
+
+            self._apply_command(data['cmd'])
+
+        elif topic == self.cfg_topic:
+            logger.warning(f'Configuration received: {topic} / {data}')
+            if 'cfg' not in data:
+                logger.warning(f'Message has no \'cfg\' field')
+                return
+
+            self._update_config(data['cfg'])
+
+    def _apply_command(self, cmd):
+        logger.warning(f'No command handler for {cmd}')
+
+    def _update_config(self, cfg):
+        logger.warning(f'No configuration handler for {cfg}')
 
 
 class LightControlDevice(ControlDevice):
@@ -47,36 +78,21 @@ class LightControlDevice(ControlDevice):
         self.last_send_time = time.time()
         self.is_enabled = False
 
-    def _update_config(self, config):
-        if 'period' not in config:
+    def _update_config(self, cfg):
+        if 'period' not in cfg:
             logger.warning(f'Config has no \'period\' field')
             return
 
-        self.work_config = config
-        logger.debug(f'Configuration applied: {config}')
+        self.work_config.update(cfg)
+        logger.debug(f'Device {self.device_id} applied configuration {cfg}')
 
-    def _callback(self, topic, msg):
-        if topic == self.cmd_topic:
-            data = json.loads(msg)
-            logger.debug(f'Command received: {topic} / {data}')
-            if 'cmd' not in data:
-                logger.warning(f'Message has no \'cmd\' field')
-                return
+    def _apply_command(self, cmd):
+        if 'enable' not in cmd:
+            logger.warning(f'Command has no \'enable\' field')
+            return
 
-            cmd = data['cmd']
-            if 'enable' not in cmd:
-                logger.warning(f'Command has no \'enable\' field')
-                return
-
-            self.is_enabled = cmd['enable']
-        elif topic == self.cfg_topic:
-            data = json.loads(msg)
-            logger.warning(f'Configuration received: {topic} / {data}')
-            if 'cfg' not in data:
-                logger.warning(f'Message has no \'cfg\' field')
-                return
-
-            self._update_config(data['cfg'])
+        self.is_enabled = cmd['enable']
+        logger.debug(f'Device {self.device_id} applied command {cmd}')
 
     def step(self, client):
         ts = time.time()
@@ -104,36 +120,21 @@ class PowerControlDevice(ControlDevice):
         self.last_send_time = time.time()
         self.is_enabled = False
 
-    def _update_config(self, config):
-        if 'period' not in config:
+    def _update_config(self, cfg):
+        if 'period' not in cfg:
             logger.warning(f'Config has no \'period\' field')
             return
 
-        self.work_config = config
-        logger.debug(f'Configuration applied: {config}')
+        self.work_config.update(cfg)
+        logger.debug(f'Device {self.device_id} applied configuration {cfg}')
 
-    def _callback(self, topic, msg):
-        if topic == self.cmd_topic:
-            data = json.loads(msg)
-            logger.debug(f'Command received: {topic} / {data}')
-            if 'cmd' not in data:
-                logger.warning(f'Message has no \'cmd\' field')
-                return
+    def _apply_command(self, cmd):
+        if 'enable' not in cmd:
+            logger.warning(f'Command has no \'enable\' field')
+            return
 
-            cmd = data['cmd']
-            if 'enable' not in cmd:
-                logger.warning(f'Command has no \'enable\' field')
-                return
-
-            self.is_enabled = cmd['enable']
-        elif topic == self.cfg_topic:
-            data = json.loads(msg)
-            logger.warning(f'Configuration received: {topic} / {data}')
-            if 'cfg' not in data:
-                logger.warning(f'Message has no \'cfg\' field')
-                return
-
-            self._update_config(data['cfg'])
+        self.is_enabled = cmd['enable']
+        logger.debug(f'Device {self.device_id} applied command {cmd}')
 
     def step(self, client):
         ts = time.time()
@@ -160,23 +161,13 @@ class EnvironmentDevice(ControlDevice):
         self.last_send_time = time.time()
         self.is_enabled = False
 
-    def _update_config(self, config):
-        if 'period' not in config:
+    def _update_config(self, cfg):
+        if 'period' not in cfg:
             logger.warning(f'Config has no \'period\' field')
             return
 
-        self.work_config = config
-        logger.debug(f'Configuration applied: {config}')
-
-    def _callback(self, topic, msg):
-        if topic == self.cfg_topic:
-            data = json.loads(msg)
-            logger.warning(f'Configuration received: {topic} / {data}')
-            if 'cfg' not in data:
-                logger.warning(f'Message has no \'cfg\' field')
-                return
-
-            self._update_config(data['cfg'])
+        self.work_config.update(cfg)
+        logger.debug(f'Device {self.device_id} applied configuration {cfg}')
 
     def _device_get_data(self):
         return {
@@ -213,9 +204,13 @@ mqtt_config = app_config['mqtt']
 
 
 def callback(mqttc, obj, msg):
-    for device in devices:
-        device._callback(msg.topic, msg.payload)
-
+    try:
+        data = json.loads(msg.payload)
+        logger.debug(f'Received data: {data}')
+        for device in devices:
+            device._callback(msg.topic, data)
+    except Exception as e:
+        logger.error(f'Error in callback: {e}')
 
 g_client = mqtt.Client()
 g_client.on_message = callback
@@ -254,8 +249,8 @@ while True:
         for device in devices:
             device.step(g_client)
     except Exception as e:
+        logger.error(f'Error in steps: {e}')
         if type(e) == KeyboardInterrupt:
             break
-        logger.error(e)
 
     time.sleep(1)
