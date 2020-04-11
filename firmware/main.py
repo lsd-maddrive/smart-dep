@@ -6,11 +6,7 @@ import time
 import dht
 from machine import Pin
 
-with open('env.json') as f:
-  wifi_creds = ujson.load(f)
-
-WiFi_SSID = wifi_creds['ssid']
-WiFi_PASS = wifi_creds['pass']
+import env
 
 # Definitions
 
@@ -23,7 +19,7 @@ def connect_wifi():
     wlan.active(True)
     if not wlan.isconnected():
         print('connecting to network...')
-        wlan.connect(WiFi_SSID, WiFi_PASS)
+        wlan.connect(env.WiFi_SSID, env.WiFi_PASS)
         while not wlan.isconnected():
             pass
     print('network config:', wlan.ifconfig())
