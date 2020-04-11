@@ -4,8 +4,6 @@ import { Line, mixins } from "vue-chartjs";
 
 const { reactiveProp } = mixins;
 
-// moment.locale("ru");
-
 export default {
   extends: Line,
   mixins: [reactiveProp],

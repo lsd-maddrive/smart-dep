@@ -63,9 +63,20 @@ const actions = {
   },
 
   setState({ state, commit, rootState }, payload) {
-    commit('setState', payload)
     payload.place_id = rootState.currentPlaceId
-    this._vm.$socket.emit('command', internal2ExtData(payload));
+    Services.sendCommand({
+      place_id: rootState.currentPlaceId,
+      data: internal2ExtData(payload)
+    })
+      .then((response) => {
+        console.log(response);
+
+        commit('setState', payload)
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+    // this._vm.$socket.client.emit('command', internal2ExtData(payload));
   }
 }
 

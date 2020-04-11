@@ -3,6 +3,7 @@ import random
 import time
 from threading import Thread, Event
 import math as m
+from contextlib import contextmanager
 
 from flask import request, current_app
 from flask_socketio import SocketIO, join_room, leave_room
@@ -34,9 +35,10 @@ _env_state = {
     }
 }
 
+
 class PlaceStateSender(Thread):
-    def __init__(self, place_id, period_s):
-        self.place_id = place_id
+    def __init__(self, id_, period_s):
+        self.id_ = id_
         self.period_s = period_s
         self.enabled = True
         super(PlaceStateSender, self).__init__()
@@ -57,13 +59,14 @@ class PlaceStateSender(Thread):
 
                 env_state = _env_state.copy()
                 env_state['ts'] = time.time()
-                env_state['state']['temperature'] = m.sin(time.time()/10)*3 + 25
+                env_state['state']['temperature'] = m.sin(
+                    time.time()/10)*3 + 25
                 env_state['state']['humidity'] = m.cos(time.time()/10)*3 + 40
 
                 data = [light_state, env_state]
 
-            logger.debug(f'Send {data} to {self.place_id}')
-            socketio.emit('state', data, room=self.place_id)
+            logger.debug(f'Send {data} to {self.id_}')
+            socketio.emit('state', data, room=self.id_)
 
             passed_time = time.time() - time_start
             sleep_time = self.period_s - passed_time
@@ -81,37 +84,38 @@ class PlaceStateSenderManager(object):
         self.counters = {}
         self.sid_2_place = {}
 
-    def start_place(self, place_id, sid):
-        self.sid_2_place[sid] = place_id
-        join_room(place_id)
+    def start_place(self, place_id, period, sid):
+        id_ = f'{place_id}_{period}'
+        self.sid_2_place[sid] = id_
+        join_room(id_)
 
-        if place_id not in self.threads:
-            self.threads[place_id] = PlaceStateSender(place_id, 3)
-            self.threads_started[place_id] = False
-            self.counters[place_id] = 1
+        if id_ not in self.threads:
+            self.threads[id_] = PlaceStateSender(id_, period)
+            self.threads_started[id_] = False
+            self.counters[id_] = 1
         else:
-            self.counters[place_id] += 1
+            self.counters[id_] += 1
 
-        if not self.threads_started[place_id]:
-            self.threads[place_id].start()
-            self.threads_started[place_id] = True
-        elif not self.threads[place_id].is_alive():
-            log.warning(f'Thread for {place_id} not alive!')
+        if not self.threads_started[id_]:
+            self.threads[id_].start()
+            self.threads_started[id_] = True
+        elif not self.threads[id_].is_alive():
+            log.warning(f'Thread for {id_} not alive!')
 
     def stop_place(self, sid):
-        place_id = self.sid_2_place.get(sid)
-        if place_id is None:
+        id_ = self.sid_2_place.get(sid)
+        if id_ is None:
             return
 
-        if place_id not in self.threads:
+        if id_ not in self.threads:
             return
 
-        self.counters[place_id] -= 1
+        self.counters[id_] -= 1
 
-        if self.counters[place_id] <= 0:
-            leave_room(place_id)
-            self.threads[place_id].stop()
-            del self.threads[place_id]
+        if self.counters[id_] <= 0:
+            leave_room(id_)
+            self.threads[id_].stop()
+            del self.threads[id_]
 
 
 place_manager = PlaceStateSenderManager()
@@ -122,14 +126,9 @@ def _socket_handle_start_states(config):
     session_id = request.sid
     logger.debug(f'Received config: {config} from {session_id}')
     place_id = config['place_id']
+    period_s = config['period']
 
-    place_manager.start_place(place_id, session_id)
-
-
-@socketio.on('command')
-def _socket_handle_start_states(state):
-    session_id = request.sid
-    logger.debug(f'Received state: {state} from {session_id}')
+    place_manager.start_place(place_id, period_s, session_id)
 
 
 @socketio.on('disconnect')
