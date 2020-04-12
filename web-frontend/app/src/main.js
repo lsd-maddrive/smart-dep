@@ -5,21 +5,19 @@ import Vue from 'vue'
 Vue.config.productionTip = false
 Vue.config.ignoredElements = [/^ion-/]
 
-import {
-  BootstrapVue,
-  IconsPlugin
-} from 'bootstrap-vue'
-import 'bootstrap/dist/css/bootstrap.css'
-import 'bootstrap-vue/dist/bootstrap-vue.css'
+import BootstrapVue from 'bootstrap-vue'
 Vue.use(BootstrapVue)
-Vue.use(IconsPlugin)
-
-import VueSocketIO from 'vue-socket.io';
-Vue.use(VueSocketIO, process.env.API_URL, store)
+import 'bootstrap/dist/css/bootstrap.min.css'
+import 'bootstrap-vue/dist/bootstrap-vue.css'
 
 import App from './App'
 import store from './store'
 import router from './router'
+
+import VueSocketIOExt from 'vue-socket.io-extended';
+import io from 'socket.io-client';
+const socket = io(process.env.API_URL);
+Vue.use(VueSocketIOExt, socket, { store });
 
 /* eslint-disable no-new */
 new Vue({

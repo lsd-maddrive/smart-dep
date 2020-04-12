@@ -26,8 +26,6 @@
 <script>
 import TempChart from "@/components/TempChart.vue";
 
-import moment from "moment";
-
 export default {
   data() {
     return {

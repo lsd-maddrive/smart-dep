@@ -5,9 +5,11 @@ Smart Department project
 
 ## Некоторые правила разработки:
 - Любые фичи или исправления делаются через создание issue с описанием и присвоением себе;
-- Для добавления какой-либо фичи добавляется ветка `feature/<issue_number>` или `feature/<short_name>`, работа ведется в ней; 
+- Для добавления какой-либо фичи добавляется ветка `feature/<issue_number>` или `feature/<short_name>`, работа ведется в ней;
 - При необходимости внесения фиксов создается ветка `fix/<issue_number>`;
 - В отношении любой ветки - после окончания тестирования и проверок делается PullRequest (PR) и после уже код вливается в develop;
 - `develop` ветка для стабильных версий системы;
 
+## Environment variables
 
+- `SMART_ENV` - set type of environment, variants: [prod, dev, test]

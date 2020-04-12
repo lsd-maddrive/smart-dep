@@ -8,9 +8,13 @@ services:
             POSTGRES_USER: "admin"
             POSTGRES_PASSWORD: "admin"
         volumes:
-        - ./volumes/timescaleDB:/var/lib/posgresql/data
+            - ./volumes/timescaleDB:/var/lib/posgresql/data
         ports:
             - "5432:5432"
+        logging:
+            options:
+                max-size: "200k"
+                max-file: "10"
 
     pgadmin:
         image: dpage/pgadmin4:4.20
@@ -20,6 +24,10 @@ services:
             PGADMIN_DEFAULT_PASSWORD: "admin"
         ports:
             - "54321:80"
+        logging:
+            options:
+                max-size: "200k"
+                max-file: "10"
 
     rabbitmq:
         image: "rabbitmq:3-management"
@@ -28,11 +36,38 @@ services:
             RABBITMQ_ERLANG_COOKIE: "SWQOKODSQALRPCLNMEQG"
         ports:
             - "15672:15672" # RabbitWebInterface
-            - "5672:5672"   # AMQP
-            - "1883:1883"   # MQTT
+            - "5672:5672" # AMQP
+            - "1883:1883" # MQTT
         labels:
             NAME: "rabbitmq"
         volumes:
             - "./config_rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins"
             - "./config_rabbitmq/rabbitmq.config:/etc/rabbitmq/rabbitmq.config:ro"
             #- "./config_rabbitmq/autocluster-0.4.1.ez:/usr/lib/rabbitmq/lib/rabbitmq_server-3.5.5/plugins/autocluster-0.4.1.ez"
+        logging:
+            options:
+                max-size: "200k"
+                max-file: "10"
+
+    web:
+        build:
+            context: web-frontend
+        restart: always
+        # For debug
+        ports:
+            - "81:80"
+
+    apiserver:
+        build:
+            context: api-server
+        restart: always
+        # For swagger access
+        ports:
+            - "5000:8080"
+        volumes:
+            # Mapping configuration with required env (default: dev)
+            - "./api-server/config/${SMART_ENV:-dev}/config.py:/app/config.py"
+        logging:
+            options:
+                max-size: "200k"
+                max-file: "10"

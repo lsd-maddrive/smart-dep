@@ -3,6 +3,8 @@ import random
 import time
 from threading import Thread, Event
 
+from kombu import Connection, Exchange, Producer
+
 from flask import request, current_app
 from flask_restplus import Resource, Namespace, fields
 import logging
@@ -49,7 +51,7 @@ _powers_db = [
 ]
 
 
-@api.route('/room/<string:place_id>/powers', endpoint='powers')
+@api.route('/place/<string:place_id>/powers', endpoint='powers')
 @api.param('place_id', 'ID of place')
 class PowerUnits(Resource):
     @api.marshal_with(_model_power, as_list=True)
@@ -72,7 +74,7 @@ _lights_db = [
 ]
 
 
-@api.route('/room/<string:place_id>/lights', endpoint='lights')
+@api.route('/place/<string:place_id>/lights', endpoint='lights')
 @api.param('place_id', 'ID of place')
 class LightUnits(Resource):
     @api.marshal_with(_model_light, as_list=True)
@@ -84,7 +86,33 @@ class LightUnits(Resource):
             return {}
 
 
-_rooms_db = [
+@api.route('/cmd/<string:place_id>', endpoint='command')
+@api.param('place_id', 'ID of place')
+class CommandResender(Resource):
+    def post(self, place_id):
+        data = request.get_json()
+        logger.debug(f'Received command: {data}')
+
+        uri = current_app.config['RABBITMQ_URI']
+        logger.debug(f"Connect to RabbitMQ {uri}")
+        conn = Connection(uri)
+        logger.debug('>>>>Connection received!')
+        channel = conn.channel()
+        exchange = Exchange('commands', type='topic', durable=True)
+
+        place_id = data['place_id']
+        type_ = data['type']
+        routing_key = f'cmd.{place_id}.{type_}'
+        # TODO - Message update
+        message = json.dumps(data)
+
+        producer = Producer(exchange=exchange,
+                            channel=channel, routing_key=routing_key)
+        producer.publish(message)
+        return f'Message sent: {message}'
+
+
+_place_db = [
     {
         'id': '8201',
         'name': "KEMZ",
@@ -92,18 +120,18 @@ _rooms_db = [
 ]
 
 
-_model_rooms = api.model('Room', {
+_model_place = api.model('Place', {
     'id': fields.String,
     'name': fields.String,
 })
 
 
-@api.route('/rooms', endpoint='rooms')
-class Rooms(Resource):
-    @api.marshal_with(_model_rooms, as_list=True)
+@api.route('/place', endpoint='place')
+class Places(Resource):
+    @api.marshal_with(_model_place, as_list=True)
     def get(self):
         if current_app.debug:
-            return _rooms_db
+            return _place_db
         else:
             # TODO - db request required
             return {}
