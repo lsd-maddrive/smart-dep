@@ -13,9 +13,10 @@ load_dotenv()
 
 def create_app():
     app = Flask(__name__)
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("SQLALCHEMY_DATABASE_URI")
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = os.getenv("SQLALCHEMY_TRACK_MODIFICATIONS")
-    app.config["DEBUG"] = os.getenv("DEBUG")
+    env_mode = os.getenv('SMART_ENV', 'dev')
+    config_path = f'../shared/config/{env_mode}/config.py'
+    
+    app.config.from_pyfile(config_path)
     db.init_app(app)
     return app
 
