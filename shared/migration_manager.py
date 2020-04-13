@@ -8,9 +8,18 @@ from flask_sqlalchemy import SQLAlchemy
 from models.table_models import db
 
 app = Flask(__name__)
-app.config.from_object(os.environ.get('CONFIG_OBJ'))
 
-print(os.environ.get('CONFIG_OBJ'))
+env_mode = os.environ.get('SMART_ENV')
+if env_mode == 'test':
+    config_path = 'config/test/config.py'
+elif env_mode == 'prod':
+    config_path = 'config/prod/config.py'
+elif env_mode == 'dev':
+    config_path = 'config/dev/config.py'
+else: # in other cases - dev mode 
+    config_path = 'config/dev/config.py'
+
+app.config.from_pyfile(config_path)
 
 db.init_app(app)
 

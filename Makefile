@@ -38,8 +38,8 @@ dc-up:		## Builds, (re)creates, starts, and attaches to containers for a service
 # Control migrations 
 #-------------------------------------------------
 # not working 
-CONFIG_OBJ=config.$(SMART_ENV).config
-mg-init-test:	## Create environment for migration [.env.test] 
+
+mg-init:	## Create environment for migration [.env.test] 
 	python3 shared/migration_manager.py db init
 
 
