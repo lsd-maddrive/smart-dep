@@ -57,6 +57,7 @@ class LightControlDevice(ControlDevice):
         print('Data: {} / {} / {}'.format(topic, msg, data))
 
     def _send_state(self, state, client):
+        # Hello comment =)
         msg = {
             'type': 'light',
             'device_id': self.unique_id,
