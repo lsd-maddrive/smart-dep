@@ -130,6 +130,3 @@ dmypy.json
 .pyre/
 
 **/.idea
-
-#temporary (just while I testing and debuging)
-migrations/

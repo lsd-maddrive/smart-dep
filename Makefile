@@ -37,11 +37,15 @@ dc-up:		## Builds, (re)creates, starts, and attaches to containers for a service
 #-------------------------------------------------
 # Control migrations 
 #-------------------------------------------------
-# not working 
 
-mg-init:	## Create environment for migration [.env.test] 
+mg-init:	## Create environment for migration - do it only once
 	python3 shared/migration_manager.py db init
 
+mg-migrate:	## Generate version-file in /migrations/versions
+	python3 shared/migration_manager.py db migrate 
 
+mg-migrate-msg:	## Generate version-file with message. Usage make mg-migrate-msg msg=''	
+	python3 shared/migration_manager.py db migrate -m $(msg)
 
-
+mg-upgrade:
+	python3 shared/migration_manager.py db upgrade 
