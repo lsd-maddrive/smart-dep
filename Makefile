@@ -47,5 +47,5 @@ mg-migrate:	## Generate version-file in /migrations/versions
 mg-migrate-msg:	## Generate version-file with message. Usage make mg-migrate-msg msg=''	
 	python3 shared/migration_manager.py db migrate -m $(msg)
 
-mg-upgrade:
+mg-upgrade:	## Apply the migration to the database
 	python3 shared/migration_manager.py db upgrade 
