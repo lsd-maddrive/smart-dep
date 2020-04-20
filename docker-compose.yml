@@ -71,3 +71,16 @@ services:
             options:
                 max-size: "200k"
                 max-file: "10"
+
+    emulator:
+        build:
+            context: emulator 
+        restart: always 
+        ports:
+            - "6000:1883"
+        volumes: 
+            - "./emulator/config.yml:/emulator/config.yml"
+        logging:
+            options:
+                max-size: "200k"
+                max-file: "10"
