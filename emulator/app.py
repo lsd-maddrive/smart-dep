@@ -202,6 +202,8 @@ with open("config.yml") as f:
 app_config = g_config['app']
 mqtt_config = app_config['mqtt']
 
+print(mqtt_config)
+
 
 def callback(mqttc, obj, msg):
     try:
@@ -219,6 +221,7 @@ g_client.connect(mqtt_config['host'], mqtt_config['port'], 60)
 
 logger.debug('Connected to MQTT')
 
+print(f"Connected\t host: {mqtt_config['host']}, port: {mqtt_config['port']}")
 
 def get_device(device_name, config, client):
     type_ = config['type']
