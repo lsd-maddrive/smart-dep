@@ -1,0 +1,1 @@
+RABBITMQ_URI = 'amqp://rabbitmq:rabbitmq@192.168.31.90:5672/%2F'
