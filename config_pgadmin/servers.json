@@ -1,0 +1,13 @@
+{
+    "Servers": {
+        "1": {
+            "Name": "Main DB",
+            "Group": "Servers",
+            "Port": 5432,
+            "Username": "admin",
+            "Host": "timescaledb",
+            "SSLMode": "prefer",
+            "MaintenanceDB": "postgres"
+        }
+    }
+}
