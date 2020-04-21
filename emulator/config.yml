@@ -1,7 +1,7 @@
 app:
   mqtt:
     client_id: unique_mqtt_device_id
-    host: 192.168.31.90
+    host: rabbitmq
     port: 1883
     username: rabbitmq
     password: rabbitmq

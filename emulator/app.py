@@ -192,7 +192,6 @@ class EnvironmentDevice(ControlDevice):
 
 # Utilization
 
-
 with open("config.yml") as f:
     try:
         g_config = yaml.safe_load(f)
@@ -201,7 +200,6 @@ with open("config.yml") as f:
 
 app_config = g_config['app']
 mqtt_config = app_config['mqtt']
-
 
 def callback(mqttc, obj, msg):
     try:
@@ -218,7 +216,6 @@ g_client.username_pw_set(username=mqtt_config['username'], password=mqtt_config[
 g_client.connect(mqtt_config['host'], mqtt_config['port'], 60)
 
 logger.debug('Connected to MQTT')
-
 
 def get_device(device_name, config, client):
     type_ = config['type']
