@@ -223,7 +223,7 @@ for i in range(5):
         is_connected = True
         break
     except:
-        logger.warning(f'Failed to connect to MQTT broker, retry after 5 seconds')
+        logger.warning(f'Failed to connect to MQTT broker, retry after 10 seconds')
         time.sleep(10)
 
 if not is_connected:
