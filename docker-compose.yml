@@ -24,6 +24,10 @@ services:
             PGADMIN_DEFAULT_PASSWORD: "admin"
         ports:
             - "54321:80"
+        volumes:
+            - ./config_pgadmin/servers.json:/pgadmin4/servers.json
+        depends_on:
+            - timescaledb
         logging:
             options:
                 max-size: "200k"
@@ -56,6 +60,8 @@ services:
         # For debug
         ports:
             - "81:80"
+        depends_on:
+            - apiserver
 
     apiserver:
         build:
@@ -64,6 +70,8 @@ services:
         # For swagger access
         ports:
             - "5000:8080"
+        depends_on:
+            - timescaledb
         volumes:
             # Mapping configuration with required env (default: dev)
             - "./api-server/config/${SMART_ENV:-dev}/config.py:/app/config.py"
@@ -78,6 +86,8 @@ services:
         restart: always 
         volumes: 
             - "./emulator/config.yml:/emulator/config.yml"
+        depends_on:
+            - rabbitmq
         logging:
             options:
                 max-size: "200k"

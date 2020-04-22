@@ -185,7 +185,7 @@ class EnvironmentDevice(ControlDevice):
             self._send_state({
                 'temperature': data['temp'],
                 'humidity': data['humid'],
-                'lighntess': data['light']
+                'lightness': data['light']
             }, client)
 
         return True
@@ -210,10 +210,25 @@ def callback(mqttc, obj, msg):
     except Exception as e:
         logger.error(f'Error in callback: {e}')
 
+is_connected = False
+
 g_client = mqtt.Client()
 g_client.on_message = callback
 g_client.username_pw_set(username=mqtt_config['username'], password=mqtt_config['password'])
-g_client.connect(mqtt_config['host'], mqtt_config['port'], 60)
+
+# Five times reconnection tries
+for i in range(5):
+    try:
+        g_client.connect(mqtt_config['host'], mqtt_config['port'], 60)
+        is_connected = True
+        break
+    except:
+        logger.warning(f'Failed to connect to MQTT broker, retry after 10 seconds')
+        time.sleep(10)
+
+if not is_connected:
+    logger.error(f'Failed to connect to: {mqtt_config}')
+    exit(1)
 
 logger.debug('Connected to MQTT')
 
