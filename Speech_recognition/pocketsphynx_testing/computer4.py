@@ -5,7 +5,7 @@ model_path = get_model_path()
 
 speech = LiveSpeech(
     verbose=False,
-    sampling_rate=16000,
+    sampling_rate=8000,
     buffer_size=2048,
     no_search=False,
     full_utt=False,
@@ -20,4 +20,4 @@ speech = LiveSpeech(
 print("Say something!")
 
 for phrase in speech:
-    print(phrase.segments(detailed=True))
+    print(phrase)
