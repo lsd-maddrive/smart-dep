@@ -2,23 +2,23 @@ import pika
 from pprint import pprint
 import yaml 
 
-with open('config.yml') as cfg:
-    total_cfg = yaml.safe_load(cfg)
+# with open('config.yml') as cfg:
+#     total_cfg = yaml.safe_load(cfg)
 
-logger_cfg = total_cfg['logger']
-rabbit_cfg = logger_cfg['rabbit']
+# logger_cfg = total_cfg['logger']
+# rabbit_cfg = logger_cfg['rabbit']
 
-credentials = pika.PlainCredentials(
-    username=rabbit_cfg['username'],
-    password=rabbit_cfg['password']
-)
+# credentials = pika.PlainCredentials(
+#     username=rabbit_cfg['username'],
+#     password=rabbit_cfg['password']
+# )
 
-params = pika.ConnectionParameters(
-    host=rabbit_cfg['host'],
-    port=rabbit_cfg['port'],
-    virtual_host='/',
-    credentials=credentials 
-)
+# params = pika.ConnectionParameters(
+#     host=rabbit_cfg['host'],
+#     port=rabbit_cfg['port'],
+#     virtual_host='/',
+#     credentials=credentials 
+# )
 
 
 class Logger(object):
@@ -38,25 +38,37 @@ class Logger(object):
         )
 
         connection = pika.BlockingConnection(params)
-        channel = connection.channel()
+        self.channel = connection.channel()
 
-        channel.exchange_declare(
+        self.channel.exchange_declare(
             exchange=topic_name,
             exchange_type='topic'
         )
 
-        queue = channel.queue_declare(
+        queue = self.channel.queue_declare(
             queue=f'all_{topic_name}', 
             exclusive=True # only allow access by the current connection 
         )
 
-        queue_name = queue.method.queue
+        self.queue_name = queue.method.queue
 
-        channel.queue_bind(
+        self.channel.queue_bind(
             exchange=topic_name, 
             queue=queue_name,
             routing_key=binding_keys
         )
+
+    def callback():
+        pass 
+
+    def consume_event():
+        self.channel.basic_consume(
+            queue=self.queue_name, 
+            on_message_callback=self.callback,
+            auto_ack=True
+        )
+
+        self.channel.start_consuming() 
 
 class StateLogger(Logger):
     def __init__(self, config):
@@ -68,6 +80,9 @@ class StateLogger(Logger):
                 "state.*.env"
             ]
         )
+    
+    def callback():
+        pass 
 
 class ConfigLogger(Logger):
     def __init__(self, config):
@@ -79,6 +94,9 @@ class ConfigLogger(Logger):
                 "cfg.*.env"
             ]
         )
+    
+    def callback():
+        pass 
 
 class CommandLogger(Logger):
     def __init__(self, config):
@@ -90,3 +108,6 @@ class CommandLogger(Logger):
                 "cmd.*.env"
             ]
         )
+
+    def callback():
+        pass 
