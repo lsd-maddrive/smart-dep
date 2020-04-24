@@ -20,12 +20,9 @@ params = pika.ConnectionParameters(
     credentials=credentials 
 )
 
-connection = pika.BlockingConnection(params)
-
-channel = connection.channel()
 
 class Logger(object):
-    def __init__(self, config, topic_name):
+    def __init__(self, config, topic_name, binding_keys):
         self.config = config 
         
         credentials = pika.PlainCredentials(
@@ -49,8 +46,47 @@ class Logger(object):
         )
 
         queue = channel.queue_declare(
-            queue='', # random name for queue
+            queue=f'all_{topic_name}', 
             exclusive=True # only allow access by the current connection 
         )
 
-        binding_keys = []
+        queue_name = queue.method.queue
+
+        channel.queue_bind(
+            exchange=topic_name, 
+            queue=queue_name,
+            routing_key=binding_keys
+        )
+
+class StateLogger(Logger):
+    def __init__(self, config):
+        super().__init__(
+            config, topic_name="states", 
+            binding_keys=[
+                "state.*.light",
+                "state.*.power",
+                "state.*.env"
+            ]
+        )
+
+class ConfigLogger(Logger):
+    def __init__(self, config):
+        super().__init__(
+            config, topic_name="configurations", 
+            binding_keys=[
+                "cfg.*.light",
+                "cfg.*.power",
+                "cfg.*.env"
+            ]
+        )
+
+class CommandLogger(Logger):
+    def __init__(self, config):
+        super().__init__(
+            config, topic_name="commands", 
+            binding_keys=[
+                "cmd.*.light",
+                "cmd.*.power",
+                "cmd.*.env"
+            ]
+        )
