@@ -61,5 +61,5 @@ deploy_tigra:
     - ssh -l "$SSH_USER" "$SSH_HOST" -p "$SSH_PORT" "cd ~/Dev && cd smart-dep && git pull || git clone https://github.com/lsd-maddrive/smart-dep.git -b develop"
     - ssh -l "$SSH_USER" "$SSH_HOST" -p "$SSH_PORT" "cd ~/Dev/smart-dep && docker-compose -p local down && docker-compose -p local build && docker-compose -p local up -d"
   only:
-    - feature/ci
+    - develop
 
