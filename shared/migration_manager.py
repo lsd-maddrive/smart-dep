@@ -1,11 +1,15 @@
 import os
+import sys 
+sys.path.append("..")
 
 from flask import Flask
 from flask_migrate import Migrate, MigrateCommand
 from flask_script import Manager
 from flask_sqlalchemy import SQLAlchemy
 
-from models.table_models import db
+# from models.table_models import db
+# from logger import db 
+db = SQLAlchemy(metadata=metadata)
 
 app = Flask(__name__)
 

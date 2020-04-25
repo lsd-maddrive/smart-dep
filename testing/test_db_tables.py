@@ -1,13 +1,13 @@
 from datetime import datetime  
 import os
 import sys 
-sys.path.append("../shared/models")
+sys.path.append("..")
 
 from dotenv import load_dotenv
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
-from table_models import db, Commands, Params, States 
+from shared.models.table_models import db, Commands, Params, States 
 
 load_dotenv()
 

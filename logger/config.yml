@@ -1,6 +1,6 @@
 logger:
     rabbit:
-        host: '127.0.0.1' 
+        host: tigra-acs.duckdns.org 
         port: 5672 
         username: rabbitmq
         password: rabbitmq
