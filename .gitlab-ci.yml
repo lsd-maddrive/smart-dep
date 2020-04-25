@@ -58,7 +58,8 @@ before_script:
 
 deploy_tigra:
   script:
-  - ssh -l "$SSH_USER" "$SSH_HOST" -p "$SSH_PORT"
+  - echo `whoami`
+  - ssh -l "$SSH_USER" "$SSH_HOST" -p "$SSH_PORT" "echo $USER; whoami; ls"
   - mkdir -p /ci && cd $_
   - cd smart-dep && git pull || git clone https://github.com/lsd-maddrive/smart-dep.git
   - cd smart-dep && docker-compose -p local down
