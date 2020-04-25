@@ -1,12 +1,9 @@
-# from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import MetaData, Column, Integer, String, DateTime
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.declarative import declarative_base
 
 metadata = MetaData() 
 Model = declarative_base(metadata=metadata)
-
-# db = SQLAlchemy()
 
 class Commands(Model):
     __tablename__= 'commands'
@@ -40,7 +37,7 @@ class Params(Model):
 
 class States(Model):
     __tablename__= "states"
-    
+
     id = Column(Integer, primary_key=True)
     timestamp = Column(DateTime)
     state = Column(JSONB)

@@ -4,7 +4,6 @@ import os
 import sys 
 sys.path.append("..")
 
-# from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 import pika 
 from pprint import pprint
@@ -13,8 +12,6 @@ from sqlalchemy.orm import Session
 import yaml 
 
 from shared.models.table_models import metadata, Commands, Params, States 
-
-# db = SQLAlchemy(metadata=metadata)
 
 with open('config.yml') as cfg:
     total_cfg = yaml.safe_load(cfg)
