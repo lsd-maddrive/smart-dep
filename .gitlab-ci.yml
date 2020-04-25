@@ -59,7 +59,7 @@ before_script:
 deploy_tigra:
   script:
   # try to connect to GitLab.com
-  - ssh "$SSH_USER":"$SSH_HOST" -p "$SSH_PORT"
+  - ssh "$SSH_USER"@"$SSH_HOST" -p "$SSH_PORT"
   - cd ~/Dev/smart-dep && git pull || git clone https://github.com/lsd-maddrive/smart-dep.git
   only:
     - feature/ci
