@@ -31,7 +31,7 @@ before_script:
   ## with your own domain name. You can copy and repeat that command if you have
   ## more than one server to connect to.
   ##
-  - ssh-keyscan gitlab.com >> ~/.ssh/known_hosts
+  - ssh-keyscan "$SSH_HOST" >> ~/.ssh/known_hosts
   - chmod 644 ~/.ssh/known_hosts
 
   ##
@@ -53,8 +53,8 @@ before_script:
   ## Optionally, if you will be using any Git commands, set the user name and
   ## email.
   ##
-  - git config --global user.email "darth@empire.com"
-  - git config --global user.name "Darth Vader"
+  # - git config --global user.email "darth@empire.com"
+  # - git config --global user.name "Darth Vader"
 
 deploy_tigra:
   script:
