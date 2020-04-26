@@ -1,3 +1,4 @@
+import argparse 
 from datetime import datetime  
 import json 
 import os
@@ -13,19 +14,6 @@ import yaml
 
 from shared.models.table_models import metadata, Commands, Params, States 
 
-with open('config.yml') as cfg:
-    total_cfg = yaml.safe_load(cfg)
-
-logger_cfg = total_cfg['logger']
-rabbit_cfg = logger_cfg['rabbit']
-
-# TO DO: check 
-# FIX for Command and Cfgs (amq.topic -> commands)
-# (amq.topic -> configurations)
-# self.channel.exchange_bind(
-#     destination=topic_name,
-#     source="amq.topic"
-# )
 class Logger(object):
     def __init__(self, config, topic_name, binding_key, session):
         self.config = config 
@@ -91,12 +79,18 @@ class StateLogger(Logger):
             binding_key=self.binding_key,
             session=session
         )
-        # Bind amq.topic exchange and logger exchange 
+        # Bind amq.topic exchange -> states exchange 
         self.channel.exchange_bind(
             destination=self.exchange_name,
             source="amq.topic",
             routing_key=self.binding_key
         )
+
+        self.state_buffer = []
+        # embedded autoincrement can not track 
+        # current changes in DB and use cached values 
+        self.cb_count = self.session.query(States).count()
+        self.BUFFER_LIMIT = 10
     
     def callback(self, ch, method, properties, body):
         state_json = json.loads(body.decode('utf-8'))
@@ -105,9 +99,10 @@ class StateLogger(Logger):
             timestamp = datetime.now()
         else:
             timestamp = state_json['timestamp']
-        # embedded autoincrement can not track 
-        # current changes in DB and use cached values 
-        next_id = self.session.query(States).count() + 1
+        
+        self.cb_count += 1
+        next_id = self.cb_count
+
         new_state = States(
             id=next_id,
             timestamp=timestamp,
@@ -116,9 +111,19 @@ class StateLogger(Logger):
             place_id=state_json['place_id'],
             type=state_json['type']
         )
+       
+        print(f"Length of buffer: {len(self.state_buffer)}, cb_c: {self.cb_count}")
+        self.state_buffer.append(new_state)
+
+        if len(self.state_buffer) >= self.BUFFER_LIMIT:
+            self.session.bulk_save_objects(
+                objects=self.state_buffer
+            )
+            self.session.commit()
+            self.state_buffer = []
         
-        self.session.add(new_state)
-        self.session.commit()
+        
+
 
 class ConfigLogger(Logger):
     def __init__(self, config, session):
@@ -196,23 +201,36 @@ class CommandLogger(Logger):
 
 
 if __name__ == "__main__":
-    # TO DO 
-    # FIX config! 
-    engine = create_engine('postgresql+psycopg2://admin:admin@tigra:5432/smart_dep')
-   
+    parser = argparse.ArgumentParser() 
+    parser.add_argument("-c", "--config", 
+        type=str,
+        help="configure path for config file"
+    )
+
+    args = parser.parse_args() 
+
+    with open(args.config) as cfg:
+        total_cfg = yaml.safe_load(cfg)
+
+    logger_cfg = total_cfg['logger']
+    rabbit_cfg = logger_cfg['rabbit']
+    db_creds = logger_cfg['timescaleDB']
+    logger_type = logger_cfg["logger"]["type"]
+
+    engine = create_engine(db_creds["uri"])
     session = Session(engine)
 
-    session.query(States).delete()
-    session.commit()
-    # state_logger = StateLogger(rabbit_cfg, session)
-    # state_logger.consume_event()
-    
-    # cfg_logger = ConfigLogger(rabbit_cfg, session)
-    # cfg_logger.consume_event()
+    if logger_type == "StateLogger":
+        log_Obj = StateLogger(rabbit_cfg, session)
+    elif logger_type == "CommandLogger":
+        log_Obj = CommandLogger(rabbit_cfg, session)
+    elif logger_type == "ConfigLogger":
+        log_Obj = ConfigLogger(rabbit_cfg, session)
 
-    # cmd_logger = CommandLogger(rabbit_cfg, session)
-    # cmd_logger.consume_event()
+    log_Obj.consume_event()    
+
+    # session.query(States).delete()
+    # session.commit()
     
-    # Logger in a waiting loop, this will never be run ??
     session.close()
 
