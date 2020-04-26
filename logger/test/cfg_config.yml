@@ -6,4 +6,5 @@ logger:
         password: rabbitmq
     timescaleDB:
         uri: postgresql+psycopg2://admin:admin@tigra:5432/smart_dep
-    
+    logger:
+        type: ConfigLogger
