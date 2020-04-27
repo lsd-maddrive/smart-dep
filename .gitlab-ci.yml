@@ -63,7 +63,7 @@ deploy_tigra:
     # Deploy new versio of services
     - ssh -l "$SSH_USER" "$SSH_HOST" -p "$SSH_PORT" "cd deploy/smart-dep && make dc-stop && make dc-build && SMART_ENV=prod make dc-daemon"
     # Apply migrations
-    - ssh -l "$SSH_USER" "$SSH_HOST" -p "$SSH_PORT" "cd deploy/smart-dep && make mg-upgrade"
+    - ssh -l "$SSH_USER" "$SSH_HOST" -p "$SSH_PORT" "cd deploy/smart-dep && pipenv run make mg-upgrade"
   only:
     - develop
 
