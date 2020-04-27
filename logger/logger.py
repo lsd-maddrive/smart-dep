@@ -243,7 +243,7 @@ if __name__ == "__main__":
     args = parser.parse_args() 
     # INPUT:
     #   python3 logger.py -c dev/config.yml
-    with open('config/' + args.config) as cfg:
+    with open(args.config) as cfg:
         total_cfg = yaml.safe_load(cfg)
 
     logger_cfg = total_cfg['logger']

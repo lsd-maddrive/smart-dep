@@ -1,9 +1,0 @@
-logger:
-    rabbit:
-        host: tigra 
-        port: 5672 
-        username: rabbitmq
-        password: rabbitmq
-    timescaleDB:
-        uri: postgresql+psycopg2://admin:admin@tigra:5432/smart_dep
-    
