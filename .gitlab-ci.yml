@@ -58,8 +58,12 @@ before_script:
 
 deploy_tigra:
   script:
-    - ssh -l "$SSH_USER" "$SSH_HOST" -p "$SSH_PORT" "cd ~/Dev && cd smart-dep && git pull || git clone https://github.com/lsd-maddrive/smart-dep.git -b develop"
-    - ssh -l "$SSH_USER" "$SSH_HOST" -p "$SSH_PORT" "cd ~/Dev/smart-dep && docker-compose -p local down && docker-compose -p local build && docker-compose -p local up -d"
+    # Download if not exists
+    - ssh -l "$SSH_USER" "$SSH_HOST" -p "$SSH_PORT" "cd deploy && cd smart-dep && git pull || git clone https://github.com/lsd-maddrive/smart-dep.git -b develop"
+    # Deploy new versio of services
+    - ssh -l "$SSH_USER" "$SSH_HOST" -p "$SSH_PORT" "cd deploy/smart-dep && make dc-stop && make dc-build && SMART_ENV=prod make dc-daemon"
+    # Apply migrations
+    - ssh -l "$SSH_USER" "$SSH_HOST" -p "$SSH_PORT" "cd deploy/smart-dep && make mg-upgrade"
   only:
     - develop
 
