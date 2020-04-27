@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 import threading
 import yaml 
 
-from shared.models.table_models import metadata, Commands, Params, States 
+from shared.models.table_models import metadata, Commands, Configs, States 
 
 class Logger(object):
     def __init__(self, config, topic_name, binding_key, session):
@@ -62,6 +62,24 @@ class Logger(object):
             routing_key=binding_key
         )
 
+        self.buffer = [] 
+        self.lock = threading.Lock()
+    
+    def send_package_to_db(self):
+        if len(self.buffer) == 0:
+            return 
+
+        self.lock.acquire()
+        print(f"Func: {len(self.buffer)}")
+        self.session.bulk_save_objects(
+            objects=self.buffer
+        )
+        self.session.commit() 
+        self.buffer = []
+        self.timer.cancel() 
+
+        self.lock.release()
+
     def consume_event(self):
         self.channel.basic_consume(
             queue=self.queue_name, 
@@ -86,29 +104,9 @@ class StateLogger(Logger):
             routing_key=self.binding_key
         )
 
-        self.state_buffer = []
         self.BUFFER_LIMIT = 10
         self.TIMEOUT_S = 3.0 
-
-        self.lock = threading.Lock()
-        
     
-    def send_package_to_db(self):
-        if len(self.state_buffer) == 0:
-            return 
-
-        self.lock.acquire()
-        # print(f"Func: {len(self.state_buffer)}")
-        self.session.bulk_save_objects(
-            objects=self.state_buffer
-        )
-        self.session.commit() 
-        self.state_buffer = []
-        self.timer.cancel() 
-
-        self.lock.release()
-
-
     def callback(self, ch, method, properties, body):
 
         state_json = json.loads(body.decode('utf-8'))
@@ -126,17 +124,16 @@ class StateLogger(Logger):
             type=state_json['type']
         )
 
-        if len(self.state_buffer) == 0:
+        if len(self.buffer) == 0:
             self.timer = threading.Timer(
                 interval=self.TIMEOUT_S,
                 function=self.send_package_to_db
             )
             self.timer.start() 
 
-        # print(f"Length of buffer: {len(self.state_buffer)}")
-        self.state_buffer.append(new_state)
+        self.buffer.append(new_state)
 
-        if len(self.state_buffer) >= self.BUFFER_LIMIT:
+        if len(self.buffer) >= self.BUFFER_LIMIT:
             self.send_package_to_db() 
         
 class ConfigLogger(Logger):
@@ -155,6 +152,9 @@ class ConfigLogger(Logger):
             source=self.exchange_name,
             routing_key=self.binding_key
         )
+
+        self.BUFFER_LIMIT = 10
+        self.TIMEOUT_S = 3.0 
     
     def callback(self, ch, method, properties, body):
         cgf_json = json.loads(body.decode('utf-8'))
@@ -163,18 +163,25 @@ class ConfigLogger(Logger):
         else:
             timestamp = cgf_json['timestamp']
         
-        next_id = session.query(Params).count() + 1
-        new_cgf = Params(
-            id=next_id,
+        new_cgf = Configs(
             timestamp=timestamp,
-            params=cgf_json['params'],
+            config=cgf_json['cfg'],
             device_id=cgf_json['device_id'], 
             place_id=cgf_json['place_id'],
             type=cgf_json['type']
         )
         
-        self.session.add(new_cgf)
-        self.session.commit()
+        if len(self.buffer) == 0:
+            self.timer = threading.Timer(
+                interval=self.TIMEOUT_S,
+                function=self.send_package_to_db
+            )
+            self.timer.start() 
+
+        self.buffer.append(new_cgf)
+
+        if len(self.buffer) >= self.BUFFER_LIMIT:
+            self.send_package_to_db() 
 
 class CommandLogger(Logger):
     def __init__(self, config, session):
@@ -193,6 +200,11 @@ class CommandLogger(Logger):
             routing_key=self.binding_key
         )
 
+        self.BUFFER_LIMIT = 10
+        self.TIMEOUT_S = 3.0 
+
+        print("Config Object - created")
+
     def callback(self, ch, method, properties, body):
         cmd_json = json.loads(body.decode('utf-8'))
         if 'timestamp' not in cmd_json:
@@ -200,18 +212,25 @@ class CommandLogger(Logger):
         else:
             timestamp = cmd_json['timestamp']
         
-        next_id = session.query(Commands).count() + 1
         new_cmd = Commands(
-            id=next_id,
             timestamp=timestamp,
-            params=cmd_json['params'],
+            command=cmd_json['cmd'],
             device_id=cmd_json['device_id'], 
             place_id=cmd_json['place_id'],
             type=cmd_json['type']
         )
         
-        self.session.add(new_cmd)
-        self.session.commit()
+        if len(self.buffer) == 0:
+            self.timer = threading.Timer(
+                interval=self.TIMEOUT_S,
+                function=self.send_package_to_db
+            )
+            self.timer.start() 
+
+        self.buffer.append(new_cmd)
+
+        if len(self.buffer) >= self.BUFFER_LIMIT:
+            self.send_package_to_db() 
 
 
 if __name__ == "__main__":

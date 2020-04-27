@@ -20,12 +20,12 @@ class Commands(Model):
                  DateTime: {self.timestamp}, Place ID: {self.place_id}"
 
 
-class Params(Model):
-    __tablename__= "params"
+class Configs(Model):
+    __tablename__= "configs"
 
     id = Column(Integer, primary_key=True)
     timestamp = Column(DateTime)
-    params = Column(JSONB)
+    config = Column(JSONB)
     device_id = Column(String(50))
     place_id = Column(String(20))
     type = Column(String(10))

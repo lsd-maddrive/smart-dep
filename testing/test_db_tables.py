@@ -3,22 +3,28 @@ import os
 import sys 
 sys.path.append("..")
 
-from dotenv import load_dotenv
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
+# from dotenv import load_dotenv
+# from flask import Flask
+# from flask_sqlalchemy import SQLAlchemy
 
-from shared.models.table_models import db, Commands, Params, States 
+from shared.models.table_models import metadata, Commands, Params, States 
 
-load_dotenv()
+env_mode = os.getenv('SMART_ENV', 'dev')
+config_path = f'shared.config.{env_mode}.config'
 
-def create_app():
-    app = Flask(__name__)
-    env_mode = os.getenv('SMART_ENV', 'dev')
-    config_path = f'../shared/config/{env_mode}/config.py'
+from config_path import SQLALCHEMY_DATABASE_URI
+
+
+# load_dotenv()
+
+# def create_app():
+#     app = Flask(__name__)
+#     env_mode = os.getenv('SMART_ENV', 'dev')
+#     config_path = f'../shared/config/{env_mode}/config.py'
     
-    app.config.from_pyfile(config_path)
-    db.init_app(app)
-    return app
+#     app.config.from_pyfile(config_path)
+#     db.init_app(app)
+#     return app
 
 '''
     @brief:     Add new row in specified table
@@ -131,23 +137,37 @@ def delete_all_items(Obj, info=False):
 
 
 if __name__ == "__main__":
-    app = create_app()
-    with app.app_context():
-        db.create_all()
-        
-    new_command = Commands(id=1, timestamp=datetime.now(), 
+    # app = create_app()
+    # with app.app_context():
+    #     db.create_all()
+
+    engine = create_engine(SQLALCHEMY_DATABASE_URI)
+    session = Session(engine)
+
+
+    new_command = Commands(timestamp=datetime.now(), 
                            command={}, device_id="test1", 
                            place_id="8206", type="Power")
-    new_param = Params(id=1, timestamp=datetime.now(),
+    new_param = Params(timestamp=datetime.now(),
                        params={}, device_id="test2",
                        place_id="8201", type="Env")
-    new_state = States(id=1, timestamp=datetime.now(),
+    new_state = States(timestamp=datetime.now(),
                        state={}, device_id="test3", 
                        place_id="8101", type="Light")
 
-    add_new_row(Commands, new_command)
-    add_new_row(Params, new_param)
-    add_new_row(States, new_state)
+    objects_list = [new_command, new_param, new_state]
+
+    session.bulk_save_objects(
+        objects=objects_list
+    )
+
+    session.commit() 
+
+    session.close()
+
+    # add_new_row(Commands, new_command)
+    # add_new_row(Params, new_param)
+    # add_new_row(States, new_state)
 
     update_item(Commands, 1, 'place_id', "8203-1")
     update_item(Params, 1, 'type', 'Power')
