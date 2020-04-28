@@ -92,3 +92,48 @@ services:
             options:
                 max-size: "200k"
                 max-file: "10"
+    
+    state_logger:
+        build:
+            context: logger 
+        restart: always
+        volumes: 
+            - "./logger/config/${SMART_ENV:-dev}/states_config.yml:/logger/config.yml"
+        depends_on: 
+            - rabbitmq
+            - timescaledb
+            - pgadmin
+        logging:
+            options:
+                max-size: "200k"
+                max-file: "10"
+    
+    command_logger:
+        build:
+            context: logger 
+        restart: always
+        volumes: 
+            - "./logger/config/${SMART_ENV:-dev}/cmd_config.yml:/logger/config.yml"
+        depends_on: 
+            - rabbitmq
+            - timescaledb
+            - pgadmin
+        logging:
+            options:
+                max-size: "200k"
+                max-file: "10"
+    
+    config_logger:
+        build:
+            context: logger 
+        restart: always
+        volumes: 
+            - "./logger/config/${SMART_ENV:-dev}/cfg_config.yml:/logger/config.yml"
+        depends_on: 
+            - rabbitmq
+            - timescaledb
+            - pgadmin
+        logging:
+            options:
+                max-size: "200k"
+                max-file: "10"
