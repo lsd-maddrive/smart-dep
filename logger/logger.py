@@ -6,7 +6,6 @@ import sys
 sys.path.append("..")
 
 import pika 
-from pprint import pprint
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 import threading
@@ -70,11 +69,17 @@ class Logger(object):
             return 
 
         self.lock.acquire()
-        print(f"Func: {len(self.buffer)}")
-        self.session.bulk_save_objects(
-            objects=self.buffer
-        )
-        self.session.commit() 
+
+        try:
+            self.session.bulk_save_objects(
+                objects=self.buffer
+            )
+            self.session.commit() 
+        except Exception as err: 
+            logger.debug(f"Commit from {topic_name} - failed\n{err}")
+            self.lock.release()
+            return 
+
         self.buffer = []
         self.timer.cancel() 
 
@@ -104,6 +109,7 @@ class StateLogger(Logger):
             routing_key=self.binding_key
         )
 
+        self.BUFFER_MAX_SIZE = 100 
         self.BUFFER_LIMIT = 10
         self.TIMEOUT_S = 3.0 
     
@@ -131,7 +137,10 @@ class StateLogger(Logger):
             )
             self.timer.start() 
 
-        self.buffer.append(new_state)
+        if len(self.buffer) >= self.BUFFER_MAX_SIZE:
+            self.buffer = []
+        else:
+            self.buffer.append(new_state)
 
         if len(self.buffer) >= self.BUFFER_LIMIT:
             self.send_package_to_db() 
@@ -153,6 +162,7 @@ class ConfigLogger(Logger):
             routing_key=self.binding_key
         )
 
+        self.BUFFER_MAX_SIZE = 100 
         self.BUFFER_LIMIT = 10
         self.TIMEOUT_S = 3.0 
     
@@ -178,7 +188,10 @@ class ConfigLogger(Logger):
             )
             self.timer.start() 
 
-        self.buffer.append(new_cgf)
+        if len(self.buffer) >= self.BUFFER_MAX_SIZE:
+            self.buffer = []
+        else:
+            self.buffer.append(new_cgf)
 
         if len(self.buffer) >= self.BUFFER_LIMIT:
             self.send_package_to_db() 
@@ -200,10 +213,11 @@ class CommandLogger(Logger):
             routing_key=self.binding_key
         )
 
+        self.BUFFER_MAX_SIZE = 100 
         self.BUFFER_LIMIT = 10
         self.TIMEOUT_S = 3.0 
 
-        print("Config Object - created")
+        # print("Config Object - created")
 
     def callback(self, ch, method, properties, body):
         cmd_json = json.loads(body.decode('utf-8'))
@@ -227,7 +241,10 @@ class CommandLogger(Logger):
             )
             self.timer.start() 
 
-        self.buffer.append(new_cmd)
+        if len(self.buffer) >= self.BUFFER_MAX_SIZE:
+            self.buffer = []
+        else:
+            self.buffer.append(new_cmd)
 
         if len(self.buffer) >= self.BUFFER_LIMIT:
             self.send_package_to_db() 
@@ -241,11 +258,9 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args() 
-    # INPUT:
-    #   python3 logger.py -c dev/config.yml
     with open(args.config) as cfg:
         total_cfg = yaml.safe_load(cfg)
-
+    
     logger_cfg = total_cfg['logger']
     rabbit_cfg = logger_cfg['rabbit']
     db_creds = logger_cfg['timescaleDB']
