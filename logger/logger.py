@@ -11,7 +11,8 @@ from sqlalchemy.orm import Session
 import threading
 import yaml 
 
-from shared.models.table_models import metadata, Commands, Configs, States 
+# from shared.models.table_models import metadata, Commands, Configs, States 
+from table_models import metadata, Commands, Configs, States
 
 class Logger(object):
     def __init__(self, config, topic_name, binding_key, session):
@@ -29,7 +30,7 @@ class Logger(object):
                 virtual_host='/',
                 credentials=credentials 
         )
-
+        print(self.config['host'], self.config['port'])
         connection = pika.BlockingConnection(params)
         self.channel = connection.channel()
 
