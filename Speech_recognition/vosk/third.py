@@ -8,13 +8,6 @@ if not os.path.exists("model-ru"):
     exit (1)
 
 import pyaudio
-
-
-# def my_kws(phrase):
-
-
-
-
 p = pyaudio.PyAudio()
 stream = p.open(format=pyaudio.paInt16, channels=1, rate=16000, input=True, frames_per_buffer=8000)
 stream.start_stream()
@@ -22,16 +15,15 @@ model = Model("model-ru")
 rec = KaldiRecognizer(model, 16000)
 s = {}
 while True:
-    data = stream.read(2000)
+    data = stream.read(5000) # было 2000
     if len(data) == 0:
         break
     if rec.AcceptWaveform(data):
-        s = rec.Result()
-        #if s["text"] != '':
-        print(s)
-        if "компьютер" in s:
-            print("FOUND KW")
-        # my_kws(rec.Result())
-    # else:
-        # print(rec.PartialResult())
+        first_res = rec.Result()
+        
+        if "" in first_res:
+            print("first_res")
+            print(first_res)
+            if "компьютер" in first_res:
+                print("FOUND KW")
 print(rec.FinalResult())

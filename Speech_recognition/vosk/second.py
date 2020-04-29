@@ -8,13 +8,6 @@ if not os.path.exists("model-ru"):
     exit (1)
 
 import pyaudio
-
-
-# def my_kws(phrase):
-
-
-
-
 p = pyaudio.PyAudio()
 stream = p.open(format=pyaudio.paInt16, channels=1, rate=16000, input=True, frames_per_buffer=8000)
 stream.start_stream()
@@ -27,11 +20,7 @@ while True:
         break
     if rec.AcceptWaveform(data):
         s = rec.Result()
-        #if s["text"] != '':
         print(s)
         if "компьютер" in s:
             print("FOUND KW")
-        # my_kws(rec.Result())
-    # else:
-        # print(rec.PartialResult())
 print(rec.FinalResult())
