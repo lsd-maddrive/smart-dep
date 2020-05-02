@@ -135,6 +135,10 @@ services:
                 max-size: "20m"
     
     state_logger:
+        environment: 
+            - TYPE=StateLogger 
+        env_file: 
+            - logger/config/.env.${SMART_ENV:-dev}
         build:
             context: .
             dockerfile: logger/Dockerfile
@@ -151,6 +155,10 @@ services:
                 max-size: "20m"
     
     command_logger:
+        environment: 
+            - TYPE=CommandLogger 
+        env_file: 
+            - logger/config/.env.${SMART_ENV:-dev}
         build:
             context: .
             dockerfile: logger/Dockerfile
@@ -167,6 +175,10 @@ services:
                 max-size: "20m"
     
     config_logger:
+        environment: 
+            - TYPE=ConfigLogger 
+        env_file: 
+            - logger/config/.env.${SMART_ENV:-dev}
         build:
             context: .
             dockerfile: logger/Dockerfile

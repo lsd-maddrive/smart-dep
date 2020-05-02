@@ -6,6 +6,8 @@ import os
 import sys 
 sys.path.append("..")
 
+from dotenv import load_dotenv
+load_dotenv()
 import pika 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
@@ -257,22 +259,33 @@ class CommandLogger(Logger):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser() 
-    parser.add_argument("-c", "--config", 
-        type=str,
-        help="configure path for config file"
-    )
+    # parser = argparse.ArgumentParser() 
+    # parser.add_argument("-c", "--config", 
+    #     type=str,
+    #     help="configure path for config file"
+    # )
 
-    args = parser.parse_args() 
-    with open(args.config) as cfg:
-            total_cfg = yaml.safe_load(cfg)
+    # args = parser.parse_args() 
+    # with open(args.config) as cfg:
+    #         total_cfg = yaml.safe_load(cfg)
 
-    logger_cfg = total_cfg['logger']
-    rabbit_cfg = logger_cfg['rabbit']
-    db_creds = logger_cfg['timescaleDB']
-    logger_type = logger_cfg["logger"]["type"]
 
-    engine = create_engine(db_creds["uri"])
+
+    # logger_cfg = total_cfg['logger']
+    # rabbit_cfg = logger_cfg['rabbit']
+    rabbit_cfg = {
+        'host': os.getenv('RABBIT_HOST'),
+        'port': os.getenv('RABBIT_PORT'),
+        'username': os.getenv('RABBIT_USERNAME'),
+        'password': os.getenv('RABBIT_PASSWORD')
+    }
+
+    # db_creds = logger_cfg['timescaleDB']
+    
+    logger_type = os.getenv('TYPE') #logger_cfg["logger"]["type"]
+
+    # engine = create_engine(db_creds["uri"])
+    engine = create_engine(os.getenv('DB_URI'))
     session = Session(engine)
 
     logger.debug(f"Logger session {logger_type} is created successfully!")
@@ -283,6 +296,9 @@ if __name__ == "__main__":
         log_Obj = CommandLogger(rabbit_cfg, session)
     elif logger_type == "ConfigLogger":
         log_Obj = ConfigLogger(rabbit_cfg, session)
+
+    print(f"{logger_type}:\n{rabbit_cfg}")
+    logger.debug(f"{logger_type}:\n{rabbit_cfg}")
 
     log_Obj.consume_event()    
 
