@@ -20,7 +20,7 @@ logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %
 logger = logging.getLogger(__name__)
 
 class Logger(object):
-    def __init__(self, config, exchange_name, binding_key, session):
+    def __init__(self, config, exchange_name, binding_key, session, constants):
         self.config = config 
         self.session = session 
         self.exchange_name = exchange_name
@@ -60,6 +60,10 @@ class Logger(object):
         
         self.buffer = [] 
         self.lock = threading.Lock()
+
+        self.BUFFER_MAX_SIZE = int(constants["BUFFER_MAX_SIZE"]) 
+        self.BUFFER_LIMIT = int(constants["BUFFER_PACK_LIMIT"])
+        self.TIMEOUT_S = float(constants["TIMEOUT_S"])
     
     def callback(self, new_row):
         if len(self.buffer) == 0:
@@ -104,13 +108,14 @@ class Logger(object):
         self.channel.start_consuming() 
 
 class StateLogger(Logger):
-    def __init__(self, config, session):
+    def __init__(self, config, session, constants):
         self.binding_key = "state.*.*"
         self.exchange_name = "states"
         super().__init__(
             config, exchange_name=self.exchange_name, 
             binding_key=self.binding_key,
-            session=session
+            session=session,
+            constants=constants
         )
 
         # Bind amq.topic exchange -> states exchange 
@@ -119,10 +124,6 @@ class StateLogger(Logger):
             source="amq.topic",
             routing_key=self.binding_key
         )
-
-        self.BUFFER_MAX_SIZE = 100 
-        self.BUFFER_LIMIT = 10
-        self.TIMEOUT_S = 3.0 
     
     def callback(self, ch, method, properties, body):
 
@@ -144,13 +145,14 @@ class StateLogger(Logger):
         super().callback(new_state)
         
 class ConfigLogger(Logger):
-    def __init__(self, config, session):
+    def __init__(self, config, session, constants):
         self.exchange_name = "configurations"
         self.binding_key = "cfg.*.*"
         super().__init__(
             config, exchange_name=self.exchange_name, 
             binding_key=self.binding_key,
-            session=session
+            session=session,
+            constants=constants
         )
 
         # Bind configurations exchange -> amq.topic exchange  
@@ -159,10 +161,6 @@ class ConfigLogger(Logger):
             source=self.exchange_name,
             routing_key=self.binding_key
         )
-
-        self.BUFFER_MAX_SIZE = 100 
-        self.BUFFER_LIMIT = 10
-        self.TIMEOUT_S = 3.0 
     
     def callback(self, ch, method, properties, body):
 
@@ -184,13 +182,14 @@ class ConfigLogger(Logger):
         super().callback(new_cfg)
         
 class CommandLogger(Logger):
-    def __init__(self, config, session):
+    def __init__(self, config, session, constants):
         self.exchange_name = "commands"
         self.binding_key = "cmd.*.*"
         super().__init__(
             config, exchange_name=self.exchange_name, 
             binding_key=self.binding_key,
-            session=session
+            session=session,
+            constants=constants
         )
 
         # Bind commands exchange -> amq.topic exchange  
@@ -199,10 +198,6 @@ class CommandLogger(Logger):
             source=self.exchange_name,
             routing_key=self.binding_key
         )
-
-        self.BUFFER_MAX_SIZE = 100 
-        self.BUFFER_LIMIT = 10
-        self.TIMEOUT_S = 3.0 
 
     def callback(self, ch, method, properties, body):
 
@@ -223,12 +218,15 @@ class CommandLogger(Logger):
         )
         
         super().callback(new_cmd)
-       
-
 
 if __name__ == "__main__":
     logger_type = os.getenv('TYPE') 
     rabbit_creds = os.getenv('RABBIT_URI')
+    log_params = {
+        "BUFFER_MAX_SIZE": os.getenv("BUFFER_MAX_SIZE"),
+        "BUFFER_PACK_LIMIT": os.getenv("BUFFER_PACK_LIMIT"),
+        "TIMEOUT_S": os.getenv("TIMEOUT_S")
+    }
 
     engine = create_engine(os.getenv('DB_URI'))
     session = Session(engine)
@@ -236,11 +234,11 @@ if __name__ == "__main__":
     logger.debug(f"Logger session {logger_type} is created successfully!")
 
     if logger_type == "StateLogger":
-        log_Obj = StateLogger(rabbit_creds, session)
+        log_Obj = StateLogger(rabbit_creds, session, log_params)
     elif logger_type == "CommandLogger":
-        log_Obj = CommandLogger(rabbit_creds, session)
+        log_Obj = CommandLogger(rabbit_creds, session, log_params)
     elif logger_type == "ConfigLogger":
-        log_Obj = ConfigLogger(rabbit_creds, session)
+        log_Obj = ConfigLogger(rabbit_creds, session, log_params)
 
     log_Obj.consume_event()    
 
