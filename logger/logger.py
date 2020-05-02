@@ -1,6 +1,7 @@
 import argparse 
 from datetime import datetime  
 import json 
+import logging 
 import os
 import sys 
 sys.path.append("..")
@@ -11,13 +12,16 @@ from sqlalchemy.orm import Session
 import threading
 import yaml 
 
-# from shared.models.table_models import metadata, Commands, Configs, States 
 from table_models import metadata, Commands, Configs, States
 
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d/%H:%M:%S')
+logger = logging.getLogger(__name__)
+
 class Logger(object):
-    def __init__(self, config, topic_name, binding_key, session):
+    def __init__(self, config, exchange_name, binding_key, session):
         self.config = config 
         self.session = session 
+        self.exchange_name = exchange_name
         
         credentials = pika.PlainCredentials(
                 username=self.config['username'],
@@ -30,13 +34,14 @@ class Logger(object):
                 virtual_host='/',
                 credentials=credentials 
         )
-        print(self.config['host'], self.config['port'])
         connection = pika.BlockingConnection(params)
         self.channel = connection.channel()
 
+        logger.debug(f"{self.exchange_name} - Connected to rabbit")
+
         # Declare exchange for logger object  
         self.channel.exchange_declare(
-            exchange=topic_name,
+            exchange=self.exchange_name,
             exchange_type='topic',
             durable=True    # Survive a reboot of RabbitMQ
         )
@@ -50,15 +55,15 @@ class Logger(object):
 
         # Declare queue binded to logger exchange 
         queue = self.channel.queue_declare(
-            queue=f'all_{topic_name}', 
+            queue=f'all_{self.exchange_name}', 
             exclusive=False # only allow access by the current connection 
         )
         self.queue_name = queue.method.queue
 
         # Bind queue to amq.topic exchange with correct routing keys
         self.channel.queue_bind(
-            queue=f"all_{topic_name}", 
-            exchange=topic_name,
+            queue=f"all_{self.exchange_name}", 
+            exchange=self.exchange_name,
             routing_key=binding_key
         )
 
@@ -77,7 +82,7 @@ class Logger(object):
             )
             self.session.commit() 
         except Exception as err: 
-            logger.debug(f"Commit from {topic_name} - failed\n{err}")
+            logger.error(f"{self.exchange_name} - Can not send package to DB")
             self.lock.release()
             return 
 
@@ -99,10 +104,11 @@ class StateLogger(Logger):
         self.binding_key = "state.*.*"
         self.exchange_name = "states"
         super().__init__(
-            config, topic_name=self.exchange_name, 
+            config, exchange_name=self.exchange_name, 
             binding_key=self.binding_key,
             session=session
         )
+
         # Bind amq.topic exchange -> states exchange 
         self.channel.exchange_bind(
             destination=self.exchange_name,
@@ -151,7 +157,7 @@ class ConfigLogger(Logger):
         self.exchange_name = "configurations"
         self.binding_key = "cfg.*.*"
         super().__init__(
-            config, topic_name=self.exchange_name, 
+            config, exchange_name=self.exchange_name, 
             binding_key=self.binding_key,
             session=session
         )
@@ -202,7 +208,7 @@ class CommandLogger(Logger):
         self.exchange_name = "commands"
         self.binding_key = "cmd.*.*"
         super().__init__(
-            config, topic_name=self.exchange_name, 
+            config, exchange_name=self.exchange_name, 
             binding_key=self.binding_key,
             session=session
         )
@@ -217,8 +223,6 @@ class CommandLogger(Logger):
         self.BUFFER_MAX_SIZE = 100 
         self.BUFFER_LIMIT = 10
         self.TIMEOUT_S = 3.0 
-
-        # print("Config Object - created")
 
     def callback(self, ch, method, properties, body):
         cmd_json = json.loads(body.decode('utf-8'))
@@ -260,8 +264,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args() 
     with open(args.config) as cfg:
-        total_cfg = yaml.safe_load(cfg)
-    
+            total_cfg = yaml.safe_load(cfg)
+
     logger_cfg = total_cfg['logger']
     rabbit_cfg = logger_cfg['rabbit']
     db_creds = logger_cfg['timescaleDB']
@@ -269,6 +273,8 @@ if __name__ == "__main__":
 
     engine = create_engine(db_creds["uri"])
     session = Session(engine)
+
+    logger.debug(f"Logger session {logger_type} is created successfully!")
 
     if logger_type == "StateLogger":
         log_Obj = StateLogger(rabbit_cfg, session)

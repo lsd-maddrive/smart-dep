@@ -11,6 +11,8 @@ services:
             - ./volumes/timescaleDB:/var/lib/posgresql/data
         ports:
             - "5432:5432"
+        labels:
+            NAME: "timescaledb"
         logging:
             options:
                 max-size: "200k"
@@ -95,10 +97,11 @@ services:
     
     state_logger:
         build:
-            context: logger 
+            context: .
+            dockerfile: logger/Dockerfile
         restart: always
         volumes: 
-            - "./logger/config/${SMART_ENV:-dev}/states_config.yml:/logger/config.yml"
+            - "./logger/config/${SMART_ENV:-dev}/states_config.yml:/app/config.yml"
         depends_on: 
             - rabbitmq
             - timescaledb
@@ -110,10 +113,11 @@ services:
     
     command_logger:
         build:
-            context: logger 
+            context: .
+            dockerfile: logger/Dockerfile
         restart: always
         volumes: 
-            - "./logger/config/${SMART_ENV:-dev}/cmd_config.yml:/logger/config.yml"
+            - "./logger/config/${SMART_ENV:-dev}/cmd_config.yml:/app/config.yml"
         depends_on: 
             - rabbitmq
             - timescaledb
@@ -125,10 +129,11 @@ services:
     
     config_logger:
         build:
-            context: logger 
+            context: .
+            dockerfile: logger/Dockerfile
         restart: always
         volumes: 
-            - "./logger/config/${SMART_ENV:-dev}/cfg_config.yml:/logger/config.yml"
+            - "./logger/config/${SMART_ENV:-dev}/cfg_config.yml:/app/config.yml"
         depends_on: 
             - rabbitmq
             - timescaledb
