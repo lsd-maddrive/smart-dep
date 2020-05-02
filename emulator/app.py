@@ -1,12 +1,35 @@
 import time
 import json
+import sys
 import paho.mqtt.client as mqtt
 import yaml
 
+from fluent import handler
 import logging
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d/%H:%M:%S')
-logger = logging.getLogger(__name__)
+# Setup fleuntd connection - simple
+custom_format = {
+    'host': '%(hostname)s',
+    'where': '%(name)s.%(module)s.%(funcName)s',
+    'type': '%(levelname)s',
+    'stack_trace': '%(exc_text)s'
+}
+
+std_h = logging.StreamHandler(sys.stdout)
+formatter = logging.Formatter(fmt='%(asctime)s - %(levelname)s - %(message)s',
+                              datefmt='%Y-%m-%d/%H:%M:%S')
+std_h.setFormatter(formatter)
+
+fluent_h = handler.FluentHandler('emulator', host='fluentd', port=24224)
+formatter = handler.FluentRecordFormatter(custom_format)
+fluent_h.setFormatter(formatter)
+
+# Set to all modules (set to root logger)
+logging.basicConfig(level=logging.DEBUG,
+                    handlers=[std_h, fluent_h])
+
+logger = logging.getLogger('emulator')
+
 
 # Definitions
 
@@ -192,77 +215,84 @@ class EnvironmentDevice(ControlDevice):
 
 # Utilization
 
-with open("config.yml") as f:
-    try:
-        g_config = yaml.safe_load(f)
-    except yaml.YAMLError as exc:
-        logger.debug(exc)
 
-app_config = g_config['app']
-mqtt_config = app_config['mqtt']
+def main():
+    with open("config.yml") as f:
+        try:
+            g_config = yaml.safe_load(f)
+        except yaml.YAMLError as exc:
+            logger.debug(exc)
 
-def callback(mqttc, obj, msg):
-    try:
-        data = json.loads(msg.payload)
-        logger.debug(f'Received data: {data}')
-        for device in devices:
-            device._callback(msg.topic, data)
-    except Exception as e:
-        logger.error(f'Error in callback: {e}')
+    app_config = g_config['app']
+    mqtt_config = app_config['mqtt']
 
-is_connected = False
+    def callback(mqttc, obj, msg):
+        try:
+            data = json.loads(msg.payload)
+            logger.debug(f'Received data: {data}')
+            for device in devices:
+                device._callback(msg.topic, data)
+        except Exception as e:
+            logger.error(f'Error in callback: {e}')
 
-g_client = mqtt.Client()
-g_client.on_message = callback
-g_client.username_pw_set(username=mqtt_config['username'], password=mqtt_config['password'])
+    is_connected = False
 
-# Five times reconnection tries
-for i in range(5):
-    try:
-        g_client.connect(mqtt_config['host'], mqtt_config['port'], 60)
-        is_connected = True
-        break
-    except:
-        logger.warning(f'Failed to connect to MQTT broker, retry after 10 seconds')
-        time.sleep(10)
+    g_client = mqtt.Client()
+    g_client.on_message = callback
+    g_client.username_pw_set(
+        username=mqtt_config['username'], password=mqtt_config['password'])
 
-if not is_connected:
-    logger.error(f'Failed to connect to: {mqtt_config}')
-    exit(1)
-
-logger.debug('Connected to MQTT')
-
-def get_device(device_name, config, client):
-    type_ = config['type']
-
-    types = {
-        'light': LightControlDevice,
-        'power': PowerControlDevice,
-        'env': EnvironmentDevice
-    }
-
-    if type_ not in types:
-        return None
-
-    return types[type_](config, client)
-
-
-devices = []
-for device_name, device_config in app_config['devices'].items():
-    device = get_device(device_name, device_config, g_client)
-    if device:
-        logger.debug(f'Created device: {device}')
-        devices.append(device)
-
-g_client.loop_start()
-
-while True:
-    try:
-        for device in devices:
-            device.step(g_client)
-    except Exception as e:
-        logger.error(f'Error in steps: {e}')
-        if type(e) == KeyboardInterrupt:
+    # Five times reconnection tries
+    for i in range(5):
+        try:
+            g_client.connect(mqtt_config['host'], mqtt_config['port'], 60)
+            is_connected = True
             break
+        except:
+            logger.warning(
+                f'Failed to connect to MQTT broker, retry after 10 seconds')
+            time.sleep(10)
 
-    time.sleep(1)
+    if not is_connected:
+        logger.error(f'Failed to connect to: {mqtt_config}')
+        exit(1)
+
+    logger.debug('Connected to MQTT')
+
+    def get_device(device_name, config, client):
+        type_ = config['type']
+
+        types = {
+            'light': LightControlDevice,
+            'power': PowerControlDevice,
+            'env': EnvironmentDevice
+        }
+
+        if type_ not in types:
+            return None
+
+        return types[type_](config, client)
+
+    devices = []
+    for device_name, device_config in app_config['devices'].items():
+        device = get_device(device_name, device_config, g_client)
+        if device:
+            logger.debug(f'Created device: {device}')
+            devices.append(device)
+
+    g_client.loop_start()
+
+    while True:
+        try:
+            for device in devices:
+                device.step(g_client)
+        except Exception as e:
+            logger.error(f'Error in steps: {e}')
+            if type(e) == KeyboardInterrupt:
+                break
+
+        time.sleep(1)
+
+
+if __name__ == '__main__':
+    main()

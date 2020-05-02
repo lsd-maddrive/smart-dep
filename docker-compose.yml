@@ -8,32 +8,18 @@ services:
             POSTGRES_USER: "admin"
             POSTGRES_PASSWORD: "admin"
         volumes:
-            - ./volumes/timescaleDB:/var/lib/posgresql/data
+            # Set implicit place for using disk space where it is deployed (not system)
+            # - db-data:/var/lib/posgresql/data
+            - ./volumes/db-data:/var/lib/posgresql/data
         ports:
             - "5432:5432"
         labels:
             NAME: "timescaledb"
         logging:
+            driver: "json-file"
             options:
-                max-size: "200k"
-                max-file: "10"
-
-    pgadmin:
-        image: dpage/pgadmin4:4.20
-        restart: always
-        environment:
-            PGADMIN_DEFAULT_EMAIL: "admin@domain.com"
-            PGADMIN_DEFAULT_PASSWORD: "admin"
-        ports:
-            - "54321:80"
-        volumes:
-            - ./config_pgadmin/servers.json:/pgadmin4/servers.json
-        depends_on:
-            - timescaledb
-        logging:
-            options:
-                max-size: "200k"
-                max-file: "10"
+                max-file: "5"
+                max-size: "20m"
 
     rabbitmq:
         image: "rabbitmq:3-management"
@@ -47,13 +33,14 @@ services:
         labels:
             NAME: "rabbitmq"
         volumes:
-            - "./config_rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins"
-            - "./config_rabbitmq/rabbitmq.config:/etc/rabbitmq/rabbitmq.config:ro"
-            #- "./config_rabbitmq/autocluster-0.4.1.ez:/usr/lib/rabbitmq/lib/rabbitmq_server-3.5.5/plugins/autocluster-0.4.1.ez"
+            - ./config/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins:ro
+            - ./config/rabbitmq/rabbitmq.config:/etc/rabbitmq/rabbitmq.config:ro
+            #- ./config/rabbitmq/autocluster-0.4.1.ez:/usr/lib/rabbitmq/lib/rabbitmq_server-3.5.5/plugins/autocluster-0.4.1.ez
         logging:
+            driver: "json-file"
             options:
-                max-size: "200k"
-                max-file: "10"
+                max-file: "5"
+                max-size: "20m"
 
     web:
         build:
@@ -64,6 +51,11 @@ services:
             - "81:80"
         depends_on:
             - apiserver
+        logging:
+            driver: "json-file"
+            options:
+                max-file: "5"
+                max-size: "20m"
 
     apiserver:
         build:
@@ -76,24 +68,71 @@ services:
             - timescaledb
         volumes:
             # Mapping configuration with required env (default: dev)
-            - "./api-server/config/${SMART_ENV:-dev}/config.py:/app/config.py"
+            - ./api-server/config/${SMART_ENV:-dev}/config.py:/app/config.py:ro
         logging:
+            driver: "json-file"
             options:
-                max-size: "200k"
-                max-file: "10"
+                max-file: "5"
+                max-size: "20m"
 
     emulator:
         build:
-            context: emulator 
-        restart: always 
-        volumes: 
-            - "./emulator/config.yml:/emulator/config.yml"
+            context: emulator
+        restart: always
+        volumes:
+            - ./emulator/config.yml:/emulator/config.yml:ro
         depends_on:
             - rabbitmq
         logging:
+            driver: "json-file"
             options:
-                max-size: "200k"
-                max-file: "10"
+                max-file: "5"
+                max-size: "20m"
+
+    pgadmin:
+        image: dpage/pgadmin4:4.20
+        restart: always
+        environment:
+            PGADMIN_DEFAULT_EMAIL: "admin@domain.com"
+            PGADMIN_DEFAULT_PASSWORD: "admin"
+        ports:
+            - "54321:80"
+        volumes:
+            - ./config/pgadmin/servers.json:/pgadmin4/servers.json:ro
+        depends_on:
+            - timescaledb
+        logging:
+            driver: "json-file"
+            options:
+                max-file: "5"
+                max-size: "20m"
+
+    fluentd:
+        build:
+            context: .
+            dockerfile: ./fluentd/Dockerfile
+        restart: always
+        ports:
+            - 24224:24224
+        logging:
+            driver: "json-file"
+            options:
+                max-file: "5"
+                max-size: "20m"
+
+    loki:
+        image: grafana/loki:latest
+        restart: always
+        ports:
+            - 3100:3100
+        command: -config.file=/etc/loki/local-config.yaml
+        volumes:
+            - loki-data:/data/loki
+        logging:
+            driver: "json-file"
+            options:
+                max-file: "5"
+                max-size: "20m"
     
     state_logger:
         build:
@@ -106,9 +145,10 @@ services:
             - rabbitmq
             - timescaledb
         logging:
+            driver: "json-file"
             options:
-                max-size: "200k"
-                max-file: "10"
+                max-file: "5"
+                max-size: "20m"
     
     command_logger:
         build:
@@ -121,9 +161,10 @@ services:
             - rabbitmq
             - timescaledb
         logging:
+            driver: "json-file"
             options:
-                max-size: "200k"
-                max-file: "10"
+                max-file: "5"
+                max-size: "20m"
     
     config_logger:
         build:
@@ -136,6 +177,32 @@ services:
             - rabbitmq
             - timescaledb
         logging:
+            driver: "json-file"
             options:
-                max-size: "200k"
-                max-file: "10"
+                max-file: "5"
+                max-size: "20m"
+
+    grafana:
+        image: grafana/grafana:6.7.3
+        restart: always
+        ports:
+            - 3000:3000
+        volumes:
+            - ./config/grafana/grafana.ini:/etc/grafana/grafana.ini:ro
+            - ./config/grafana/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml:ro
+            - grafana-data:/var/lib/grafana
+        depends_on:
+            - loki
+        logging:
+            driver: "json-file"
+            options:
+                max-file: "5"
+                max-size: "20m"
+
+volumes:
+    # db-data:
+        # driver: local
+    grafana-data:
+        driver: local
+    loki-data:
+        driver: local
