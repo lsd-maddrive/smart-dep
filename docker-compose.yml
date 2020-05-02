@@ -135,16 +135,14 @@ services:
                 max-size: "20m"
     
     state_logger:
-        environment: 
-            - TYPE=StateLogger 
-        env_file: 
-            - logger/config/.env.${SMART_ENV:-dev}
         build:
             context: .
             dockerfile: logger/Dockerfile
+        env_file: 
+            - "logger/config/.env.${SMART_ENV:-dev}"
+        environment: 
+            - TYPE=StateLogger 
         restart: always
-        volumes: 
-            - "./logger/config/${SMART_ENV:-dev}/states_config.yml:/app/config.yml"
         depends_on: 
             - rabbitmq
             - timescaledb
@@ -155,16 +153,14 @@ services:
                 max-size: "20m"
     
     command_logger:
-        environment: 
-            - TYPE=CommandLogger 
-        env_file: 
-            - logger/config/.env.${SMART_ENV:-dev}
         build:
             context: .
             dockerfile: logger/Dockerfile
+        env_file: 
+            - "logger/config/.env.${SMART_ENV:-dev}"
+        environment: 
+            - TYPE=CommandLogger 
         restart: always
-        volumes: 
-            - "./logger/config/${SMART_ENV:-dev}/cmd_config.yml:/app/config.yml"
         depends_on: 
             - rabbitmq
             - timescaledb
@@ -175,16 +171,14 @@ services:
                 max-size: "20m"
     
     config_logger:
-        environment: 
-            - TYPE=ConfigLogger 
-        env_file: 
-            - logger/config/.env.${SMART_ENV:-dev}
         build:
             context: .
             dockerfile: logger/Dockerfile
+        env_file: 
+            - "logger/config/.env.${SMART_ENV:-dev}"
+        environment: 
+            - TYPE=ConfigLogger 
         restart: always
-        volumes: 
-            - "./logger/config/${SMART_ENV:-dev}/cfg_config.yml:/app/config.yml"
         depends_on: 
             - rabbitmq
             - timescaledb

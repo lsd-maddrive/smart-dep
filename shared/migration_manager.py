@@ -26,7 +26,7 @@ app.config.from_pyfile(config_path)
 
 app_config = importlib.import_module(f"config.{env_mode}.config")
 
-logger.debug(f"Migration address: {app_config.SQLALCHEMY_DATABASE_URI.split('@')[1].split('/')[0]}")
+logger.debug(f"Migration address: {app_config.SQLALCHEMY_DATABASE_URI}")
 
 db.init_app(app)
 

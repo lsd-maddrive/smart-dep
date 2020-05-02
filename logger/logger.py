@@ -72,6 +72,7 @@ class Logger(object):
         self.buffer = [] 
         self.lock = threading.Lock()
     
+   
     def send_package_to_db(self):
         if len(self.buffer) == 0:
             return 
@@ -125,6 +126,8 @@ class StateLogger(Logger):
     
     def callback(self, ch, method, properties, body):
 
+        logger.debug("StateLogger Callback here")
+
         state_json = json.loads(body.decode('utf-8'))
 
         if 'timestamp' not in state_json:
@@ -177,6 +180,9 @@ class ConfigLogger(Logger):
         self.TIMEOUT_S = 3.0 
     
     def callback(self, ch, method, properties, body):
+
+        logger.debug("ConfigLogger Callback here")
+
         cgf_json = json.loads(body.decode('utf-8'))
         if 'timestamp' not in cgf_json:
             timestamp = datetime.now()
@@ -228,6 +234,9 @@ class CommandLogger(Logger):
         self.TIMEOUT_S = 3.0 
 
     def callback(self, ch, method, properties, body):
+
+        logger.debug("CommandLogger Callback here")
+
         cmd_json = json.loads(body.decode('utf-8'))
         if 'timestamp' not in cmd_json:
             timestamp = datetime.now()
@@ -259,32 +268,17 @@ class CommandLogger(Logger):
 
 
 if __name__ == "__main__":
-    # parser = argparse.ArgumentParser() 
-    # parser.add_argument("-c", "--config", 
-    #     type=str,
-    #     help="configure path for config file"
-    # )
-
-    # args = parser.parse_args() 
-    # with open(args.config) as cfg:
-    #         total_cfg = yaml.safe_load(cfg)
-
-
-
-    # logger_cfg = total_cfg['logger']
-    # rabbit_cfg = logger_cfg['rabbit']
     rabbit_cfg = {
         'host': os.getenv('RABBIT_HOST'),
         'port': os.getenv('RABBIT_PORT'),
         'username': os.getenv('RABBIT_USERNAME'),
         'password': os.getenv('RABBIT_PASSWORD')
     }
-
-    # db_creds = logger_cfg['timescaleDB']
     
-    logger_type = os.getenv('TYPE') #logger_cfg["logger"]["type"]
+    logger_type = os.getenv('TYPE') 
 
-    # engine = create_engine(db_creds["uri"])
+    logger.debug(f"{logger_type}:\n{rabbit_cfg}\n{os.getenv('DB_URI')}")
+
     engine = create_engine(os.getenv('DB_URI'))
     session = Session(engine)
 
@@ -296,9 +290,6 @@ if __name__ == "__main__":
         log_Obj = CommandLogger(rabbit_cfg, session)
     elif logger_type == "ConfigLogger":
         log_Obj = ConfigLogger(rabbit_cfg, session)
-
-    print(f"{logger_type}:\n{rabbit_cfg}")
-    logger.debug(f"{logger_type}:\n{rabbit_cfg}")
 
     log_Obj.consume_event()    
 

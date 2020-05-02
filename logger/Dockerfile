@@ -9,4 +9,4 @@ COPY logger/requirements.txt /app
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
-CMD ["python3", "logger.py", "-c", "config.yml"]
+CMD ["python3", "logger.py"] 
