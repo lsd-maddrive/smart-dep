@@ -25,18 +25,7 @@ class Logger(object):
         self.session = session 
         self.exchange_name = exchange_name
         
-        credentials = pika.PlainCredentials(
-                username=self.config['username'],
-                password=self.config['password']
-        )
-
-        params = pika.ConnectionParameters(
-                host=self.config['host'],
-                port=self.config['port'],
-                virtual_host='/',
-                credentials=credentials 
-        )
-        connection = pika.BlockingConnection(params)
+        connection = pika.BlockingConnection(pika.URLParameters(config))
         self.channel = connection.channel()
 
         logger.debug(f"{self.exchange_name} - Connected to rabbit")
@@ -68,17 +57,29 @@ class Logger(object):
             exchange=self.exchange_name,
             routing_key=binding_key
         )
-
+        
         self.buffer = [] 
         self.lock = threading.Lock()
     
+    def callback(self, new_row):
+        if len(self.buffer) == 0:
+            self.timer = threading.Timer(
+                interval=self.TIMEOUT_S,
+                function=self.send_package_to_db
+            )
+            self.timer.start() 
+        
+        if len(self.buffer) <= self.BUFFER_MAX_SIZE:
+            self.buffer.append(new_row)
+
+        if len(self.buffer) >= self.BUFFER_LIMIT:
+            self.send_package_to_db()  
    
     def send_package_to_db(self):
         if len(self.buffer) == 0:
             return 
 
         self.lock.acquire()
-
         try:
             self.session.bulk_save_objects(
                 objects=self.buffer
@@ -92,7 +93,6 @@ class Logger(object):
 
         self.buffer = []
         self.timer.cancel() 
-
         self.lock.release()
 
     def consume_event(self):
@@ -126,10 +126,8 @@ class StateLogger(Logger):
     
     def callback(self, ch, method, properties, body):
 
-        logger.debug("StateLogger Callback here")
-
+        logger.debug("StateLogger Callback is coming to the party")
         state_json = json.loads(body.decode('utf-8'))
-
         if 'timestamp' not in state_json:
             timestamp = datetime.now()
         else:
@@ -143,17 +141,7 @@ class StateLogger(Logger):
             type=state_json['type']
         )
 
-        if len(self.buffer) == 0:
-            self.timer = threading.Timer(
-                interval=self.TIMEOUT_S,
-                function=self.send_package_to_db
-            )
-            self.timer.start() 
-        
-        self.buffer.append(new_state)
-
-        if len(self.buffer) >= self.BUFFER_LIMIT:
-            self.send_package_to_db() 
+        super().callback(new_state)
         
 class ConfigLogger(Logger):
     def __init__(self, config, session):
@@ -179,7 +167,6 @@ class ConfigLogger(Logger):
     def callback(self, ch, method, properties, body):
 
         logger.debug("ConfigLogger Callback here")
-
         cgf_json = json.loads(body.decode('utf-8'))
         if 'timestamp' not in cgf_json:
             timestamp = datetime.now()
@@ -193,19 +180,9 @@ class ConfigLogger(Logger):
             place_id=cgf_json['place_id'],
             type=cgf_json['type']
         )
-        
-        if len(self.buffer) == 0:
-            self.timer = threading.Timer(
-                interval=self.TIMEOUT_S,
-                function=self.send_package_to_db
-            )
-            self.timer.start() 
-        
-        self.buffer.append(new_cgf)
 
-        if len(self.buffer) >= self.BUFFER_LIMIT:
-            self.send_package_to_db() 
-
+        super().callback(new_cfg)
+        
 class CommandLogger(Logger):
     def __init__(self, config, session):
         self.exchange_name = "commands"
@@ -245,30 +222,13 @@ class CommandLogger(Logger):
             type=cmd_json['type']
         )
         
-        if len(self.buffer) == 0:
-            self.timer = threading.Timer(
-                interval=self.TIMEOUT_S,
-                function=self.send_package_to_db
-            )
-            self.timer.start() 
-
-        self.buffer.append(new_cmd)
-
-        if len(self.buffer) >= self.BUFFER_LIMIT:
-            self.send_package_to_db() 
+        super().callback(new_cmd)
+       
 
 
 if __name__ == "__main__":
-    rabbit_cfg = {
-        'host': os.getenv('RABBIT_HOST'),
-        'port': os.getenv('RABBIT_PORT'),
-        'username': os.getenv('RABBIT_USERNAME'),
-        'password': os.getenv('RABBIT_PASSWORD')
-    }
-    
     logger_type = os.getenv('TYPE') 
-
-    logger.debug(f"{logger_type}:\n{rabbit_cfg}\n{os.getenv('DB_URI')}")
+    rabbit_creds = os.getenv('RABBIT_URI')
 
     engine = create_engine(os.getenv('DB_URI'))
     session = Session(engine)
@@ -276,11 +236,11 @@ if __name__ == "__main__":
     logger.debug(f"Logger session {logger_type} is created successfully!")
 
     if logger_type == "StateLogger":
-        log_Obj = StateLogger(rabbit_cfg, session)
+        log_Obj = StateLogger(rabbit_creds, session)
     elif logger_type == "CommandLogger":
-        log_Obj = CommandLogger(rabbit_cfg, session)
+        log_Obj = CommandLogger(rabbit_creds, session)
     elif logger_type == "ConfigLogger":
-        log_Obj = ConfigLogger(rabbit_cfg, session)
+        log_Obj = ConfigLogger(rabbit_creds, session)
 
     log_Obj.consume_event()    
 
