@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 7f9eac1d2054
-Revises: 285781e3c1d9
-Create Date: 2020-04-27 21:51:38.934115
+Revision ID: f34491dca5db
+Revises: 1a67d2f02e18
+Create Date: 2020-05-02 19:00:33.448953
 
 """
 from alembic import op
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = '7f9eac1d2054'
-down_revision = '285781e3c1d9'
+revision = 'f34491dca5db'
+down_revision = '1a67d2f02e18'
 branch_labels = None
 depends_on = None
 
@@ -36,10 +36,10 @@ def downgrade():
     op.create_table('params',
     sa.Column('id', sa.INTEGER(), autoincrement=True, nullable=False),
     sa.Column('timestamp', postgresql.TIMESTAMP(), autoincrement=False, nullable=True),
+    sa.Column('params', postgresql.JSONB(astext_type=sa.Text()), autoincrement=False, nullable=True),
     sa.Column('device_id', sa.VARCHAR(length=20), autoincrement=False, nullable=True),
     sa.Column('place_id', sa.VARCHAR(length=20), autoincrement=False, nullable=True),
     sa.Column('type', sa.VARCHAR(length=10), autoincrement=False, nullable=True),
-    sa.Column('config', postgresql.JSONB(astext_type=sa.Text()), autoincrement=False, nullable=True),
     sa.PrimaryKeyConstraint('id', name='params_pkey')
     )
     op.drop_table('configs')

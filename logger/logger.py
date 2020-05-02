@@ -81,8 +81,9 @@ class Logger(object):
                 objects=self.buffer
             )
             self.session.commit() 
+            logger.debug(f"{self.exchange_name} - Send to DB successfully")
         except Exception as err: 
-            logger.error(f"{self.exchange_name} - Can not send package to DB")
+            logger.error(f"{self.exchange_name} - Can not send package to DB\n{err}")
             self.lock.release()
             return 
 

@@ -1,3 +1,3 @@
-SQLALCHEMY_DATABASE_URI='postgresql+psycopg2://admin:admin@tigra:5432/smart_dep'
+SQLALCHEMY_DATABASE_URI='postgresql+psycopg2://admin:admin@127.0.0.1:5432/smart_dep'
 SQLALCHEMY_TRACK_MODIFICATIONS=False
 DEBUG=True

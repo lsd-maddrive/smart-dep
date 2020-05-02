@@ -105,7 +105,6 @@ services:
         depends_on: 
             - rabbitmq
             - timescaledb
-            - pgadmin
         logging:
             options:
                 max-size: "200k"
@@ -121,7 +120,6 @@ services:
         depends_on: 
             - rabbitmq
             - timescaledb
-            - pgadmin
         logging:
             options:
                 max-size: "200k"
@@ -137,7 +135,6 @@ services:
         depends_on: 
             - rabbitmq
             - timescaledb
-            - pgadmin
         logging:
             options:
                 max-size: "200k"

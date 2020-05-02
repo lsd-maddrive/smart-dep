@@ -1,10 +1,10 @@
 logger:
     rabbit:
-        host: tigra 
+        host: rabbitmq 
         port: 5672 
         username: rabbitmq
         password: rabbitmq
     timescaleDB:
-        uri: postgresql+psycopg2://admin:admin@127.0.0.1:5432/smart_dep
+        uri: postgresql+psycopg2://admin:admin@timescaledb:5432/smart_dep
     logger:
         type: ConfigLogger
