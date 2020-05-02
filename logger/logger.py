@@ -149,11 +149,8 @@ class StateLogger(Logger):
                 function=self.send_package_to_db
             )
             self.timer.start() 
-
-        if len(self.buffer) >= self.BUFFER_MAX_SIZE:
-            self.buffer = []
-        else:
-            self.buffer.append(new_state)
+        
+        self.buffer.append(new_state)
 
         if len(self.buffer) >= self.BUFFER_LIMIT:
             self.send_package_to_db() 
@@ -203,11 +200,8 @@ class ConfigLogger(Logger):
                 function=self.send_package_to_db
             )
             self.timer.start() 
-
-        if len(self.buffer) >= self.BUFFER_MAX_SIZE:
-            self.buffer = []
-        else:
-            self.buffer.append(new_cgf)
+        
+        self.buffer.append(new_cgf)
 
         if len(self.buffer) >= self.BUFFER_LIMIT:
             self.send_package_to_db() 
@@ -258,10 +252,7 @@ class CommandLogger(Logger):
             )
             self.timer.start() 
 
-        if len(self.buffer) >= self.BUFFER_MAX_SIZE:
-            self.buffer = []
-        else:
-            self.buffer.append(new_cmd)
+        self.buffer.append(new_cmd)
 
         if len(self.buffer) >= self.BUFFER_LIMIT:
             self.send_package_to_db() 
