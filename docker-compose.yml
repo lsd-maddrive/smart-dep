@@ -13,6 +13,8 @@ services:
             - ./volumes/db-data:/var/lib/posgresql/data
         ports:
             - "5432:5432"
+        labels:
+            NAME: "timescaledb"
         logging:
             driver: "json-file"
             options:
@@ -126,6 +128,66 @@ services:
         command: -config.file=/etc/loki/local-config.yaml
         volumes:
             - loki-data:/data/loki
+        logging:
+            driver: "json-file"
+            options:
+                max-file: "5"
+                max-size: "20m"
+    
+    state_logger:
+        build:
+            context: .
+            dockerfile: logger/Dockerfile
+        env_file: 
+            - "logger/config/.env.${SMART_ENV:-dev}"
+        environment: 
+            - TYPE=state
+            - BUFFER_LIMIT=1000
+            - TIMEOUT_S=1.0
+        restart: always
+        depends_on: 
+            - rabbitmq
+            - timescaledb
+        logging:
+            driver: "json-file"
+            options:
+                max-file: "5"
+                max-size: "20m"
+    
+    command_logger:
+        build:
+            context: .
+            dockerfile: logger/Dockerfile
+        env_file: 
+            - "logger/config/.env.${SMART_ENV:-dev}"
+        environment: 
+            - TYPE=command 
+            - BUFFER_LIMIT=1000
+            - TIMEOUT_S=1.0
+        restart: always
+        depends_on: 
+            - rabbitmq
+            - timescaledb
+        logging:
+            driver: "json-file"
+            options:
+                max-file: "5"
+                max-size: "20m"
+    
+    config_logger:
+        build:
+            context: .
+            dockerfile: logger/Dockerfile
+        env_file: 
+            - "logger/config/.env.${SMART_ENV:-dev}"
+        environment: 
+            - TYPE=config 
+            - BUFFER_LIMIT=1000
+            - TIMEOUT_S=1.0
+        restart: always
+        depends_on: 
+            - rabbitmq
+            - timescaledb
         logging:
             driver: "json-file"
             options:

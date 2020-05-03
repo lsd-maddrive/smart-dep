@@ -1,41 +1,49 @@
-from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import MetaData, Column, Integer, String, DateTime
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.ext.declarative import declarative_base
 
-db = SQLAlchemy()
+metadata = MetaData() 
+Model = declarative_base(metadata=metadata)
 
-class Commands(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    timestamp = db.Column(db.DateTime)
-    command = db.Column(JSONB)
-    device_id = db.Column(db.String(20))
-    place_id = db.Column(db.String(20))
-    type = db.Column(db.String(10))
+class Commands(Model):
+    __tablename__= 'commands'
+
+    id = Column(Integer, primary_key=True)
+    timestamp = Column(DateTime)
+    command = Column(JSONB)
+    device_id = Column(String(50))
+    place_id = Column(String(20))
+    type = Column(String(10))
 
     def __repr__(self):
         return f"Command Type: {self.type}, Device ID: {self.device_id} \
                  DateTime: {self.timestamp}, Place ID: {self.place_id}"
 
 
-class Params(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    timestamp = db.Column(db.DateTime)
-    params = db.Column(JSONB)
-    device_id = db.Column(db.String(20))
-    place_id = db.Column(db.String(20))
-    type = db.Column(db.String(10))
+class Configs(Model):
+    __tablename__= "configs"
+
+    id = Column(Integer, primary_key=True)
+    timestamp = Column(DateTime)
+    config = Column(JSONB)
+    device_id = Column(String(50))
+    place_id = Column(String(20))
+    type = Column(String(10))
 
     def __repr__(self):
         return f"Params Type: {self.type}, Device ID: {self.device_id} \
                  DateTime: {self.timestamp}, Place ID: {self.place_id}"
 
 
-class States(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    timestamp = db.Column(db.DateTime)
-    state = db.Column(JSONB)
-    device_id = db.Column(db.String(20))
-    place_id = db.Column(db.String(20))
-    type = db.Column(db.String(10))
+class States(Model):
+    __tablename__= "states"
+
+    id = Column(Integer, primary_key=True)
+    timestamp = Column(DateTime)
+    state = Column(JSONB)
+    device_id = Column(String(20))
+    place_id = Column(String(20))
+    type = Column(String(10))
 
     def __repr__(self):
         return f"State Type: {self.type}, Device ID: {self.device_id} \
