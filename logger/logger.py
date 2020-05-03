@@ -60,6 +60,7 @@ class Logger(object):
         
         self.buffer = [] 
         self.lock = threading.Lock()
+        self.timer = None 
 
         self.BUFFER_LIMIT = self.config.get("BUFFER_LIMIT", "1000")
         try:
@@ -68,14 +69,14 @@ class Logger(object):
             logger.error(f"Invalid value of BUFFER_LIMIT: {self.BUFFER_LIMIT}")
             raise Exception(f'Configuration of BUFFER_LIMIT contains invalid value: {self.BUFFER_LIMIT}\n{err}')
 
-        self.TIMEOUT_S = self.config.get("TIMEOUT_S", "2.0")
+        self.TIMEOUT_S = self.config.get("TIMEOUT_S", "1.0")
         try:
             self.TIMEOUT_S = float(self.TIMEOUT_S)
         except Exception as err: 
             logger.error(f"Invalid value of TIMEOUT: {self.TIMEOUT_S}")
             raise Exception(f'Configuration of TIMEOUT contains invalid value: {self.TIMEOUT_S}\n{err}')
-            
-    
+
+
     def callback(self, ch, method, properties, body):
         logger.debug(f"{self.exchange_name} callback is coming to the party\n \
                       Logger Configuration:\n \
@@ -88,23 +89,22 @@ class Logger(object):
         new_row = self.get_record(in_data)
 
         if len(self.buffer) == 0:
-            self.timer = threading.Timer(
-                interval=self.TIMEOUT_S,
-                function=self.send_package_to_db
-            )
-            self.timer.start() 
+            self.start_timer(self.TIMEOUT_S)
         
         if len(self.buffer) < self.BUFFER_LIMIT:
             self.buffer.append(new_row)
 
         if len(self.buffer) == self.BUFFER_LIMIT:
+            self.timer.cancel()
             self.send_package_to_db()  
    
+
     def send_package_to_db(self):
+        self.lock.acquire()
         if len(self.buffer) == 0:
+            self.lock.release()
             return 
 
-        self.lock.acquire()
         try:
             self.session.bulk_save_objects(
                 objects=self.buffer
@@ -113,12 +113,24 @@ class Logger(object):
             logger.debug(f"{self.exchange_name} - Send to DB successfully")
         except Exception as err: 
             logger.error(f"{self.exchange_name} - Can not send package to DB\n{err}")
+            self.start_timer(self.TIMEOUT_S * 10)
             self.lock.release()
             return 
 
         self.buffer = []
         self.timer.cancel() 
         self.lock.release()
+
+
+    def start_timer(self, period):
+        # if timer is dead 
+        if self.timer is None or not self.timer.is_alive():
+            self.timer = threading.Timer(
+                interval=self.TIMEOUT_S,
+                function=self.send_package_to_db
+            )
+            self.timer.start() 
+
 
     def consume_event(self):
         self.channel.basic_consume(
@@ -235,11 +247,15 @@ def main():
         return 1
 
     try:
-        logger_config = {
-            "RABBIT_URI": rabbit_uri,
-            "BUFFER_LIMIT": os.getenv("BUFFER_LIMIT"),
-            "TIMEOUT_S": os.getenv("TIMEOUT_S")
-        }
+        logger_config = {}
+        logger_config["RABBIT_URI"] = rabbit_uri
+        buf_limit = os.getenv("BUFFER_LIMIT")
+        if buf_limit is not None:
+            logger_config["BUFFER_LIMIT"] = buf_limit
+        timeout = os.getenv("TIMEOUT_S")
+        if timeout is not None:
+            logger_config["TIMEOUT_S"] = timeout
+
         engine = create_engine(db_uri)
         session = Session(engine)
 
