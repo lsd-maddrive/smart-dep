@@ -94,7 +94,7 @@ class Logger(object):
         if len(self.buffer) < self.BUFFER_LIMIT:
             self.buffer.append(new_row)
 
-        if len(self.buffer) == self.BUFFER_LIMIT:
+        if len(self.buffer) >= self.BUFFER_LIMIT:
             self.timer.cancel()
             self.send_package_to_db()  
    
