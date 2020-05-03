@@ -246,7 +246,7 @@ def main():
         logger.critical('RABBITMQ URI IS NOT FOUND')
         return 1
 
-    try:
+    
         logger_config = {}
         logger_config["RABBIT_URI"] = rabbit_uri
         buf_limit = os.getenv("BUFFER_LIMIT")
@@ -258,7 +258,7 @@ def main():
 
         engine = create_engine(db_uri)
         session = Session(engine)
-
+    try:
         if type_ in supported_types:
             logger_obj = supported_types[type_](logger_config, session)
             logger_obj.consume_event()   
