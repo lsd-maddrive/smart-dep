@@ -61,44 +61,32 @@ class Logger(object):
         self.buffer = [] 
         self.lock = threading.Lock()
 
-        self.config["BUFFER_MAX_SIZE_DEFAULT"] = "200"
-        self.config["BUFFER_PACK_LIMIT_DEFAULT"] = "20"
-        self.config["TIMEOUT_S_DEFAULT"] = "50.0"
-
+        self.BUFFER_LIMIT = self.config.get("BUFFER_LIMIT", "1000")
         try:
-            self.BUFFER_MAX_SIZE = int(
-                self.config.get("BUFFER_MAX_SIZE",
-                "BUFFER_MAX_SIZE_DEFAULT")
-            ) 
-        except (TypeError, ValueError):
-            logger.error(f"Invalid Buffer MAX SIZE - {self.config['BUFFER_MAX_SIZE']}\n \
-                          DEFAULT VALUE will be used - {self.config['BUFFER_MAX_SIZE_DEFAULT']}")
+            self.BUFFER_LIMIT = int(self.BUFFER_LIMIT)
+        except Exception as err: 
+            logger.error(f"Invalid value of BUFFER_LIMIT: {self.BUFFER_LIMIT}")
+            raise Exception(f'Configuration of BUFFER_LIMIT contains invalid value: {self.BUFFER_LIMIT}\n{err}')
 
-            self.BUFFER_MAX_SIZE = int(self.config["BUFFER_MAX_SIZE_DEFAULT"]) 
-
+        self.TIMEOUT_S = self.config.get("TIMEOUT_S", "2.0")
         try:
-            self.BUFFER_LIMIT = int(
-                self.config.get("BUFFER_PACK_LIMIT",
-                "BUFFER_PACK_LIMIT_DEFAULT")
-            )
-        except (TypeError, ValueError):
-            logger.error(f"Invalid Buffer Packge LIMIT - {self.config['BUFFER_PACK_LIMIT']}\n \
-                          DEFAULT VALUE will be used - {self.config['BUFFER_PACK_LIMIT_DEFAULT']}")
-
-            self.BUFFER_LIMIT = int(self.config["BUFFER_PACK_LIMIT_DEFAULT"]) 
-
-        try:
-            self.TIMEOUT_S = float(
-                self.config.get("TIMEOUT_S", "TIMEOUT_S_DEFAULT")
-            )
-        except (TypeError, ValueError):
-            logger.error(f"Invalid Timeout Value - {self.config['TIMEOUT_S']}\n \
-                          DEFAULT VALUE will be used - {self.config['TIMEOUT_S_DEFAULT']}")
-
-            self.TIMEOUT_S = int(self.config["TIMEOUT_S_DEFAULT"]) 
-
+            self.TIMEOUT_S = float(self.TIMEOUT_S)
+        except Exception as err: 
+            logger.error(f"Invalid value of TIMEOUT: {self.TIMEOUT_S}")
+            raise Exception(f'Configuration of TIMEOUT contains invalid value: {self.TIMEOUT_S}\n{err}')
+            
     
-    def callback(self, new_row):
+    def callback(self, ch, method, properties, body):
+        logger.debug(f"{self.exchange_name} callback is coming to the party\n \
+                      Logger Configuration:\n \
+                      BUFFER LIMIT: {self.BUFFER_LIMIT}\tTIMEOUT: {self.TIMEOUT_S}")
+
+        in_data = json.loads(body.decode('utf-8'))
+        if 'timestamp' not in in_data:
+            in_data['timestamp'] = datetime.now()
+
+        new_row = self.get_record(in_data)
+
         if len(self.buffer) == 0:
             self.timer = threading.Timer(
                 interval=self.TIMEOUT_S,
@@ -106,10 +94,10 @@ class Logger(object):
             )
             self.timer.start() 
         
-        if len(self.buffer) <= self.BUFFER_MAX_SIZE:
+        if len(self.buffer) < self.BUFFER_LIMIT:
             self.buffer.append(new_row)
 
-        if len(self.buffer) >= self.BUFFER_LIMIT:
+        if len(self.buffer) == self.BUFFER_LIMIT:
             self.send_package_to_db()  
    
     def send_package_to_db(self):
@@ -157,25 +145,16 @@ class StateLogger(Logger):
             routing_key=self.binding_key
         )
     
-    def callback(self, ch, method, properties, body):
-
-        logger.debug(f"StateLogger Callback is coming to the party")
-
-        state_json = json.loads(body.decode('utf-8'))
-        if 'timestamp' not in state_json:
-            timestamp = datetime.now()
-        else:
-            timestamp = state_json['timestamp']
-        
+    def get_record(self, in_data):
         new_state = States(
-            timestamp=timestamp,
-            state=state_json['state'],
-            device_id=state_json['device_id'], 
-            place_id=state_json['place_id'],
-            type=state_json['type']
+            timestamp=in_data['timestamp'],
+            state=in_data['state'],
+            device_id=in_data['device_id'], 
+            place_id=in_data['place_id'],
+            type=in_data['type']
         )
+        return new_state
 
-        super().callback(new_state)
         
 class ConfigLogger(Logger):
     def __init__(self, config, session):
@@ -194,24 +173,16 @@ class ConfigLogger(Logger):
             routing_key=self.binding_key
         )
     
-    def callback(self, ch, method, properties, body):
-
-        logger.debug("ConfigLogger Callback here")
-        cgf_json = json.loads(body.decode('utf-8'))
-        if 'timestamp' not in cgf_json:
-            timestamp = datetime.now()
-        else:
-            timestamp = cgf_json['timestamp']
-        
+    def get_record(self, in_data):
         new_cgf = Configs(
-            timestamp=timestamp,
-            config=cgf_json['cfg'],
-            device_id=cgf_json['device_id'], 
-            place_id=cgf_json['place_id'],
-            type=cgf_json['type']
+            timestamp=in_data['timestamp'],
+            config=in_data['cfg'],
+            device_id=in_data['device_id'], 
+            place_id=in_data['place_id'],
+            type=in_data['type']
         )
+        return new_cgf
 
-        super().callback(new_cfg)
         
 class CommandLogger(Logger):
     def __init__(self, config, session):
@@ -230,78 +201,64 @@ class CommandLogger(Logger):
             routing_key=self.binding_key
         )
 
-    def callback(self, ch, method, properties, body):
-
-        logger.debug("CommandLogger Callback here")
-
-        cmd_json = json.loads(body.decode('utf-8'))
-        if 'timestamp' not in cmd_json:
-            timestamp = datetime.now()
-        else:
-            timestamp = cmd_json['timestamp']
-        
+    def get_record(self, in_data):
         new_cmd = Commands(
-            timestamp=timestamp,
-            command=cmd_json['cmd'],
-            device_id=cmd_json['device_id'], 
-            place_id=cmd_json['place_id'],
-            type=cmd_json['type']
+            timestamp=in_data['timestamp'],
+            command=in_data['cmd'],
+            device_id=in_data['device_id'], 
+            place_id=in_data['place_id'],
+            type=in_data['type']
         )
-        
-        super().callback(new_cmd)
+        return new_cmd
 
-if __name__ == "__main__":
-    TYPE_DEFAULT = "StateLogger"
 
-    if 'TYPE' not in os.environ:
-        logger_type = TYPE_DEFAULT 
-    else:
-        logger_type = os.getenv('TYPE') 
-        logger_type = TYPE_DEFAULT if logger_type == None else logger_type
+def main():
+    supported_types = {
+        "state": StateLogger,
+        "command": CommandLogger,
+        "config": ConfigLogger
+    }
 
-    # if manadatory configs is found - no exit 
-    exit_flag = False 
-
-    if 'DB_URI' not in os.environ:
-        logger.critical(f"DB URI NOT FOUND for {logger_type}")
-        exit_flag = True 
-    elif os.getenv('DB_URI') == None:
-        logger.critical(f"DB URI is empty for {logger_type}")
-        exit_flag = True 
+    type_ = os.getenv('TYPE')
+    if type_ is None:
+        logger.critical("Logger TYPE IS NOT FOUND")
+        return 1 
     
-    if 'RABBIT_URI' not in os.environ:
-        logger.critical(f"RABBITMQ URI NOT FOUND for {logger_type}")
-        exit_flag = True 
-    elif os.getenv('RABBIT_URI') == None:
-        logger.critical(f"RABBIT_URI is empty for {logger_type}")
-        exit_flag = True 
+    db_uri = os.getenv('DB_URI')
+    if db_uri is None:
+        logger.critical("DB URI IS NOT FOUND")
+        return 1 
+    
+    rabbit_uri = os.getenv('RABBIT_URI')
+    if rabbit_uri is None:
+        logger.critical('RABBITMQ URI IS NOT FOUND')
+        return 1
 
-    if not exit_flag:
+    try:
         logger_config = {
-            "RABBIT_URI": os.getenv('RABBIT_URI'),
-            "BUFFER_MAX_SIZE": os.getenv("BUFFER_MAX_SIZE"),
-            "BUFFER_PACK_LIMIT": os.getenv("BUFFER_PACK_LIMIT"),
+            "RABBIT_URI": rabbit_uri,
+            "BUFFER_LIMIT": os.getenv("BUFFER_LIMIT"),
             "TIMEOUT_S": os.getenv("TIMEOUT_S")
         }
-    
-        engine = create_engine(os.getenv('DB_URI'))
+        engine = create_engine(db_uri)
         session = Session(engine)
 
-        logger.debug(f"Logger session {logger_type} is created successfully!")
+        if type_ in supported_types:
+            logger_obj = supported_types[type_](logger_config, session)
+            logger_obj.consume_event()   
+            # session.query(States).delete()
+            # session.commit() 
+        else:
+            logger.critical(f"INVALID VALUE OF LOGGET TYPE: {type_}")
+            return 1 
+    except Exception as err:
+        logger.error(f"{err}") 
 
-        if logger_type == "StateLogger":
-            log_Obj = StateLogger(logger_config, session)
-        elif logger_type == "CommandLogger":
-            log_Obj = CommandLogger(logger_config, session)
-        elif logger_type == "ConfigLogger":
-            log_Obj = ConfigLogger(logger_config, session)
-
-        log_Obj.consume_event()    
-
-        # session.query(States).delete()
-        # session.commit()
-        
+    finally: 
         session.close()
-    else:
-        logger.critical(f'{logger_type} - MANDATORY CREDS NOT FOUND')
+        logger.debug("Logger session is CLOSED - successfully!")
+        return 0 
 
+
+if __name__ == "__main__":
+    sys.exit(main())

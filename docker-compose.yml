@@ -141,10 +141,9 @@ services:
         env_file: 
             - "logger/config/.env.${SMART_ENV:-dev}"
         environment: 
-            - TYPE=StateLogger 
-            - BUFFER_MAX_SIZE=hi
-            # - BUFFER_PACK_LIMIT=10
-            - TIMEOUT_S=30.0
+            - TYPE=state
+            - BUFFER_LIMIT=1000
+            - TIMEOUT_S=2.0
         restart: always
         depends_on: 
             - rabbitmq
@@ -162,10 +161,9 @@ services:
         env_file: 
             - "logger/config/.env.${SMART_ENV:-dev}"
         environment: 
-            - TYPE=CommandLogger 
-            - BUFFER_MAX_SIZE=100
-            - BUFFER_PACK_LIMIT=10
-            - TIMEOUT_S=30.0
+            - TYPE=command 
+            - BUFFER_LIMIT=1000
+            - TIMEOUT_S=2.0
         restart: always
         depends_on: 
             - rabbitmq
@@ -183,10 +181,9 @@ services:
         env_file: 
             - "logger/config/.env.${SMART_ENV:-dev}"
         environment: 
-            - TYPE=ConfigLogger 
-            - BUFFER_MAX_SIZE=100
-            - BUFFER_PACK_LIMIT=10
-            - TIMEOUT_S=30.0
+            - TYPE=config 
+            - BUFFER_LIMIT=1000
+            - TIMEOUT_S=2.0
         restart: always
         depends_on: 
             - rabbitmq
