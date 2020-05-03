@@ -61,9 +61,42 @@ class Logger(object):
         self.buffer = [] 
         self.lock = threading.Lock()
 
-        self.BUFFER_MAX_SIZE = int(self.config["BUFFER_MAX_SIZE"]) 
-        self.BUFFER_LIMIT = int(self.config["BUFFER_PACK_LIMIT"])
-        self.TIMEOUT_S = float(self.config["TIMEOUT_S"])
+        self.config["BUFFER_MAX_SIZE_DEFAULT"] = "200"
+        self.config["BUFFER_PACK_LIMIT_DEFAULT"] = "20"
+        self.config["TIMEOUT_S_DEFAULT"] = "50.0"
+
+        try:
+            self.BUFFER_MAX_SIZE = int(
+                self.config.get("BUFFER_MAX_SIZE",
+                "BUFFER_MAX_SIZE_DEFAULT")
+            ) 
+        except (TypeError, ValueError):
+            logger.error(f"Invalid Buffer MAX SIZE - {self.config['BUFFER_MAX_SIZE']}\n \
+                          DEFAULT VALUE will be used - {self.config['BUFFER_MAX_SIZE_DEFAULT']}")
+
+            self.BUFFER_MAX_SIZE = int(self.config["BUFFER_MAX_SIZE_DEFAULT"]) 
+
+        try:
+            self.BUFFER_LIMIT = int(
+                self.config.get("BUFFER_PACK_LIMIT",
+                "BUFFER_PACK_LIMIT_DEFAULT")
+            )
+        except (TypeError, ValueError):
+            logger.error(f"Invalid Buffer Packge LIMIT - {self.config['BUFFER_PACK_LIMIT']}\n \
+                          DEFAULT VALUE will be used - {self.config['BUFFER_PACK_LIMIT_DEFAULT']}")
+
+            self.BUFFER_LIMIT = int(self.config["BUFFER_PACK_LIMIT_DEFAULT"]) 
+
+        try:
+            self.TIMEOUT_S = float(
+                self.config.get("TIMEOUT_S", "TIMEOUT_S_DEFAULT")
+            )
+        except (TypeError, ValueError):
+            logger.error(f"Invalid Timeout Value - {self.config['TIMEOUT_S']}\n \
+                          DEFAULT VALUE will be used - {self.config['TIMEOUT_S_DEFAULT']}")
+
+            self.TIMEOUT_S = int(self.config["TIMEOUT_S_DEFAULT"]) 
+
     
     def callback(self, new_row):
         if len(self.buffer) == 0:
@@ -218,46 +251,57 @@ class CommandLogger(Logger):
         super().callback(new_cmd)
 
 if __name__ == "__main__":
-    BUFFER_MAX_SIZE_DEFAULT = "100" 
-    BUFFER_PACK_LIMIT_DEFAULT = "10"
-    TIMEOUT_S_DEFAULT = "30.0"
+    TYPE_DEFAULT = "StateLogger"
+
+    if 'TYPE' not in os.environ:
+        logger_type = TYPE_DEFAULT 
+    else:
+        logger_type = os.getenv('TYPE') 
+        logger_type = TYPE_DEFAULT if logger_type == None else logger_type
+
+    # if manadatory configs is found - no exit 
+    exit_flag = False 
+
+    if 'DB_URI' not in os.environ:
+        logger.critical(f"DB URI NOT FOUND for {logger_type}")
+        exit_flag = True 
+    elif os.getenv('DB_URI') == None:
+        logger.critical(f"DB URI is empty for {logger_type}")
+        exit_flag = True 
     
-    logger_type = os.getenv('TYPE') 
-    logger_config = {
-        "RABBIT_URI": os.getenv('RABBIT_URI'),
-        "BUFFER_MAX_SIZE": os.getenv("BUFFER_MAX_SIZE"),
-        "BUFFER_PACK_LIMIT": os.getenv("BUFFER_PACK_LIMIT"),
-        "TIMEOUT_S": os.getenv("TIMEOUT_S")
-    }
+    if 'RABBIT_URI' not in os.environ:
+        logger.critical(f"RABBITMQ URI NOT FOUND for {logger_type}")
+        exit_flag = True 
+    elif os.getenv('RABBIT_URI') == None:
+        logger.critical(f"RABBIT_URI is empty for {logger_type}")
+        exit_flag = True 
 
-    if not bool(logger_config.get('RABBIT_URI')):
-        logger.critical(f"{logger_type} CREDS NOT FOUND")
-
-    if not bool(logger_config.get('BUFFER_MAX_SIZE')):
-        logger_config['BUFFER_MAX_SIZE'] = BUFFER_MAX_SIZE_DEFAULT
-
-    if not bool(logger_config.get('BUFFER_PACK_LIMIT')):
-        logger_config['BUFFER_PACK_LIMIT'] = BUFFER_PACK_LIMIT_DEFAULT
-
-    if not bool(logger_config.get('TIMEOUT_S')):
-        logger_config['TIMEOUT_S'] = TIMEOUT_S_DEFAULT
+    if not exit_flag:
+        logger_config = {
+            "RABBIT_URI": os.getenv('RABBIT_URI'),
+            "BUFFER_MAX_SIZE": os.getenv("BUFFER_MAX_SIZE"),
+            "BUFFER_PACK_LIMIT": os.getenv("BUFFER_PACK_LIMIT"),
+            "TIMEOUT_S": os.getenv("TIMEOUT_S")
+        }
     
-    engine = create_engine(os.getenv('DB_URI'))
-    session = Session(engine)
+        engine = create_engine(os.getenv('DB_URI'))
+        session = Session(engine)
 
-    logger.debug(f"Logger session {logger_type} is created successfully!")
+        logger.debug(f"Logger session {logger_type} is created successfully!")
 
-    if logger_type == "StateLogger":
-        log_Obj = StateLogger(logger_config, session)
-    elif logger_type == "CommandLogger":
-        log_Obj = CommandLogger(logger_config, session)
-    elif logger_type == "ConfigLogger":
-        log_Obj = ConfigLogger(logger_config, session)
+        if logger_type == "StateLogger":
+            log_Obj = StateLogger(logger_config, session)
+        elif logger_type == "CommandLogger":
+            log_Obj = CommandLogger(logger_config, session)
+        elif logger_type == "ConfigLogger":
+            log_Obj = ConfigLogger(logger_config, session)
 
-    log_Obj.consume_event()    
+        log_Obj.consume_event()    
 
-    # session.query(States).delete()
-    # session.commit()
-    
-    session.close()
+        # session.query(States).delete()
+        # session.commit()
+        
+        session.close()
+    else:
+        logger.critical(f'{logger_type} - MANDATORY CREDS NOT FOUND')
 
