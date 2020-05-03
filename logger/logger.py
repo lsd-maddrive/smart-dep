@@ -126,7 +126,7 @@ class Logger(object):
         # if timer is dead 
         if self.timer is None or not self.timer.is_alive():
             self.timer = threading.Timer(
-                interval=self.TIMEOUT_S,
+                interval=period,
                 function=self.send_package_to_db
             )
             self.timer.start() 
