@@ -142,9 +142,9 @@ services:
             - "logger/config/.env.${SMART_ENV:-dev}"
         environment: 
             - TYPE=StateLogger 
-            - BUFFER_MAX_SIZE=100
-            - BUFFER_PACK_LIMIT=10
-            - TIMEOUT_S=30.0
+            # - BUFFER_MAX_SIZE=100
+            # - BUFFER_PACK_LIMIT=10
+            # - TIMEOUT_S=30.0
         restart: always
         depends_on: 
             - rabbitmq

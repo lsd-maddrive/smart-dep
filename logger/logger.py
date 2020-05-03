@@ -6,8 +6,6 @@ import os
 import sys 
 sys.path.append("..")
 
-from dotenv import load_dotenv
-load_dotenv()
 import pika 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
@@ -20,12 +18,14 @@ logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %
 logger = logging.getLogger(__name__)
 
 class Logger(object):
-    def __init__(self, config, exchange_name, binding_key, session, constants):
+    def __init__(self, config, exchange_name, binding_key, session):
         self.config = config 
         self.session = session 
         self.exchange_name = exchange_name
         
-        connection = pika.BlockingConnection(pika.URLParameters(config))
+        connection = pika.BlockingConnection(
+            pika.URLParameters(self.config["RABBIT_URI"])
+        )
         self.channel = connection.channel()
 
         logger.debug(f"{self.exchange_name} - Connected to rabbit")
@@ -61,9 +61,9 @@ class Logger(object):
         self.buffer = [] 
         self.lock = threading.Lock()
 
-        self.BUFFER_MAX_SIZE = int(constants["BUFFER_MAX_SIZE"]) 
-        self.BUFFER_LIMIT = int(constants["BUFFER_PACK_LIMIT"])
-        self.TIMEOUT_S = float(constants["TIMEOUT_S"])
+        self.BUFFER_MAX_SIZE = int(self.config["BUFFER_MAX_SIZE"]) 
+        self.BUFFER_LIMIT = int(self.config["BUFFER_PACK_LIMIT"])
+        self.TIMEOUT_S = float(self.config["TIMEOUT_S"])
     
     def callback(self, new_row):
         if len(self.buffer) == 0:
@@ -108,14 +108,13 @@ class Logger(object):
         self.channel.start_consuming() 
 
 class StateLogger(Logger):
-    def __init__(self, config, session, constants):
+    def __init__(self, config, session):
         self.binding_key = "state.*.*"
         self.exchange_name = "states"
         super().__init__(
             config, exchange_name=self.exchange_name, 
             binding_key=self.binding_key,
-            session=session,
-            constants=constants
+            session=session
         )
 
         # Bind amq.topic exchange -> states exchange 
@@ -127,7 +126,8 @@ class StateLogger(Logger):
     
     def callback(self, ch, method, properties, body):
 
-        logger.debug("StateLogger Callback is coming to the party")
+        logger.debug(f"StateLogger Callback is coming to the party")
+
         state_json = json.loads(body.decode('utf-8'))
         if 'timestamp' not in state_json:
             timestamp = datetime.now()
@@ -145,14 +145,13 @@ class StateLogger(Logger):
         super().callback(new_state)
         
 class ConfigLogger(Logger):
-    def __init__(self, config, session, constants):
+    def __init__(self, config, session):
         self.exchange_name = "configurations"
         self.binding_key = "cfg.*.*"
         super().__init__(
             config, exchange_name=self.exchange_name, 
             binding_key=self.binding_key,
-            session=session,
-            constants=constants
+            session=session
         )
 
         # Bind configurations exchange -> amq.topic exchange  
@@ -182,14 +181,13 @@ class ConfigLogger(Logger):
         super().callback(new_cfg)
         
 class CommandLogger(Logger):
-    def __init__(self, config, session, constants):
+    def __init__(self, config, session):
         self.exchange_name = "commands"
         self.binding_key = "cmd.*.*"
         super().__init__(
             config, exchange_name=self.exchange_name, 
             binding_key=self.binding_key,
-            session=session,
-            constants=constants
+            session=session
         )
 
         # Bind commands exchange -> amq.topic exchange  
@@ -220,25 +218,41 @@ class CommandLogger(Logger):
         super().callback(new_cmd)
 
 if __name__ == "__main__":
+    BUFFER_MAX_SIZE_DEFAULT = "100" 
+    BUFFER_PACK_LIMIT_DEFAULT = "10"
+    TIMEOUT_S_DEFAULT = "30.0"
+    
     logger_type = os.getenv('TYPE') 
-    rabbit_creds = os.getenv('RABBIT_URI')
-    log_params = {
+    logger_config = {
+        "RABBIT_URI": os.getenv('RABBIT_URI'),
         "BUFFER_MAX_SIZE": os.getenv("BUFFER_MAX_SIZE"),
         "BUFFER_PACK_LIMIT": os.getenv("BUFFER_PACK_LIMIT"),
         "TIMEOUT_S": os.getenv("TIMEOUT_S")
     }
 
+    if not bool(logger_config.get('RABBIT_URI')):
+        logger.critical(f"{logger_type} CREDS NOT FOUND")
+
+    if not bool(logger_config.get('BUFFER_MAX_SIZE')):
+        logger_config['BUFFER_MAX_SIZE'] = BUFFER_MAX_SIZE_DEFAULT
+
+    if not bool(logger_config.get('BUFFER_PACK_LIMIT')):
+        logger_config['BUFFER_PACK_LIMIT'] = BUFFER_PACK_LIMIT_DEFAULT
+
+    if not bool(logger_config.get('TIMEOUT_S')):
+        logger_config['TIMEOUT_S'] = TIMEOUT_S_DEFAULT
+    
     engine = create_engine(os.getenv('DB_URI'))
     session = Session(engine)
 
     logger.debug(f"Logger session {logger_type} is created successfully!")
 
     if logger_type == "StateLogger":
-        log_Obj = StateLogger(rabbit_creds, session, log_params)
+        log_Obj = StateLogger(logger_config, session)
     elif logger_type == "CommandLogger":
-        log_Obj = CommandLogger(rabbit_creds, session, log_params)
+        log_Obj = CommandLogger(logger_config, session)
     elif logger_type == "ConfigLogger":
-        log_Obj = ConfigLogger(rabbit_creds, session, log_params)
+        log_Obj = ConfigLogger(logger_config, session)
 
     log_Obj.consume_event()    
 
