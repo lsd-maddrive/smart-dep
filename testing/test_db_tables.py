@@ -5,11 +5,12 @@ from sqlalchemy.orm import Session
 import sys 
 sys.path.append("..")
 
-from shared.models.table_models import metadata, Commands, Configs, States 
+from db.models.table_models import metadata, Commands, Configs, States 
 
 env_mode = os.getenv('SMART_ENV', 'dev')
 config_path = f'shared.config.{env_mode}.config'
 
+# NOT WORKING ! 
 with open(f'../shared/config/{env_mode}/config.py') as cfg_file:
     db_uri = cfg_file.readline().split("'")[1]
 
