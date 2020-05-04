@@ -76,12 +76,11 @@ class Logger(object):
             logger.error(f"Invalid value of TIMEOUT: {self.TIMEOUT_S}")
             raise Exception(f'Configuration of TIMEOUT contains invalid value: {self.TIMEOUT_S}\n{err}')
 
-
-    def callback(self, ch, method, properties, body):
         logger.debug(f"{self.exchange_name} callback is coming to the party\n \
                       Logger Configuration:\n \
                       BUFFER LIMIT: {self.BUFFER_LIMIT}\tTIMEOUT: {self.TIMEOUT_S}")
 
+    def callback(self, ch, method, properties, body):
         in_data = json.loads(body.decode('utf-8'))
         if 'timestamp' not in in_data:
             in_data['timestamp'] = datetime.now()
@@ -232,8 +231,8 @@ def main():
     }
 
     type_ = os.getenv('TYPE')
-    if type_ is None:
-        logger.critical("Logger TYPE IS NOT FOUND")
+    if type_ not in supported_types:
+        logger.critical(f"Logger type has invalid value: {type_}, supported type: {supported_types.keys}")
         return 1 
     
     db_uri = os.getenv('DB_URI')
@@ -246,34 +245,28 @@ def main():
         logger.critical('RABBITMQ URI IS NOT FOUND')
         return 1
 
+    logger_config = {}
+    logger_config["RABBIT_URI"] = rabbit_uri
+    buf_limit = os.getenv("BUFFER_LIMIT")
+    if buf_limit is not None:
+        logger_config["BUFFER_LIMIT"] = buf_limit
+    timeout = os.getenv("TIMEOUT_S")
+    if timeout is not None:
+        logger_config["TIMEOUT_S"] = timeout
+
+    engine = create_engine(db_uri)
+    session = Session(engine)
     
-        logger_config = {}
-        logger_config["RABBIT_URI"] = rabbit_uri
-        buf_limit = os.getenv("BUFFER_LIMIT")
-        if buf_limit is not None:
-            logger_config["BUFFER_LIMIT"] = buf_limit
-        timeout = os.getenv("TIMEOUT_S")
-        if timeout is not None:
-            logger_config["TIMEOUT_S"] = timeout
-
-        engine = create_engine(db_uri)
-        session = Session(engine)
     try:
-        if type_ in supported_types:
-            logger_obj = supported_types[type_](logger_config, session)
-            logger_obj.consume_event()   
-            # session.query(States).delete()
-            # session.commit() 
-        else:
-            logger.critical(f"INVALID VALUE OF LOGGET TYPE: {type_}")
-            return 1 
+        logger_obj = supported_types[type_](logger_config, session)
+        logger_obj.consume_event()   
     except Exception as err:
-        logger.error(f"{err}") 
-
+        logger.error(f"Exception in main loop, reason: {err}")
     finally: 
         session.close()
-        logger.debug("Logger session is CLOSED - successfully!")
-        return 0 
+        logger.debug("DB session is CLOSED - successfully!")
+    
+    return 0
 
 
 if __name__ == "__main__":
