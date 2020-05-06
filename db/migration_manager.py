@@ -19,10 +19,6 @@ load_dotenv(dotenv_path=env_path)
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d/%H:%M:%S')
 logger = logging.getLogger(__name__)
 
-# db = SQLAlchemy(metadata=metadata)
-
-# app = Flask(__name__)
-
 def main():
     db = SQLAlchemy(metadata=metadata)
 
@@ -55,16 +51,6 @@ def main():
     manager.run()
     
     return 0 
-
-# env_mode = os.getenv('SMART_ENV', 'dev')
-
-# config_path = f'config/{env_mode}/config.py'
-
-# app.config.from_pyfile(config_path)
-
-# app_config = importlib.import_module(f"config.{env_mode}.config")
-
-# logger.debug(f"Migration address: {app_config.SQLALCHEMY_DATABASE_URI}")
 
 if __name__ == '__main__':
     sys.exit(main())
