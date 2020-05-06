@@ -4,13 +4,12 @@ import json
 import logging 
 import os
 import sys 
-# sys.path.append("..")
 
 import pika 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 import threading
-import yaml 
+# import yaml 
 
 from models import metadata, Commands, Configs, States
 
@@ -236,7 +235,7 @@ def main():
         return 1 
     # TO DO
     # FIX db_uri -> config/.env
-    db_uri = os.getenv('DB_URI')
+    db_uri = os.getenv('TRACKER_DB_URI')
     if db_uri is None:
         logger.critical("DB URI IS NOT FOUND")
         return 1 

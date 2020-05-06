@@ -140,7 +140,7 @@ services:
             context: .
             dockerfile: tracker/Dockerfile
         env_file: 
-            - "tracker/config/.env.${SMART_ENV:-dev}"
+            - "config/.env.${SMART_ENV:-dev}"
         environment: 
             - TYPE=state
             - BUFFER_LIMIT=1000
@@ -161,7 +161,7 @@ services:
             context: .
             dockerfile: tracker/Dockerfile
         env_file: 
-            - "tracker/config/.env.${SMART_ENV:-dev}"
+            - "config/.env.${SMART_ENV:-dev}"
         environment: 
             - TYPE=command 
             - BUFFER_LIMIT=1000
@@ -182,7 +182,7 @@ services:
             context: .
             dockerfile: tracker/Dockerfile
         env_file: 
-            - "tracker/config/.env.${SMART_ENV:-dev}"
+            - "config/.env.${SMART_ENV:-dev}"
         environment: 
             - TYPE=config 
             - BUFFER_LIMIT=1000
