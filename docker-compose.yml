@@ -79,6 +79,7 @@ services:
         build:
             context: emulator
         restart: always
+        hostname: emulator
         volumes:
             - ./emulator/config.yml:/emulator/config.yml:ro
         depends_on:
@@ -134,17 +135,18 @@ services:
                 max-file: "5"
                 max-size: "20m"
     
-    state_logger:
+    state_tracker:
         build:
             context: .
-            dockerfile: logger/Dockerfile
+            dockerfile: tracker/Dockerfile
         env_file: 
-            - "logger/config/.env.${SMART_ENV:-dev}"
+            - "tracker/config/.env.${SMART_ENV:-dev}"
         environment: 
             - TYPE=state
             - BUFFER_LIMIT=1000
             - TIMEOUT_S=1.0
         restart: always
+        hostname: state_tracker
         depends_on: 
             - rabbitmq
             - timescaledb
@@ -154,17 +156,18 @@ services:
                 max-file: "5"
                 max-size: "20m"
     
-    command_logger:
+    command_tracker:
         build:
             context: .
-            dockerfile: logger/Dockerfile
+            dockerfile: tracker/Dockerfile
         env_file: 
-            - "logger/config/.env.${SMART_ENV:-dev}"
+            - "tracker/config/.env.${SMART_ENV:-dev}"
         environment: 
             - TYPE=command 
             - BUFFER_LIMIT=1000
             - TIMEOUT_S=1.0
         restart: always
+        hostname: command_tracker
         depends_on: 
             - rabbitmq
             - timescaledb
@@ -174,17 +177,18 @@ services:
                 max-file: "5"
                 max-size: "20m"
     
-    config_logger:
+    config_tracker:
         build:
             context: .
-            dockerfile: logger/Dockerfile
+            dockerfile: tracker/Dockerfile
         env_file: 
-            - "logger/config/.env.${SMART_ENV:-dev}"
+            - "tracker/config/.env.${SMART_ENV:-dev}"
         environment: 
             - TYPE=config 
             - BUFFER_LIMIT=1000
             - TIMEOUT_S=1.0
         restart: always
+        hostname: config_tracker
         depends_on: 
             - rabbitmq
             - timescaledb

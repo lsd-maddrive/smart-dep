@@ -12,12 +12,12 @@ from sqlalchemy.orm import Session
 import threading
 import yaml 
 
-from table_models import metadata, Commands, Configs, States
+from models import metadata, Commands, Configs, States
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d/%H:%M:%S')
 logger = logging.getLogger(__name__)
 
-class Logger(object):
+class Tracker(object):
     def __init__(self, config, exchange_name, binding_key, session):
         self.config = config 
         self.session = session 
@@ -139,7 +139,7 @@ class Logger(object):
         )
         self.channel.start_consuming() 
 
-class StateLogger(Logger):
+class StateTracker(Tracker):
     def __init__(self, config, session):
         self.binding_key = "state.*.*"
         self.exchange_name = "states"
@@ -167,7 +167,7 @@ class StateLogger(Logger):
         return new_state
 
         
-class ConfigLogger(Logger):
+class ConfigTracker(Tracker):
     def __init__(self, config, session):
         self.exchange_name = "configurations"
         self.binding_key = "cfg.*.*"
@@ -195,7 +195,7 @@ class ConfigLogger(Logger):
         return new_cgf
 
         
-class CommandLogger(Logger):
+class CommandTracker(Tracker):
     def __init__(self, config, session):
         self.exchange_name = "commands"
         self.binding_key = "cmd.*.*"
@@ -225,41 +225,43 @@ class CommandLogger(Logger):
 
 def main():
     supported_types = {
-        "state": StateLogger,
-        "command": CommandLogger,
-        "config": ConfigLogger
+        "state": StateTracker,
+        "command": CommandTracker,
+        "config": ConfigTracker
     }
 
     type_ = os.getenv('TYPE')
     if type_ not in supported_types:
         logger.critical(f"Logger type has invalid value: {type_}, supported type: {supported_types.keys}")
         return 1 
-    
+    # TO DO
+    # FIX db_uri -> config/.env
     db_uri = os.getenv('DB_URI')
     if db_uri is None:
         logger.critical("DB URI IS NOT FOUND")
         return 1 
-    
+    # TO DO
+    # FIX rabbit_uri -> config/.env
     rabbit_uri = os.getenv('RABBIT_URI')
     if rabbit_uri is None:
         logger.critical('RABBITMQ URI IS NOT FOUND')
         return 1
 
-    logger_config = {}
-    logger_config["RABBIT_URI"] = rabbit_uri
+    tracker_config = {}
+    tracker_config["RABBIT_URI"] = rabbit_uri
     buf_limit = os.getenv("BUFFER_LIMIT")
     if buf_limit is not None:
-        logger_config["BUFFER_LIMIT"] = buf_limit
+        tracker_config["BUFFER_LIMIT"] = buf_limit
     timeout = os.getenv("TIMEOUT_S")
     if timeout is not None:
-        logger_config["TIMEOUT_S"] = timeout
+        tracker_config["TIMEOUT_S"] = timeout
 
     engine = create_engine(db_uri)
     session = Session(engine)
     
     try:
-        logger_obj = supported_types[type_](logger_config, session)
-        logger_obj.consume_event()   
+        tracker_obj = supported_types[type_](tracker_config, session)
+        tracker_obj.consume_event()   
     except Exception as err:
         logger.error(f"Exception in main loop, reason: {err}")
     finally: 
