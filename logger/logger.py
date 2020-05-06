@@ -4,7 +4,7 @@ import json
 import logging 
 import os
 import sys 
-sys.path.append("..")
+# sys.path.append("..")
 
 import pika 
 from sqlalchemy import create_engine
