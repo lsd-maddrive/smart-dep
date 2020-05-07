@@ -16,29 +16,8 @@ Smart Department project
 
 ## Migrations 
 
-Step 1: create a migration repository with the following command
-
-```make 
-make mg-init
 ```
-> You can skip this step if the folder 'migrations' already exists. 
-
-Step 2: generate an initial migration with the following command:
-
-```make
-make mg-migrate
-```
-If you want to add a message to your migration use:
-```make
-make mg-migrate-msg msg='Initial'
-```
-where you can put yourown message instead of 'Initial' example. 
-
-> This command will generate a version-file (/migrations/versions), where all changes of your DB will be tracked. The migration script needs to be reviewed and edited, as Alembic currently does not detect every change you make to your models. 
-
-Step 3: apply the migration to the database (be carefully, check your DB first, changes may be already apllied):
-```make
-make mg-upgrade 
+make migrate
 ```
 
-Then each time the database models change repeat steps 2 and 3. 
+That all you need to make you DB actual :wink:

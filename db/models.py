@@ -6,7 +6,7 @@ metadata = MetaData()
 Model = declarative_base(metadata=metadata)
 
 class Commands(Model):
-    __tablename__= 'commands'
+    __tablename__= 'commands111'
 
     id = Column(Integer, primary_key=True)
     timestamp = Column(DateTime)
