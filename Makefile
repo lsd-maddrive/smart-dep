@@ -38,10 +38,7 @@ dc-up:		## Builds, (re)creates, starts, and attaches to containers for a service
 # Control migrations
 #-------------------------------------------------
 
-mg-build: 	## Build docker image for Flask Migrations 
-	docker build -t flask_migrations:latest -f db/Dockerfile .
-
 DB:=postgresql+psycopg2://admin:admin@localhost:5432/smart_dep 
-mg-upgrade:		## Run image with migrations upgrade 
-	docker run -v ${CURDIR}/db/migrations:/app/migrations -e DB_URI=${DB} --network="host" flask_migrations:latest
+migrate:		## Build and run image with migrations upgrade 
+	docker build -t flask_migrations:latest -f db/Dockerfile .;docker run -v ${CURDIR}/db/migrations:/app/migrations -e DB_URI=${DB} --network="host" flask_migrations:latest
 
