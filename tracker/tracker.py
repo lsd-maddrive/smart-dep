@@ -252,7 +252,7 @@ def main():
         logger.critical(f"Logger type has invalid value: {type_}, supported type: {supported_types.keys}")
         return 1 
  
-    db_uri = os.getenv('TRACKER_DB_URI')
+    db_uri = os.getenv('DB_URI')
     if db_uri is None:
         logger.critical("DB URI IS NOT FOUND")
         return 1 

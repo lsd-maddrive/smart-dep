@@ -38,18 +38,6 @@ dc-up:		## Builds, (re)creates, starts, and attaches to containers for a service
 # Control migrations
 #-------------------------------------------------
 
-# mg-init:	## Create environment for migration - do it only once
-# 	python3 db/migration_manager.py db init --directory db/migrations
-
-# mg-migrate:	## Generate version-file in /migrations/versions
-# 	python3 db/migration_manager.py db migrate --directory db/migrations
-
-# mg-migrate-msg:	## Generate version-file with message. Usage make mg-migrate-msg msg=''
-# 	python3 db/migration_manager.py db migrate -m $(msg) --directory db/migrations
-
-# mg-upgrade:	## Apply the migration to the database
-# 	python3 db/migration_manager.py db upgrade --directory db/migrations
-
 mg-build: 	## Build docker image for Flask Migrations 
 	docker build -t flask_migrations:latest -f db/Dockerfile .
 
