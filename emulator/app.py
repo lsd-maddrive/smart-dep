@@ -7,7 +7,7 @@ import yaml
 from fluent import handler
 import logging
 
-# Setup fleuntd connection - simple
+# Setup fluentd connection - simple
 custom_format = {
     'host': '%(hostname)s',
     'where': '%(name)s.%(module)s.%(funcName)s',

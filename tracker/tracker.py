@@ -5,16 +5,34 @@ import logging
 import os
 import sys 
 
+from fluent import handler
 import pika 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 import threading
-# import yaml 
 
 from models import metadata, Commands, Configs, States
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d/%H:%M:%S')
 logger = logging.getLogger(__name__)
+
+# Setup fluentd connection - simple
+custom_format = {
+    'host': '%(hostname)s',
+    'where': '%(name)s.%(module)s.%(funcName)s',
+    'type': '%(levelname)s',
+    'stack_trace': '%(exc_text)s'
+}
+
+std_h = logging.StreamHandler(sys.stdout)
+formatter = logging.Formatter(fmt='%(asctime)s - %(levelname)s - %(message)s',
+                              datefmt='%Y-%m-%d/%H:%M:%S')
+std_h.setFormatter(formatter)
+
+fluent_h = handler.FluentHandler('tracker', host='fluentd', port=24224)
+formatter = handler.FluentRecordFormatter(custom_format)
+fluent_h.setFormatter(logger)
+
 
 class Tracker(object):
     def __init__(self, config, exchange_name, binding_key, session):
@@ -233,14 +251,12 @@ def main():
     if type_ not in supported_types:
         logger.critical(f"Logger type has invalid value: {type_}, supported type: {supported_types.keys}")
         return 1 
-    # TO DO
-    # FIX db_uri -> config/.env
+ 
     db_uri = os.getenv('TRACKER_DB_URI')
     if db_uri is None:
         logger.critical("DB URI IS NOT FOUND")
         return 1 
-    # TO DO
-    # FIX rabbit_uri -> config/.env
+    
     rabbit_uri = os.getenv('RABBIT_URI')
     if rabbit_uri is None:
         logger.critical('RABBITMQ URI IS NOT FOUND')

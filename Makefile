@@ -49,3 +49,5 @@ mg-migrate-msg:	## Generate version-file with message. Usage make mg-migrate-msg
 
 mg-upgrade:	## Apply the migration to the database
 	python3 db/migration_manager.py db upgrade --directory db/migrations
+
+# mg-docker:
