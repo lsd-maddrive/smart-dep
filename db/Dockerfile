@@ -4,3 +4,9 @@ COPY db/migration_manager.py /app/
 WORKDIR /app 
 
 COPY db/models.py /app
+COPY db/requirements.txt /app
+
+RUN pip install --upgrade pip
+RUN pip install --no-cache-dir -r requirements.txt
+
+CMD ["python3", "migration_manager.py", "db", "upgrade"]

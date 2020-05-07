@@ -2,24 +2,19 @@ import importlib
 import logging
 import os
 import sys 
-sys.path.append("..")
 
 from flask import Flask
 from flask_migrate import Migrate, MigrateCommand
 from flask_script import Manager
 from flask_sqlalchemy import SQLAlchemy
-from dotenv import load_dotenv
 
 from models import metadata
-
-env_mode = os.getenv('SMART_ENV', 'dev')
-env_path = f'./config/.env.{env_mode}'
-load_dotenv(dotenv_path=env_path)
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d/%H:%M:%S')
 logger = logging.getLogger(__name__)
 
 def main():
+
     db = SQLAlchemy(metadata=metadata)
 
     app = Flask(__name__)
