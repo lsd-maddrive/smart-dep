@@ -3,6 +3,11 @@ venv3
 venv
 model-ru
 model-en
+first.py
+second.py
+third.py
+trying_dict.py
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

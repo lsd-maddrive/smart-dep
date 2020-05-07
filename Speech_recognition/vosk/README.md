@@ -7,5 +7,8 @@ Smart Department project
 
 sudo apt-get install portaudio19-dev
 
-Планируется реализовать kws и стандартное распознавание при помощи одного vosk
+KWS с помощью данного инструмента реализовано в скрипте kws_vosk.py. Для работы с данной библиотекой необходимо поставить словарь из следующей ссылки:
+https://github.com/alphacep/kaldi-android-demo/releases
+В данном скрипте использовалась модель alphacep-model-android-ru-0.3.tar.gz
+Необходимо модель из подобного архива установить в папку со скриптом и запустить скрипт
 
