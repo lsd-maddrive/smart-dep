@@ -10,6 +10,4 @@ COPY db/requirements.txt /app
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
-CMD chmod +x do_migrations.sh
-# CMD ["python3", "migration_manager.py", "db", "migrate"]
-# CMD ["python3 migration_manager.py db migrate", ";", "python3 migration_manager.py db upgrade"]
+CMD python3 /app/migration_manager.py db migrate; python3 /app/migration_manager.py db upgrade
