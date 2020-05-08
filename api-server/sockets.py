@@ -8,7 +8,8 @@ from contextlib import contextmanager
 from flask import request, current_app
 from flask_socketio import SocketIO, join_room, leave_room
 import logging
-
+# >>to allow other origins
+# >>'*' can be used to instruct the server to allow all origins
 socketio = SocketIO(cors_allowed_origins="*")
 
 logging.basicConfig(level=logging.DEBUG)
@@ -120,7 +121,7 @@ class PlaceStateSenderManager(object):
 
 place_manager = PlaceStateSenderManager()
 
-
+# >>???server-side event handler
 @socketio.on('start_states')
 def _socket_handle_start_states(config):
     session_id = request.sid

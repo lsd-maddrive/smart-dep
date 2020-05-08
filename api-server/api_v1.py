@@ -2,7 +2,7 @@ import json
 import random
 import time
 from threading import Thread, Event
-
+# >>messaging library
 from kombu import Connection, Exchange, Producer
 
 from flask import request, current_app
@@ -11,14 +11,17 @@ import logging
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
-
+# >>A namespace module contains models and resources declarations
+# >>Flask-RESTPlus - The main idea is to split your app into reusable namespaces
 api = Namespace('api/v1', description="Main API namespace")
-
+# >>allows you to instantiate and register models to your API or Namespace.
+# >>???What does it mean "register models to your API"
 _model_state = api.model('State', {
     'device_id': fields.String,
     'type': fields.String
 })
-
+# >>Polymorphism
+# >> Nested for dicts, lists 
 _model_light = api.inherit('Light', _model_state, {
     'state': fields.Nested(api.model('LightState', {
         'enabled': fields.Boolean
@@ -32,7 +35,7 @@ _model_power = api.inherit('Power', _model_state, {
     })
     ),
 })
-
+# >>??? What is it?
 _powers_db = [
     {
         'device_id': '0',
@@ -50,7 +53,8 @@ _powers_db = [
     },
 ]
 
-
+# >> Routes refer to URL patterns of an app
+# >>???go to the web page /place/.../powers?? 
 @api.route('/place/<string:place_id>/powers', endpoint='powers')
 @api.param('place_id', 'ID of place')
 class PowerUnits(Resource):
@@ -61,7 +65,8 @@ class PowerUnits(Resource):
         else:
             # TODO - db request required
             return {}
-
+# >>The decorator marshal_with() is what actually takes your data object
+# >>and applies the field filtering
 
 _lights_db = [
     {
