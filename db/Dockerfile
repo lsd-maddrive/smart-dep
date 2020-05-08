@@ -1,9 +1,8 @@
 FROM python:3.8.2-slim
 
 COPY db/migration_manager.py /app/
-WORKDIR /app 
+WORKDIR /app
 
-COPY db/do_migrations.sh /app
 COPY db/models.py /app
 COPY db/requirements.txt /app
 
