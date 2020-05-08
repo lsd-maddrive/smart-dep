@@ -31,7 +31,7 @@ std_h.setFormatter(formatter)
 
 fluent_h = handler.FluentHandler('tracker', host='fluentd', port=24224)
 formatter = handler.FluentRecordFormatter(custom_format)
-fluent_h.setFormatter(logger)
+fluent_h.setFormatter(formatter)
 
 
 class Tracker(object):
