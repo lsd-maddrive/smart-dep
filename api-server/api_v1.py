@@ -1,4 +1,5 @@
 import json
+import os
 import random
 import time
 from threading import Thread, Event
@@ -62,7 +63,7 @@ db_uri = os.getenv('DB_URI')
 if db_uri is None:
     logger.critical('DB URI IS NOT FOUND')
 else:
-    engine = current_app(db_uri)
+    engine = create_engine(db_uri)
     session = Session(engine)
     logger.debug("DB session is created successfully!")
 
@@ -73,11 +74,13 @@ class PowerUnits(Resource):
     @api.marshal_with(_model_power, as_list=True)
     def get(self, place_id):
         if current_app.debug:
+            query = session.query(States).filter(States.place_id.like(place_id))
+            logger.debug(f"POWER UNIT DEBUG\n\n\n\n{query}")
             return _powers_db
         else:
             # TODO - db request required
             query = session.query(States).filter(States.place_id.like(place_id))
-            print(query)
+            logger.debug(f"POWER UNIT DEBUG\n\n\n\n{query}")
             return {}
 # >>The decorator marshal_with() is what actually takes your data object
 # >>and applies the field filtering
