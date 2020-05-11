@@ -2,17 +2,22 @@ import json
 import random
 import time
 from threading import Thread, Event
-# >>messaging library
+import sys 
+sys.path.append("..")
+
 from kombu import Connection, Exchange, Producer
 
 from flask import request, current_app
 from flask_restplus import Resource, Namespace, fields
 import logging
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session
+
+from db.models import metadata, Commands, Configs, States
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
-# >>A namespace module contains models and resources declarations
-# >>Flask-RESTPlus - The main idea is to split your app into reusable namespaces
+
 api = Namespace('api/v1', description="Main API namespace")
 # >>allows you to instantiate and register models to your API or Namespace.
 # >>???What does it mean "register models to your API"
@@ -35,7 +40,7 @@ _model_power = api.inherit('Power', _model_state, {
     })
     ),
 })
-# >>??? What is it?
+
 _powers_db = [
     {
         'device_id': '0',
@@ -53,8 +58,15 @@ _powers_db = [
     },
 ]
 
-# >> Routes refer to URL patterns of an app
-# >>???go to the web page /place/.../powers?? 
+db_uri = os.getenv('DB_URI')
+if db_uri is None:
+    logger.critical('DB URI IS NOT FOUND')
+else:
+    engine = current_app(db_uri)
+    session = Session(engine)
+    logger.debug("DB session is created successfully!")
+
+
 @api.route('/place/<string:place_id>/powers', endpoint='powers')
 @api.param('place_id', 'ID of place')
 class PowerUnits(Resource):
@@ -64,6 +76,8 @@ class PowerUnits(Resource):
             return _powers_db
         else:
             # TODO - db request required
+            query = session.query(States).filter(States.place_id.like(place_id))
+            print(query)
             return {}
 # >>The decorator marshal_with() is what actually takes your data object
 # >>and applies the field filtering

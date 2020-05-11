@@ -147,7 +147,6 @@ class Tracker(object):
             )
             self.timer.start() 
 
-
     def consume_event(self):
         self.channel.basic_consume(
             queue=self.queue_name, 
