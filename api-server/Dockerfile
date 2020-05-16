@@ -1,9 +1,10 @@
 FROM python:3.8.2-slim
 
-COPY app.py sockets.py api_v1.py /app/
+COPY api-server/app.py api-server/sockets.py api-server/api_v1.py /app/
+COPY db/models.py /app/
 WORKDIR /app
 
-COPY requirements.txt /app
+COPY api-server/requirements.txt /app
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 

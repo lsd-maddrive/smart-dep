@@ -4,7 +4,7 @@ import random
 import time
 from threading import Thread, Event
 import sys 
-sys.path.append("..")
+# sys.path.append("..")
 
 from kombu import Connection, Exchange, Producer
 
@@ -14,7 +14,7 @@ import logging
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
-from db.models import metadata, Commands, Configs, States
+from models import metadata, Commands, Configs, States
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -59,13 +59,20 @@ _powers_db = [
     },
 ]
 
-db_uri = os.getenv('DB_URI')
-if db_uri is None:
-    logger.critical('DB URI IS NOT FOUND')
-else:
-    engine = create_engine(db_uri)
-    session = Session(engine)
-    logger.debug("DB session is created successfully!")
+# TODO: how to check db_uri 
+
+# db_uri = os.getenv('DB_URI')
+db_uri = 'postgresql+psycopg2://admin:admin@timescaledb:5432/smart_dep'
+
+# engine = None
+# session = None
+
+# if db_uri is None:
+    # logger.critical('DB URI IS NOT FOUND')
+# else:
+engine = create_engine(db_uri)
+session = Session(engine)
+logger.debug("DB session is created successfully!")
 
 
 @api.route('/place/<string:place_id>/powers', endpoint='powers')
@@ -73,6 +80,7 @@ else:
 class PowerUnits(Resource):
     @api.marshal_with(_model_power, as_list=True)
     def get(self, place_id):
+        logger.debug(f"POWER UNIT DEBUG")
         if current_app.debug:
             query = session.query(States).filter(States.place_id.like(place_id))
             logger.debug(f"POWER UNIT DEBUG\n\n\n\n{query}")
@@ -102,9 +110,16 @@ class LightUnits(Resource):
     @api.marshal_with(_model_light, as_list=True)
     def get(self, place_id):
         if current_app.debug:
+            logger.debug("LIGHT UNIT HERE APP DEBUG")
+            query = session.query(States).filter(States.place_id.like(place_id))
+            logger.debug(f"LIGHT UNIT DEBUG\n\n\n\n{query}")
+
             return _lights_db
         else:
             # TODO - db request required
+            logger.debug("LIGHT UNIT HERE ELSE")
+            query = session.query(States).filter(States.place_id.like(place_id))
+            logger.debug(f"LIGHT UNIT DEBUG\n\n\n\n{query}")
             return {}
 
 
@@ -112,6 +127,7 @@ class LightUnits(Resource):
 @api.param('place_id', 'ID of place')
 class CommandResender(Resource):
     def post(self, place_id):
+        logger.debug('COMMAND RESENDER HERE')
         data = request.get_json()
         logger.debug(f'Received command: {data}')
 

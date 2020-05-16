@@ -59,7 +59,8 @@ services:
 
     apiserver:
         build:
-            context: api-server
+            context: .
+            dockerfile: api-server/Dockerfile
         restart: always
         # For swagger access
         ports:
