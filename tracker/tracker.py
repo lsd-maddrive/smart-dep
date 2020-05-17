@@ -256,7 +256,7 @@ def main():
         logger.critical("DB URI IS NOT FOUND")
         return 1 
     
-    rabbit_uri = os.getenv('RABBIT_URI')
+    rabbit_uri = os.getenv('RABBITMQ_URI')
     if rabbit_uri is None:
         logger.critical('RABBITMQ URI IS NOT FOUND')
         return 1

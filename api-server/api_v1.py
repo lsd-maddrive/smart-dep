@@ -1,10 +1,9 @@
+import datetime
 import json
 import os
 import random
 import time
 from threading import Thread, Event
-import sys 
-# sys.path.append("..")
 
 from kombu import Connection, Exchange, Producer
 
@@ -12,7 +11,10 @@ from flask import request, current_app
 from flask_restplus import Resource, Namespace, fields
 import logging
 from sqlalchemy import create_engine
+from sqlalchemy import desc
+from sqlalchemy import distinct
 from sqlalchemy.orm import Session
+from sqlalchemy.sql.expression import func
 
 from models import metadata, Commands, Configs, States
 
@@ -20,14 +22,12 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 api = Namespace('api/v1', description="Main API namespace")
-# >>allows you to instantiate and register models to your API or Namespace.
-# >>???What does it mean "register models to your API"
+
 _model_state = api.model('State', {
     'device_id': fields.String,
     'type': fields.String
 })
-# >>Polymorphism
-# >> Nested for dicts, lists 
+
 _model_light = api.inherit('Light', _model_state, {
     'state': fields.Nested(api.model('LightState', {
         'enabled': fields.Boolean
@@ -59,20 +59,22 @@ _powers_db = [
     },
 ]
 
-# TODO: how to check db_uri 
+minutes = os.getenv('DMINUTES')
+if minutes is None:
+    time_delta = datetime.timedelta(minutes=5)
+    logger.warning(f"DMINUTES is NOT FOUND! DEFAULT DMINUTES value is used 5 mins.")
+else:
+    time_delta = datetime.timedelta(minutes=int(minutes))
+    logger.debug(f"DMINUTES is found. The value of delta time for DB is {minutes}")
 
-# db_uri = os.getenv('DB_URI')
-db_uri = 'postgresql+psycopg2://admin:admin@timescaledb:5432/smart_dep'
+db_uri = os.getenv('DB_URI')
 
-# engine = None
-# session = None
-
-# if db_uri is None:
-    # logger.critical('DB URI IS NOT FOUND')
-# else:
-engine = create_engine(db_uri)
-session = Session(engine)
-logger.debug("DB session is created successfully!")
+if db_uri is None:
+    logger.critical('DB URI IS NOT FOUND')
+else:
+    engine = create_engine(db_uri)
+    session = Session(engine)
+    logger.debug(f"DB session is created successfully! {db_uri}")
 
 
 @api.route('/place/<string:place_id>/powers', endpoint='powers')
@@ -80,15 +82,15 @@ logger.debug("DB session is created successfully!")
 class PowerUnits(Resource):
     @api.marshal_with(_model_power, as_list=True)
     def get(self, place_id):
-        logger.debug(f"POWER UNIT DEBUG")
         if current_app.debug:
-            query = session.query(States).filter(States.place_id.like(place_id))
-            logger.debug(f"POWER UNIT DEBUG\n\n\n\n{query}")
+
+            # query = db.session.query(States).filter(States.place_id.like(place_id))
+            # logger.debug(f"POWER UNIT DEBUG\n\n\n\n{query}")
             return _powers_db
         else:
             # TODO - db request required
-            query = session.query(States).filter(States.place_id.like(place_id))
-            logger.debug(f"POWER UNIT DEBUG\n\n\n\n{query}")
+            # query = session.query(States).filter(States.place_id.like(place_id))
+            # logger.debug(f"POWER UNIT DEBUG\n\n\n\n{query}")
             return {}
 # >>The decorator marshal_with() is what actually takes your data object
 # >>and applies the field filtering
@@ -110,16 +112,39 @@ class LightUnits(Resource):
     @api.marshal_with(_model_light, as_list=True)
     def get(self, place_id):
         if current_app.debug:
-            logger.debug("LIGHT UNIT HERE APP DEBUG")
-            query = session.query(States).filter(States.place_id.like(place_id))
-            logger.debug(f"LIGHT UNIT DEBUG\n\n\n\n{query}")
+            # logger.debug("LIGHT UNIT HERE APP DEBUG")
+            # logger.debug(f"DB URI: {db_uri}")
+            # current_timestamp = datetime.datetime.now()
+            # check_time = current_timestamp - time_delta
+            
+            # logger.debug(f"Current TIMESTAMP: {current_timestamp}")
+            # logger.debug(f"Check TIMESTAMP: {check_time}")
+
+            # query = session.query(States). \
+            #         filter(States.timestamp >= check_time). \
+            #         filter(States.place_id.like(place_id)). \
+            #         distinct(States.device_id)
+
+            # query_tmp = session.query(States). \
+            #             filter(States.timestamp >= check_time). \
+            #             filter(States.place_id.like(place_id)). \
+            #             order_by(States.timestamp.desc()). \
+            #             limit(5)
+
+            # for q in query:
+            #     logger.debug(f"{q}\n")
+
+            
+
+            # for q in query_tmp:
+            #     logger.debug(f"TMP LOG: {q}\n")
 
             return _lights_db
         else:
             # TODO - db request required
-            logger.debug("LIGHT UNIT HERE ELSE")
-            query = session.query(States).filter(States.place_id.like(place_id))
-            logger.debug(f"LIGHT UNIT DEBUG\n\n\n\n{query}")
+            # logger.debug("LIGHT UNIT HERE ELSE")
+            # query = session.query(States).filter(States.place_id.like(place_id))
+            # logger.debug(f"LIGHT UNIT DEBUG\n\n\n\n{query}")
             return {}
 
 
