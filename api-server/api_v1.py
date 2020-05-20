@@ -1,4 +1,4 @@
-import datetime
+from datetime import date, datetime, timedelta
 import json
 import os
 import random
@@ -10,6 +10,7 @@ from kombu import Connection, Exchange, Producer
 from flask import request, current_app
 from flask_restplus import Resource, Namespace, fields
 import logging
+from pprint import pformat
 from sqlalchemy import create_engine
 from sqlalchemy import desc
 from sqlalchemy import distinct
@@ -42,29 +43,29 @@ _model_power = api.inherit('Power', _model_state, {
     ),
 })
 
-_powers_db = [
-    {
-        'device_id': '0',
-        'type': 'power',
-        'state': {
-            'enabled': True
-        }
-    },
-    {
-        'device_id': '1',
-        'type': 'power',
-        'state': {
-            'enabled': False
-        }
-    },
-]
+# _powers_db = [
+#     {
+#         'device_id': '0',
+#         'type': 'power',
+#         'state': {
+#             'enabled': True
+#         }
+#     },
+#     {
+#         'device_id': '1',
+#         'type': 'power',
+#         'state': {
+#             'enabled': False
+#         }
+#     },
+# ]
 
 minutes = os.getenv('DMINUTES')
 if minutes is None:
-    time_delta = datetime.timedelta(minutes=5)
+    time_delta = timedelta(minutes=5)
     logger.warning(f"DMINUTES is NOT FOUND! DEFAULT DMINUTES value is used 5 mins.")
 else:
-    time_delta = datetime.timedelta(minutes=int(minutes))
+    time_delta = timedelta(minutes=int(minutes))
     logger.debug(f"DMINUTES is found. The value of delta time for DB is {minutes}")
 
 db_uri = os.getenv('DB_URI')
@@ -84,27 +85,53 @@ class PowerUnits(Resource):
     def get(self, place_id):
         if current_app.debug:
 
-            # query = db.session.query(States).filter(States.place_id.like(place_id))
-            # logger.debug(f"POWER UNIT DEBUG\n\n\n\n{query}")
-            return _powers_db
+            current_timestamp = datetime.now()
+            check_time = current_timestamp - time_delta
+
+            query = session.query(States). \
+                    filter(States.timestamp >= check_time). \
+                    filter(States.place_id == place_id). \
+                    filter(States.type == 'power'). \
+                    order_by(States.device_id, States.timestamp.desc()). \
+                    distinct(States.device_id)
+        
+            powers_dict_list = [] 
+            for q in query:
+                powers_dict_list.append(
+                    {
+                        'type': q.type, 
+                        'device_id': q.device_id, 
+                        'state': q.state, 
+                        'timestamp': json.dumps(q.timestamp, default=json_serial), 
+                        'place_id': place_id
+                    }
+                )
+
+            logger.debug(f"POWER UNIT DATA:\n{pformat(powers_dict_list)}")
+            
+            return powers_dict_list
         else:
             # TODO - db request required
-            # query = session.query(States).filter(States.place_id.like(place_id))
-            # logger.debug(f"POWER UNIT DEBUG\n\n\n\n{query}")
             return {}
 # >>The decorator marshal_with() is what actually takes your data object
 # >>and applies the field filtering
 
-_lights_db = [
-    {
-        'device_id': '0',
-        'type': 'light',
-        'state': {
-            'enabled': True
-        }
-    }
-]
+# _lights_db = [
+#     {
+#         'device_id': '0',
+#         'type': 'light',
+#         'state': {
+#             'enabled': True
+#         }
+#     }
+# ]
 
+
+def json_serial(obj):
+    """JSON serializer for objects not serializable by default json code"""
+    if isinstance(obj, (datetime, date)):
+        return obj.isoformat()
+    raise TypeError ("Type %s not serializable" % type(obj))
 
 @api.route('/place/<string:place_id>/lights', endpoint='lights')
 @api.param('place_id', 'ID of place')
@@ -112,39 +139,33 @@ class LightUnits(Resource):
     @api.marshal_with(_model_light, as_list=True)
     def get(self, place_id):
         if current_app.debug:
-            # logger.debug("LIGHT UNIT HERE APP DEBUG")
-            # logger.debug(f"DB URI: {db_uri}")
-            # current_timestamp = datetime.datetime.now()
-            # check_time = current_timestamp - time_delta
+            current_timestamp = datetime.now()
+            check_time = current_timestamp - time_delta
+
+            query = session.query(States). \
+                    filter(States.timestamp >= check_time). \
+                    filter(States.place_id == place_id). \
+                    filter(States.type == 'light'). \
+                    order_by(States.device_id, States.timestamp.desc()). \
+                    distinct(States.device_id)
+        
+            lights_dict_list = [] 
+            for q in query:
+                lights_dict_list.append(
+                    {
+                        'type': q.type, 
+                        'device_id': q.device_id, 
+                        'state': q.state, 
+                        'timestamp': json.dumps(q.timestamp, default=json_serial), 
+                        'place_id': place_id
+                    }
+                )
+
+            logger.debug(f"LIGHT UNIT DATA:\n{pformat(lights_dict_list)}")
             
-            # logger.debug(f"Current TIMESTAMP: {current_timestamp}")
-            # logger.debug(f"Check TIMESTAMP: {check_time}")
-
-            # query = session.query(States). \
-            #         filter(States.timestamp >= check_time). \
-            #         filter(States.place_id.like(place_id)). \
-            #         distinct(States.device_id)
-
-            # query_tmp = session.query(States). \
-            #             filter(States.timestamp >= check_time). \
-            #             filter(States.place_id.like(place_id)). \
-            #             order_by(States.timestamp.desc()). \
-            #             limit(5)
-
-            # for q in query:
-            #     logger.debug(f"{q}\n")
-
-            
-
-            # for q in query_tmp:
-            #     logger.debug(f"TMP LOG: {q}\n")
-
-            return _lights_db
+            return lights_dict_list
         else:
             # TODO - db request required
-            # logger.debug("LIGHT UNIT HERE ELSE")
-            # query = session.query(States).filter(States.place_id.like(place_id))
-            # logger.debug(f"LIGHT UNIT DEBUG\n\n\n\n{query}")
             return {}
 
 
