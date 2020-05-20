@@ -99,11 +99,11 @@ class PowerUnits(Resource):
             for q in query:
                 powers_dict_list.append(
                     {
-                        'type': q.type, 
                         'device_id': q.device_id, 
+                        'type': q.type, 
                         'state': q.state, 
-                        'timestamp': json.dumps(q.timestamp, default=json_serial), 
-                        'place_id': place_id
+                        # 'timestamp': json.dumps(q.timestamp, default=json_serial), 
+                        # 'place_id': place_id
                     }
                 )
 
@@ -127,11 +127,11 @@ class PowerUnits(Resource):
 # ]
 
 
-def json_serial(obj):
-    """JSON serializer for objects not serializable by default json code"""
-    if isinstance(obj, (datetime, date)):
-        return obj.isoformat()
-    raise TypeError ("Type %s not serializable" % type(obj))
+# def json_serial(obj):
+#     """JSON serializer for objects not serializable by default json code"""
+#     if isinstance(obj, (datetime, date)):
+#         return obj.isoformat()
+#     raise TypeError ("Type %s not serializable" % type(obj))
 
 @api.route('/place/<string:place_id>/lights', endpoint='lights')
 @api.param('place_id', 'ID of place')
@@ -153,11 +153,11 @@ class LightUnits(Resource):
             for q in query:
                 lights_dict_list.append(
                     {
-                        'type': q.type, 
                         'device_id': q.device_id, 
+                        'type': q.type, 
                         'state': q.state, 
-                        'timestamp': json.dumps(q.timestamp, default=json_serial), 
-                        'place_id': place_id
+                        # 'timestamp': json.dumps(q.timestamp, default=json_serial), 
+                        # 'place_id': place_id
                     }
                 )
 
@@ -196,12 +196,12 @@ class CommandResender(Resource):
         return f'Message sent: {message}'
 
 
-_place_db = [
-    {
-        'id': '8201',
-        'name': "KEMZ",
-    }
-]
+# _place_db = [
+#     {
+#         'id': '8201',
+#         'name': "KEMZ",
+#     }
+# ]
 
 
 _model_place = api.model('Place', {
@@ -215,7 +215,27 @@ class Places(Resource):
     @api.marshal_with(_model_place, as_list=True)
     def get(self):
         if current_app.debug:
-            return _place_db
+            current_timestamp = datetime.now()
+            check_time = current_timestamp - time_delta
+
+            query = session.query(States.place_id). \
+                    filter(States.timestamp < check_time). \
+                    order_by(States.place_id, States.timestamp.desc()). \
+                    distinct(States.place_id)
+            
+            places_dict_list = []
+
+            for q in query:
+                places_dict_list.append(
+                    {
+                        'id': q.place_id,
+                        'name': q.place_id
+                    }
+                )
+            
+            logger.debug(f"Places UNIT DATA:\n{pformat(places_dict_list)}")
+            
+            return places_dict_list
         else:
             # TODO - db request required
             return {}

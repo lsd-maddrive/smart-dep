@@ -18,8 +18,7 @@ from db.models import metadata, Commands, Configs, States
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-
-db_uri = 'postgresql+psycopg2://admin:admin@localhost:5432/smart_dep'
+# db_uri = 'postgresql+psycopg2://admin:admin@localhost:5432/smart_dep'
 
 # engine = create_engine(db_uri)#, echo=True)
 # session = Session(engine)
@@ -27,6 +26,15 @@ db_uri = 'postgresql+psycopg2://admin:admin@localhost:5432/smart_dep'
 # current_timestamp = datetime.datetime.now()
 # time_delta = datetime.timedelta(minutes=5)
 # check_time = current_timestamp - time_delta
+
+# place_query = session.query(States.place_id). \
+#               filter(States.timestamp < check_time). \
+#               order_by(States.place_id, States.timestamp.desc()). \
+#               distinct(States.place_id)
+
+# for pq in place_query:
+#     print(f"{pq}")
+
 
 # tmp = session.query(States). \
 #         filter(States.timestamp < check_time). \
@@ -42,3 +50,4 @@ db_uri = 'postgresql+psycopg2://admin:admin@localhost:5432/smart_dep'
 # test light unit in api_v1.py 
 r = requests.get('http://localhost:5000/api/v1/place/8201/powers')
 r = requests.get('http://localhost:5000/api/v1/place/8201/lights')
+r = requests.get('http://localhost:5000/api/v1/place')
