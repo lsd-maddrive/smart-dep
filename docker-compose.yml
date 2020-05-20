@@ -71,9 +71,6 @@ services:
             - "5000:8080"
         depends_on:
             - timescaledb
-        # volumes:
-            # Mapping configuration with required env (default: dev)
-            # - ./api-server/config/${SMART_ENV:-dev}/config.py:/app/config.py:ro
         logging:
             driver: "json-file"
             options:
