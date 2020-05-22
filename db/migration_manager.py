@@ -20,6 +20,7 @@ def main():
     # only in dev mode! In prod => DEBUG = False!
     # Leaving it on will allow users to run 
     # arbitrary Python code on your server.
+    # FLASK_DEBUG -? 
     app.config["DEBUG"] = True
 
     # If set to True, Flask-SQLAlchemy will track modifications 
