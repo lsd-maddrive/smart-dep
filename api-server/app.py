@@ -16,13 +16,13 @@ logger = logging.getLogger(__name__)
 
 from sockets import socketio
 from api_v1 import api as ns
-from db import db 
+
+from database import db 
+from models import *
 
 app = Flask(__name__)
 
-####### APP CONFIGURATION ZONE #######
-########## OPTIONAL CONFIGS ##########
-app.config['DEBUG'] = os.getenv('API_SERVER_DEBUG', True)
+app.config['FLASK_DEBUG'] = os.getenv('API_SERVER_DEBUG', True)
 app.config['TESTING'] = os.getenv('API_SERVER_TESTING', False)
 
 db_uri = os.getenv('DB_URI')
@@ -44,9 +44,7 @@ logger.debug(f"RABBITMQ URI is set to {rabbitmq_uri}")
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = os.getenv('SQLALCHEMY_TRACK_MODIFICATIONS', False)
 
-
 db.init_app(app)
-
 
 # >>Initialization. Connect soketio and flask 
 socketio.init_app(app)
@@ -56,9 +54,5 @@ api.add_namespace(ns)
 # >>enable CORS for all domains on all routes
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
-# >> start up web service, replaces app.run(...)
-# socketio.run(app, debug=True, use_reloader=True)
-
 if __name__ == '__main__':
-    # sys.exit(main())
-    socketio.run(app, debug=True, use_reloader=True)
+    socketio.run(app, debug=False, use_reloader=True)
