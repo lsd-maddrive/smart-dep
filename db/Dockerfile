@@ -4,6 +4,7 @@ COPY db/migration_manager.py /app/
 WORKDIR /app
 
 COPY db/models.py /app
+COPY db/db.py /app 
 COPY db/requirements.txt /app
 
 RUN pip install --upgrade pip

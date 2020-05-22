@@ -8,14 +8,15 @@ from flask_migrate import Migrate, MigrateCommand
 from flask_script import Manager
 from flask_sqlalchemy import SQLAlchemy
 
-from models import metadata
+# from models import metadata
+from db import db 
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d/%H:%M:%S')
 logger = logging.getLogger(__name__)
 
 def main():
 
-    db = SQLAlchemy(metadata=metadata)
+    # db = SQLAlchemy(metadata=metadata)
 
     app = Flask(__name__)
     
