@@ -55,6 +55,8 @@ class PlaceStateSender(Thread):
             time_start = time.time()
 
             if self.debug:
+                logger.debug("INSIDE RUN SOCKETS")
+                
                 light_state = _lights_db[0].copy()
                 light_state['state']['enabled'] = bool(random.getrandbits(1))
 
