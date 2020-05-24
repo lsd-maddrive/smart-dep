@@ -41,6 +41,23 @@ def get_last_places(check_time):
             Query object that containts unique place id
     """
     return db.session.query(States.place_id). \
-           filter(States.timestamp < check_time). \
+           filter(States.timestamp >= check_time). \
            order_by(States.place_id, States.timestamp.desc()). \
            distinct(States.place_id)
+
+# TODO: CHECK THIS FUNCTION! 
+def get_devices_states(check_time):
+    """
+        Get last states for all unique devices in defined 
+        period of time 
+
+        Args:
+            check_time (datetime): the lower bound of time
+        
+        Returns:
+            Query object that containts data for each unique device
+    """
+    return db.session.query(States). \
+           filter(States.timestamp >= check_time). \ 
+           order_by(States.device_id, States.timestamp.desc()). \
+           distinct(States.device_id)
