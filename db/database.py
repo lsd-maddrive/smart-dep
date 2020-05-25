@@ -6,7 +6,11 @@ from sqlalchemy import desc
 from sqlalchemy import distinct
 from sqlalchemy.orm import Session
 
-from db.models import * 
+# for docker 
+from models import *
+
+# for tests 
+# from db.models import * 
 
 db = SQLAlchemy(metadata=metadata)
 
@@ -51,6 +55,7 @@ def get_last_places(check_time, db_session=db.session):
            distinct(States.place_id)
 
 # TODO: CHECK THIS FUNCTION! 
+# in tests - it works
 def get_devices_states(check_time, db_session=db.session):
     """
         Get last states for all unique devices in defined 

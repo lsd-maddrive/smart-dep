@@ -9,6 +9,7 @@ from db.models import States
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d/%H:%M:%S')
 logger = logging.getLogger(__name__)
 
+# ?? Remove file into ./db/tests ?? 
 
 def test_get_last_states(timescaleDB):
     _ = timescaleDB.query(States). \

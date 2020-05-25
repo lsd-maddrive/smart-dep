@@ -60,7 +60,7 @@ services:
     apiserver:
         build:
             context: .
-            dockerfile: api-server/Dockerfile
+            dockerfile: api_server/Dockerfile
         env_file: 
             - "config/.env.${SMART_ENV:-dev}"
         environment: 
