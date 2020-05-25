@@ -7,8 +7,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import testing.postgresql
 
-# from api_server.app import app 
-from db.models import * 
+from api_server.app import create_app
+from db.models import Model, States 
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d/%H:%M:%S')
 logger = logging.getLogger(__name__)
@@ -19,7 +19,7 @@ def test_db():
     return testing.postgresql.Postgresql()
 
 @pytest.fixture(scope='session')
-def timescaleDB(request, dbUrl):
+def timescaleDB(request, test_db):
     engine = create_engine(test_db.url())
     logger.debug(f"Engine is creates: {test_db.url()}")
     
@@ -77,5 +77,7 @@ def timescaleDB(request, dbUrl):
 
 @pytest.fixture(scope='session')
 def client(timescaleDB):
-    app.config['DATABASE'] = test_db.url()
-    pass 
+    # app = create_app()
+    # app.config['DATABASE'] = test_db.url()
+    pass
+     
