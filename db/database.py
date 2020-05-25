@@ -26,7 +26,6 @@ def get_last_states(check_time, place_id, type_, db_session=db.session):
             Query object that containts unique data for each
             device in defined period of time
     """
-    print(f"{type(db_session)}")
     return db_session.query(States). \
            filter(States.timestamp >= check_time). \
            filter(States.place_id == place_id). \
