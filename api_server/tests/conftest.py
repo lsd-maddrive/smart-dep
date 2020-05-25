@@ -1,6 +1,7 @@
 from datetime import datetime
 import logging
 
+from pprint import pformat
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -11,7 +12,7 @@ from db.models import *
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d/%H:%M:%S')
 logger = logging.getLogger(__name__)
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def timescaleDB(request):
     test_db = testing.postgresql.Postgresql()
     engine = create_engine(test_db.url())
@@ -22,19 +23,41 @@ def timescaleDB(request):
     session = Session()
     logger.debug('session - done')
     
-    test_state = States(
-        timestamp=datetime.now(), 
-        state= {'enabled': False}, 
-        device_id='11:11:11:11:11:11',
-        place_id='8201',
-        type='light'
-    )
-    logger.debug(f"Test row: {test_state}")
-    session.add(test_state)
-    logger.debug("Test row - added")
-    session.commit()
-    logger.debug("Test row - commited")
+    devices = [
+        '11:11:11:11:11:11', 
+        '01:01:01:01:01:01', 
+        'FF:FF:FF:FF:FF:FF'
+        # None
+    ]
 
+    types = [
+        'light', 
+        'env', 
+        'power'
+        # 'unknown'
+    ]
+
+    states = []
+    for type_ in types:
+        for device in devices:
+            states.append(
+                States(
+                    timestamp=datetime.now(), 
+                    state= {'enable': False}, 
+                    device_id=device, 
+                    place_id='8201', 
+                    type=type_
+                )
+            )
+
+    logger.debug(f"DB DATA STATES: {pformat(states)}")
+
+    session.bulk_save_objects(
+        objects=states
+    )
+
+    session.commit() 
+    
     def resource_teardown():
         logger.debug("resource_teardown")
         session.close()
