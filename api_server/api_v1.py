@@ -12,7 +12,7 @@ from flask_restplus import Resource, Namespace, fields
 import logging
 from pprint import pformat
 
-from database import * 
+from db.database import *
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)

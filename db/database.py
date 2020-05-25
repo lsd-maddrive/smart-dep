@@ -6,11 +6,7 @@ from sqlalchemy import desc
 from sqlalchemy import distinct
 from sqlalchemy.orm import Session
 
-# for docker 
-from models import *
-
-# for tests 
-# from db.models import * 
+from db.models import * 
 
 db = SQLAlchemy(metadata=metadata)
 

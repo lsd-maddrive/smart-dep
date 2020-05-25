@@ -1,5 +1,6 @@
 import os
 import sys 
+sys.path.append("..")
 
 from flask import Flask, request
 from flask_restplus import Api
@@ -9,10 +10,10 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-from api_v1 import api as ns
-from database import db 
-from models import *
-from sockets import socketio
+from api_server.api_v1 import api as ns 
+from api_server.sockets import socketio
+from db.database import db 
+from db.database import * 
 
 app = Flask(__name__)
 

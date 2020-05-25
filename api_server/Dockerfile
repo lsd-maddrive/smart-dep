@@ -1,7 +1,8 @@
 FROM python:3.8.2-slim
 
-COPY api_server/app.py api_server/sockets.py api_server/api_v1.py /app/
-COPY db/models.py db/database.py /app/
+COPY api_server/app.py /app/
+COPY api_server/sockets.py api_server/api_v1.py /app/api_server/
+COPY db/models.py db/database.py /app/db/
 WORKDIR /app
 
 COPY api_server/requirements.txt /app
