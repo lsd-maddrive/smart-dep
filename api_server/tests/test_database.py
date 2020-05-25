@@ -20,8 +20,8 @@ def test_db(timescaleDB):
         type_='light', 
         db_session=timescaleDB
     )
-
-    logger.debug(f"TYPE: {type(db_last_states)}, {type(timescaleDB)}")
+    for dls in db_last_states:
+        logger.debug(f"{dls}")
 
     
     assert True  
