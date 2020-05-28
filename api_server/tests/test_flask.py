@@ -1,8 +1,10 @@
+import copy 
 import json
 import logging
 
 import pytest
 
+from db.database import db 
 from db.models import * 
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d/%H:%M:%S')
@@ -61,12 +63,20 @@ def test_place_request(timescaleDB, client):
 def test_socketio_client_is_connected(sio_client):
     assert sio_client.is_connected()
 
-def test_socketio(sio_client):
-    # cgf = {
-    #     'place_id': '8201',
-    #     'period': '5'
-    # }
-    # sio_client.emit('start_states', cgf)
-    # sio_client.disconnect()
+# TODO: how to check in assert? 
+def test_socketio_disconnect(sio_client):
+    sio_client.emit('disconnect')
+    assert True 
+
+
+def test_socketio(sio_client, timescaleDB):
+    config = {
+        'place_id': '8201',
+        'period': 5
+    }
+    tmo = copy.copy(timescaleDB)
+    sio_client.emit('start_states', config)
+    # logger.debug(f"TEST: {sio_client.get_received()}")
+    # logger.debug(f"EMIT {sio_client.emit('start_states', config)}")
     
     assert True

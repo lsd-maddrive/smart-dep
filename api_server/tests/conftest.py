@@ -98,18 +98,17 @@ def flask_app(test_db, timescaleDB):
     socketio.init_app(app)
     api = Api(app)
     api.add_namespace(ns)
-    CORS(app, resources={r"/api/*": {"origins": "*"}})
 
     return app
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def client(flask_app):
     with flask_app.test_client() as client:
         yield client
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def sio_client(flask_app, client):
     sio_test_client = socketio.test_client(
         flask_app, flask_test_client=client

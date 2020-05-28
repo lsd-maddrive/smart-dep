@@ -1,4 +1,8 @@
+from datetime import datetime, timedelta
 import json
+import os
+import sys
+sys.path.append("..")
 import random
 import time
 from threading import Thread, Event
@@ -8,12 +12,17 @@ from contextlib import contextmanager
 from flask import request, current_app
 from flask_socketio import SocketIO, join_room, leave_room
 import logging
+
+from db.database import * 
+
 # >>to allow other origins
 # >>'*' can be used to instruct the server to allow all origins
 socketio = SocketIO(cors_allowed_origins="*")
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+
+time_delta = timedelta(minutes=int(os.getenv('DMINUTES', '5')))
 
 
 _lights_db = [
@@ -44,7 +53,8 @@ class PlaceStateSender(Thread):
         self.enabled = True
         super(PlaceStateSender, self).__init__()
 
-        self.debug = current_app.debug
+        # self.debug = current_app.debug
+        # self.db_session = db_session
 
     def stop(self):
         self.enabled = False
@@ -54,19 +64,26 @@ class PlaceStateSender(Thread):
         while self.enabled:
             time_start = time.time()
 
-            if self.debug:
-                logger.debug("INSIDE RUN SOCKETS")
-                
-                light_state = _lights_db[0].copy()
-                light_state['state']['enabled'] = bool(random.getrandbits(1))
+            logger.debug("INSIDE RUN SOCKETS")
+            current_timestamp = datetime.now()
+            check_time = current_timestamp - time_delta 
+            
+            logger.debug("Before DB query")
+            # devices = get_devices_states(check_time)
+            logger.debug("After DB query")
+            # for device in devices:
+            #     logger.debug(f"FOR LOOP {device}")
+            
+            light_state = _lights_db[0].copy()
+            light_state['state']['enabled'] = bool(random.getrandbits(1))
 
-                env_state = _env_state.copy()
-                env_state['ts'] = time.time()
-                env_state['state']['temperature'] = m.sin(
-                    time.time()/10)*3 + 25
-                env_state['state']['humidity'] = m.cos(time.time()/10)*3 + 40
+            env_state = _env_state.copy()
+            env_state['ts'] = time.time()
+            env_state['state']['temperature'] = m.sin(
+                time.time()/10)*3 + 25
+            env_state['state']['humidity'] = m.cos(time.time()/10)*3 + 40
 
-                data = [light_state, env_state]
+            data = [light_state, env_state]
 
             logger.debug(f'Send {data} to {self.id_}')
             socketio.emit('state', data, room=self.id_)
@@ -123,10 +140,12 @@ class PlaceStateSenderManager(object):
 
 place_manager = PlaceStateSenderManager()
 
-# >>???server-side event handler
+
 @socketio.on('start_states')
-def _socket_handle_start_states(config):
+def _socket_handle_start_states(config, db_session=None):
+    logger.debug(f"INSIDE SOCKET START STATES")
     session_id = request.sid
+    logger.debug(f"SESSION ID {session_id}")
     logger.debug(f'Received config: {config} from {session_id}')
     place_id = config['place_id']
     period_s = config['period']
