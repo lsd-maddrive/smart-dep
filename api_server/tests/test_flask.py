@@ -1,4 +1,3 @@
-import copy 
 import json
 import logging
 
@@ -48,6 +47,7 @@ def test_lights_request(timescaleDB, client):
     # TODO: add message with details if test failed 
     assert right_states == json.loads(rv.data)
 
+
 def test_place_request(timescaleDB, client):
     right_states = []
     right_states.append(
@@ -59,24 +59,3 @@ def test_place_request(timescaleDB, client):
     rv = client.get('http://localhost:5000/api/v1/place')
     # TODO: add message with details if test failed 
     assert right_states == json.loads(rv.data)
-
-def test_socketio_client_is_connected(sio_client):
-    assert sio_client.is_connected()
-
-# TODO: how to check in assert? 
-def test_socketio_disconnect(sio_client):
-    sio_client.emit('disconnect')
-    assert True 
-
-
-def test_socketio(sio_client, timescaleDB):
-    config = {
-        'place_id': '8201',
-        'period': 5
-    }
-    tmo = copy.copy(timescaleDB)
-    sio_client.emit('start_states', config)
-    # logger.debug(f"TEST: {sio_client.get_received()}")
-    # logger.debug(f"EMIT {sio_client.emit('start_states', config)}")
-    
-    assert True

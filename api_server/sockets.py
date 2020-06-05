@@ -53,9 +53,6 @@ class PlaceStateSender(Thread):
         self.enabled = True
         super(PlaceStateSender, self).__init__()
 
-        # self.debug = current_app.debug
-        # self.db_session = db_session
-
     def stop(self):
         self.enabled = False
         self.join()
@@ -64,15 +61,20 @@ class PlaceStateSender(Thread):
         while self.enabled:
             time_start = time.time()
 
-            logger.debug("INSIDE RUN SOCKETS")
             current_timestamp = datetime.now()
             check_time = current_timestamp - time_delta 
             
-            logger.debug("Before DB query")
+            # TODO: CHECK!!!!! 
             # devices = get_devices_states(check_time)
-            logger.debug("After DB query")
-            # for device in devices:
-            #     logger.debug(f"FOR LOOP {device}")
+            # data = [] 
+            # for device in devices: 
+            #     data.append(
+            #         {
+            #             'device_id': device.device_id, 
+            #             'type': device.type, 
+            #             'state': device.state, 
+            #         }
+            #     )
             
             light_state = _lights_db[0].copy()
             light_state['state']['enabled'] = bool(random.getrandbits(1))
@@ -90,6 +92,7 @@ class PlaceStateSender(Thread):
 
             passed_time = time.time() - time_start
             sleep_time = self.period_s - passed_time
+            
             if sleep_time < 0:
                 logger.warning(
                     f'Time processing requires more time delay, current processing time: {passed_time} [s]')
@@ -142,8 +145,7 @@ place_manager = PlaceStateSenderManager()
 
 
 @socketio.on('start_states')
-def _socket_handle_start_states(config, db_session=None):
-    logger.debug(f"INSIDE SOCKET START STATES")
+def _socket_handle_start_states(config):
     session_id = request.sid
     logger.debug(f"SESSION ID {session_id}")
     logger.debug(f'Received config: {config} from {session_id}')
