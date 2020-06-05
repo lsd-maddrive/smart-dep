@@ -3,7 +3,7 @@ import logging
 
 import pytest
 
-from db.database import db 
+from api_server.database import db 
 from db.models import * 
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d/%H:%M:%S')

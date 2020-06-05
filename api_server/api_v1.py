@@ -12,7 +12,7 @@ from flask_restplus import Resource, Namespace, fields
 import logging
 from pprint import pformat
 
-from db.database import *
+import api_server.database as asdb 
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -75,7 +75,7 @@ class PowerUnits(Resource):
                 current_timestamp = datetime.now()
                 check_time = current_timestamp - time_delta
 
-                query = get_last_states(
+                query = asdb.get_last_states(
                     check_time, place_id, 'power'
                 )
                 
@@ -116,7 +116,7 @@ class LightUnits(Resource):
             current_timestamp = datetime.now()
             check_time = current_timestamp - time_delta
 
-            query = get_last_states(
+            query = asdb.get_last_states(
                 check_time, place_id, 'light'
             )
         
@@ -188,7 +188,7 @@ class Places(Resource):
             current_timestamp = datetime.now()
             check_time = current_timestamp - time_delta
 
-            query = get_last_places(check_time)
+            query = asdb.get_last_places(check_time)
             
             places_dict_list = []
 

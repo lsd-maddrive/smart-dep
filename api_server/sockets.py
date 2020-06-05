@@ -1,9 +1,11 @@
 from datetime import datetime, timedelta
 import json
+import logging
 import os
 import sys
 sys.path.append("..")
-import random
+
+# import random
 import time
 from threading import Thread, Event
 import math as m
@@ -11,12 +13,11 @@ from contextlib import contextmanager
 
 from flask import request, current_app
 from flask_socketio import SocketIO, join_room, leave_room
-import logging
-
-from db.database import * 
-
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
+import api_server.database as asdb
+
 
 # >>to allow other origins
 # >>'*' can be used to instruct the server to allow all origins
@@ -72,7 +73,7 @@ class PlaceStateSender(Thread):
             current_timestamp = datetime.now()
             check_time = current_timestamp - time_delta 
             
-            devices = get_devices_states(check_time, session)
+            devices = asdb.get_devices_states(check_time, session)
             data = [] 
             for device in devices: 
                 data.append(

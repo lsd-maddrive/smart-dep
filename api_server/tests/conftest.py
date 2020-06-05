@@ -13,10 +13,11 @@ import testing.postgresql
 
 from api_server.api_v1 import api as ns 
 from api_server.api_func import create_app
+from api_server.database import db 
 from api_server.sockets import socketio
 from db.models import Model, States 
 
-from db.database import db 
+
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d/%H:%M:%S')
 logger = logging.getLogger(__name__)

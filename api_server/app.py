@@ -13,8 +13,8 @@ logger = logging.getLogger(__name__)
 from api_server.api_v1 import api as ns 
 from api_server.api_func import create_app
 from api_server.sockets import socketio
-from db.database import db 
-from db.database import * 
+from database import db 
+# from db.database import * 
 
 app = create_app()
 
