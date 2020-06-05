@@ -1,4 +1,5 @@
 import logging
+import time 
 
 import pytest
 
@@ -10,10 +11,6 @@ logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %
 logger = logging.getLogger(__name__)
 
 
-def test_socketio_client_is_connected(sio_client):
-    assert sio_client.is_connected()
-
-
 def test_socketio(sio_client):
     config = {
         'place_id': '8201',
@@ -21,11 +18,15 @@ def test_socketio(sio_client):
     }
 
     sio_client.emit('start_states', config)
-    
+    time.sleep(3)
+
+    # work, consists of correct data x 3 
+    data = sio_client.get_received()
+    logger.debug(f'DATA IN TEST: {data}')
+
+    sio_client.emit('disconnect')
+
+    time.sleep(3)
+
     assert True
 
-
-# TODO: how to check in assert? 
-def test_socketio_disconnect(sio_client):
-    sio_client.emit('disconnect')
-    assert True 

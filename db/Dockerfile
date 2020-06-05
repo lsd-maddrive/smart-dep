@@ -1,11 +1,10 @@
 FROM python:3.8.2-slim
 
-COPY db/migration_manager.py /app/
+COPY db/migration_manager.py db/models.py db/requirements.txt /app/
 WORKDIR /app
 
-COPY db/models.py /app
-COPY db/db.py /app 
-COPY db/requirements.txt /app
+COPY db/models.py /app/db/
+COPY api_server/database.py /app 
 
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt

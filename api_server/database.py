@@ -6,7 +6,7 @@ from sqlalchemy import desc
 from sqlalchemy import distinct
 from sqlalchemy.orm import Session
 
-from db.models import * 
+from db.models import metadata, States 
 
 db = SQLAlchemy(metadata=metadata)
 
@@ -50,8 +50,7 @@ def get_last_places(check_time, db_session=db.session):
            order_by(States.place_id, States.timestamp.desc()). \
            distinct(States.place_id)
 
-# TODO: CHECK THIS FUNCTION! 
-# in tests - it works
+
 def get_devices_states(check_time, db_session=db.session):
     """
         Get last states for all unique devices in defined 
