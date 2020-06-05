@@ -14,10 +14,14 @@ import App from './App'
 import store from './store'
 import router from './router'
 
+const debug = process.env.NODE_ENV !== 'production'
+
 import VueSocketIOExt from 'vue-socket.io-extended';
 import io from 'socket.io-client';
-const socket = io(process.env.API_URL);
-Vue.use(VueSocketIOExt, socket, { store });
+const socket = io(process.env.API_URL, {autoConnect: !debug});
+Vue.use(VueSocketIOExt, socket, {
+  store
+});
 
 /* eslint-disable no-new */
 new Vue({
@@ -27,5 +31,8 @@ new Vue({
   components: {
     App
   },
-  template: '<App/>'
+  template: '<App/>',
+	beforeCreate() {
+		this.$store.commit('auth/sync_token')
+	}
 })

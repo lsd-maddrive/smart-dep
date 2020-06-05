@@ -6,6 +6,7 @@ Vue.use(Vuex)
 import light from './modules/light'
 import power from './modules/power'
 import environ from './modules/environ'
+import auth from './modules/auth'
 
 const debug = process.env.NODE_ENV !== 'production'
 
@@ -21,7 +22,8 @@ export default new Vuex.Store({
   modules: {
     light,
     power,
-    environ
+    environ,
+    auth
   },
   getters: {
     currentPlace: (state, getters) => {
@@ -31,7 +33,9 @@ export default new Vuex.Store({
     }
   },
   actions: {
-    async syncPlaces({ commit }) {
+    async syncPlaces({
+      commit
+    }) {
       try {
         let response = await Services.getPlaces()
         console.log(response)
@@ -39,20 +43,17 @@ export default new Vuex.Store({
       } catch (error) {
         console.log("Failed to request places")
         console.log(error)
-        commit('setPlaces', [
-          {
-            id: '8201',
-            name: 'KEMZ',
-          },
-          {
-            id: '8203',
-            name: 'ELESI'
-          }
-        ])
+        if (debug) {
+          console.warn(">>> Set sample places")
+          commit('setPlaces', Services.getTestPlaces())
+        }
       }
     },
 
-    switchPlace({ commit, dispatch }, payload) {
+    switchPlace({
+      commit,
+      dispatch
+    }, payload) {
       commit("setCurrentPlace", {
         place_id: payload.place_id
       });
@@ -72,17 +73,18 @@ export default new Vuex.Store({
       });
     },
 
-    socket_state({ commit, dispatch }, payload) {
+    socket_state({
+      commit,
+      dispatch
+    }, payload) {
       // console.log(payload)
 
       for (let unit of payload) {
         if (unit.type == "light") {
           dispatch('light/setExtState', unit)
-        }
-        else if (unit.type == "power") {
+        } else if (unit.type == "power") {
           dispatch('power/setExtState', unit)
-        }
-        else if (unit.type == "env") {
+        } else if (unit.type == "env") {
           commit('environ/setExtState', unit)
         }
       }
