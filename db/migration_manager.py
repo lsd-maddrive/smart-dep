@@ -8,20 +8,19 @@ from flask_migrate import Migrate, MigrateCommand
 from flask_script import Manager
 from flask_sqlalchemy import SQLAlchemy
 
-from models import metadata
+from database import db 
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d/%H:%M:%S')
 logger = logging.getLogger(__name__)
 
 def main():
 
-    db = SQLAlchemy(metadata=metadata)
-
     app = Flask(__name__)
     
     # only in dev mode! In prod => DEBUG = False!
     # Leaving it on will allow users to run 
     # arbitrary Python code on your server.
+    # FLASK_DEBUG -? 
     app.config["DEBUG"] = True
 
     # If set to True, Flask-SQLAlchemy will track modifications 

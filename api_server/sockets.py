@@ -1,80 +1,75 @@
-import json
-import random
+from datetime import datetime, timedelta
+import logging
+import os
+from pprint import pformat
+
 import time
-from threading import Thread, Event
-import math as m
+from threading import Thread
 from contextlib import contextmanager
 
 from flask import request, current_app
 from flask_socketio import SocketIO, join_room, leave_room
-import logging
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+import api_server.database as asdb
+
 
 socketio = SocketIO(cors_allowed_origins="*")
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-
-_lights_db = [
-    {
-        'device_id': '0',
-        'type': 'light',
-        'state': {
-            'enabled': True
-        }
-    }
-]
-
-_env_state = {
-    'device_id': '0',
-    'type': 'env',
-    'state': {
-        'temperature': 25.0,
-        'humidity': 40.0,
-        'lightness': 35.0
-    }
-}
+time_delta = timedelta(minutes=int(os.getenv('DMINUTES', '5')))
 
 
 class PlaceStateSender(Thread):
-    def __init__(self, id_, period_s):
+    def __init__(self, id_, period_s, db_url):
         self.id_ = id_
         self.period_s = period_s
         self.enabled = True
+        self.db_url = db_url 
         super(PlaceStateSender, self).__init__()
-
-        self.debug = current_app.debug
 
     def stop(self):
         self.enabled = False
         self.join()
 
     def run(self):
+        engine = create_engine(self.db_url)
+        session = sessionmaker(bind=engine)()
+
         while self.enabled:
             time_start = time.time()
 
-            if self.debug:
-                light_state = _lights_db[0].copy()
-                light_state['state']['enabled'] = bool(random.getrandbits(1))
-
-                env_state = _env_state.copy()
-                env_state['ts'] = time.time()
-                env_state['state']['temperature'] = m.sin(
-                    time.time()/10)*3 + 25
-                env_state['state']['humidity'] = m.cos(time.time()/10)*3 + 40
-
-                data = [light_state, env_state]
-
-            logger.debug(f'Send {data} to {self.id_}')
+            current_timestamp = datetime.now()
+            check_time = current_timestamp - time_delta 
+            
+            devices = asdb.get_devices_states(check_time, session)
+            data = [] 
+            for device in devices: 
+                data.append(
+                    {
+                        'device_id': device.device_id, 
+                        'type': device.type, 
+                        'state': device.state, 
+                    }
+                )
+            # time of emitting 'state' event - fot pytest
+            data.append({'time': datetime.now()})
+            logger.debug(f'Send:\n{pformat(data)}\nto {self.id_}')
             socketio.emit('state', data, room=self.id_)
 
             passed_time = time.time() - time_start
             sleep_time = self.period_s - passed_time
+            
             if sleep_time < 0:
                 logger.warning(
                     f'Time processing requires more time delay, current processing time: {passed_time} [s]')
             else:
                 time.sleep(sleep_time)
+        
+        session.close()
 
 
 class PlaceStateSenderManager(object):
@@ -84,13 +79,13 @@ class PlaceStateSenderManager(object):
         self.counters = {}
         self.sid_2_place = {}
 
-    def start_place(self, place_id, period, sid):
+    def start_place(self, place_id, period, sid, db_url):
         id_ = f'{place_id}_{period}'
         self.sid_2_place[sid] = id_
         join_room(id_)
 
         if id_ not in self.threads:
-            self.threads[id_] = PlaceStateSender(id_, period)
+            self.threads[id_] = PlaceStateSender(id_, period, db_url)
             self.threads_started[id_] = False
             self.counters[id_] = 1
         else:
@@ -124,11 +119,13 @@ place_manager = PlaceStateSenderManager()
 @socketio.on('start_states')
 def _socket_handle_start_states(config):
     session_id = request.sid
+    logger.debug(f"SESSION ID {session_id}")
     logger.debug(f'Received config: {config} from {session_id}')
     place_id = config['place_id']
     period_s = config['period']
+    current_db_url = current_app.config["SQLALCHEMY_DATABASE_URI"] 
 
-    place_manager.start_place(place_id, period_s, session_id)
+    place_manager.start_place(place_id, period_s, session_id, current_db_url)
 
 
 @socketio.on('disconnect')

@@ -11,7 +11,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 import threading
 
-from models import metadata, Commands, Configs, States
+from models import Commands, Configs, States
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d/%H:%M:%S')
 logger = logging.getLogger(__name__)
@@ -147,7 +147,6 @@ class Tracker(object):
             )
             self.timer.start() 
 
-
     def consume_event(self):
         self.channel.basic_consume(
             queue=self.queue_name, 
@@ -257,7 +256,7 @@ def main():
         logger.critical("DB URI IS NOT FOUND")
         return 1 
     
-    rabbit_uri = os.getenv('RABBIT_URI')
+    rabbit_uri = os.getenv('RABBITMQ_URI')
     if rabbit_uri is None:
         logger.critical('RABBITMQ URI IS NOT FOUND')
         return 1
