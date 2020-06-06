@@ -1,6 +1,3 @@
-import sys 
-sys.path.append("..")
-
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import desc
 from sqlalchemy import distinct

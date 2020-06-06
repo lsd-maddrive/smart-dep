@@ -15,8 +15,6 @@ from api_server.database import db
 from api_server.sockets import socketio
 from db.models import Model, States 
 
-
-
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d/%H:%M:%S')
 logger = logging.getLogger(__name__)
 
@@ -41,14 +39,12 @@ def timescaleDB(request, test_db):
         '11:11:11:11:11:11', 
         '01:01:01:01:01:01', 
         'FF:FF:FF:FF:FF:FF'
-        # None
     ]
 
     types = [
         'light', 
         'env', 
         'power'
-        # 'unknown'
     ]
 
     states = []

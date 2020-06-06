@@ -1,15 +1,11 @@
 from datetime import date, datetime, timedelta
 import json
+import logging
 import os
-import random
-import time
-from threading import Thread, Event
-
-from kombu import Connection, Exchange, Producer
 
 from flask import request, current_app
 from flask_restplus import Resource, Namespace, fields
-import logging
+from kombu import Connection, Exchange, Producer
 from pprint import pformat
 
 import api_server.database as asdb 
@@ -40,25 +36,13 @@ _model_power = api.inherit('Power', _model_state, {
     ),
 })
 
-_powers_db = [
-    {
-        'device_id': '0',
-        'type': 'power',
-        'state': {
-            'enabled': True
-        }
-    },
-    {
-        'device_id': '1',
-        'type': 'power',
-        'state': {
-            'enabled': False
-        }
-    },
-]
+
 
 # def json_serial(obj):
-#     """JSON serializer for objects not serializable by default json code"""
+#     """
+#       JSON serializer for objects not serializable by default json code
+#       in case if we decide to get timestamp from DB as well 
+#     """
 #     if isinstance(obj, (datetime, date)):
 #         return obj.isoformat()
 #     raise TypeError ("Type %s not serializable" % type(obj))
@@ -95,15 +79,6 @@ class PowerUnits(Resource):
                 
             return powers_dict_list
 
-_lights_db = [
-    {
-        'device_id': '0',
-        'type': 'light',
-        'state': {
-            'enabled': True
-        }
-    }
-]
 
 @api.route('/place/<string:place_id>/lights', endpoint='lights')
 @api.param('place_id', 'ID of place')
@@ -162,14 +137,6 @@ class CommandResender(Resource):
                             channel=channel, routing_key=routing_key)
         producer.publish(message)
         return f'Message sent: {message}'
-
-
-_place_db = [
-    {
-        'id': '8201',
-        'name': "KEMZ",
-    }
-]
 
 
 _model_place = api.model('Place', {

@@ -55,6 +55,7 @@ class PlaceStateSender(Thread):
                         'state': device.state, 
                     }
                 )
+            # time of emitting 'state' event - fot pytest
             data.append({'time': datetime.now()})
             logger.debug(f'Send:\n{pformat(data)}\nto {self.id_}')
             socketio.emit('state', data, room=self.id_)

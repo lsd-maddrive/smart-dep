@@ -1,7 +1,5 @@
 import logging
 import os
-import sys 
-sys.path.append("..")
 
 from flask import Flask, request
 
