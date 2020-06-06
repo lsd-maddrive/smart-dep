@@ -2,9 +2,7 @@ import os
 from datetime import datetime
 import logging
 
-# from flask_sqlalchemy import SQLAlchemy
 from flask_restplus import Api
-from flask_cors import CORS
 from pprint import pformat
 import pytest
 from sqlalchemy import create_engine
@@ -54,15 +52,15 @@ def timescaleDB(request, test_db):
     ]
 
     states = []
-    for type_ in types:
-        for device in devices:
-            states.append(
+
+    for i in range(len(devices)):
+        states.append(
                 States(
                     timestamp=datetime.now(), 
                     state= {'enabled': False}, 
-                    device_id=device, 
+                    device_id=devices[i], 
                     place_id='8201', 
-                    type=type_
+                    type=types[i]
                 )
             )
 
