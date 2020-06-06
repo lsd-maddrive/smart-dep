@@ -1,14 +1,10 @@
 from datetime import datetime, timedelta
-import json
 import logging
 import os
-import sys
-sys.path.append("..")
+from pprint import pformat
 
-# import random
 import time
-from threading import Thread, Event
-import math as m
+from threading import Thread
 from contextlib import contextmanager
 
 from flask import request, current_app
@@ -19,35 +15,12 @@ from sqlalchemy.orm import sessionmaker
 import api_server.database as asdb
 
 
-# >>to allow other origins
-# >>'*' can be used to instruct the server to allow all origins
 socketio = SocketIO(cors_allowed_origins="*")
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 time_delta = timedelta(minutes=int(os.getenv('DMINUTES', '5')))
-
-
-_lights_db = [
-    {
-        'device_id': '0',
-        'type': 'light',
-        'state': {
-            'enabled': True
-        }
-    }
-]
-
-_env_state = {
-    'device_id': '0',
-    'type': 'env',
-    'state': {
-        'temperature': 25.0,
-        'humidity': 40.0,
-        'lightness': 35.0
-    }
-}
 
 
 class PlaceStateSender(Thread):
@@ -64,8 +37,7 @@ class PlaceStateSender(Thread):
 
     def run(self):
         engine = create_engine(self.db_url)
-        Session = sessionmaker(bind=engine)
-        session = Session()
+        session = sessionmaker(bind=engine)()
 
         while self.enabled:
             time_start = time.time()
@@ -83,8 +55,8 @@ class PlaceStateSender(Thread):
                         'state': device.state, 
                     }
                 )
-            
-            logger.debug(f'Send {data} to {self.id_}')
+            data.append({'time': datetime.now()})
+            logger.debug(f'Send:\n{pformat(data)}\nto {self.id_}')
             socketio.emit('state', data, room=self.id_)
 
             passed_time = time.time() - time_start
