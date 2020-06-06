@@ -23,6 +23,23 @@ Vue.use(VueSocketIOExt, socket, {
   store
 });
 
+
+import Toasted from 'vue-toasted';
+Vue.use(Toasted, {
+  position: 'top-right',
+  duration: 5000,
+  keepOnHover: true,
+  iconPack : 'material'
+})
+
+import VeeValidate, { Validator } from 'vee-validate';
+import ru from 'vee-validate/dist/locale/ru';
+
+Validator.localize('ru', ru);
+Vue.use(VeeValidate, {
+  locale: 'ru',
+});
+
 /* eslint-disable no-new */
 new Vue({
   el: '#app',
@@ -33,6 +50,6 @@ new Vue({
   },
   template: '<App/>',
 	beforeCreate() {
-		this.$store.commit('auth/sync_token')
+		this.$store.dispatch('auth/after_login')
 	}
 })

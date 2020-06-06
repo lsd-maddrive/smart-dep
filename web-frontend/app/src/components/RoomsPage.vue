@@ -40,7 +40,6 @@ export default {
   name: "RoomsSelector",
   data() {
     return {
-      // isProd: process.env.NODE_ENV == 'production'
     };
   },
   computed: {
@@ -50,7 +49,16 @@ export default {
   },
   methods: {},
   components: {},
-  beforeMount() {}
+  created() {
+    this.$store
+      .dispatch("syncPlaces")
+      .then(resp => {
+        this.$toasted.show("Комнаты обновлены!");
+      })
+      .catch(err => {
+        this.$toasted.show("Не удалось обновить комнаты =(");
+      });
+  }
 };
 </script>
 

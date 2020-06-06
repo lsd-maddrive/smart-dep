@@ -1,8 +1,10 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import RoomsSelector from '@/components/RoomsSelector'
-import RoomControl from '@/components/RoomControl'
+import RoomsPage from '@/components/RoomsPage'
+import RoomControlPage from '@/components/RoomControlPage'
 import LoginPage from '@/components/LoginPage'
+import RegisterPage from '@/components/RegisterPage'
+import TitlePage from '@/components/TitlePage'
 
 import store from '@/store'
 
@@ -10,36 +12,45 @@ Vue.use(Router)
 
 
 let router = new Router({
-  routes: [{
-      path: '/404',
-      component: {
-        template: '<p>Page Not Found</p>'
-      },
-    },
+  routes: [
     {
       path: '*',
-      redirect: '/404'
+      redirect: {name: 'Home'}
     },
     {
       path: '/room/:id',
       name: 'RoomControl',
-      component: RoomControl,
+      component: RoomControlPage,
+      meta: {
+        requiresAuth: true
+      }
+    },
+    {
+      path: '/home',
+      name: 'Home',
+      component: RoomsPage,
       meta: {
         requiresAuth: true
       }
     },
     {
       path: '/',
-      name: 'Home',
-      component: RoomsSelector,
-      meta: {
-        requiresAuth: true
-      }
+      name: 'Title',
+      component: TitlePage,
+      meta: {}
     },
     {
       path: '/login',
       name: 'Login',
       component: LoginPage,
+      meta: {
+        hideForAuth: true
+      }
+    },
+    {
+      path: '/register',
+      name: 'Register',
+      component: RegisterPage,
       meta: {
         hideForAuth: true
       }
@@ -60,7 +71,7 @@ router.beforeEach((to, from, next) => {
   if (to.matched.some(record => record.meta.hideForAuth)) {
     if (store.getters["auth/isAuthenticated"]) {
       next({
-        name: "Home"
+        name: "Main"
       });
     } else {
       next()

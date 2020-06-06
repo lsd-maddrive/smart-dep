@@ -8,7 +8,7 @@
     </b-navbar>
 
     <Sidebar>
-      <b-button :to="{path: '/'}" class="my-2 w-100">Главная</b-button>
+      <b-button :to="{name: 'Home'}" class="my-2 w-100">Главная</b-button>
       <b-dropdown id="dropdown-1" text="Доступные комнаты" class="my-2 w-100">
         <b-dropdown-item v-for="place in places" :key="place.id">
           <b-button
@@ -52,9 +52,6 @@ export default {
       });
     }
   },
-  beforeMount() {
-    this.$store.dispatch("syncPlaces");
-  },
   created: function() {
     axios.interceptors.response.use(undefined, function(err) {
       return new Promise(function(resolve, reject) {
@@ -64,6 +61,10 @@ export default {
         throw err;
       });
     });
+
+  },
+  mounted() {
+    
   }
 };
 </script>

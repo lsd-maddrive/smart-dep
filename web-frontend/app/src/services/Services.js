@@ -1,33 +1,34 @@
 import Api from '@/services/Api'
 
+const api = Api();
+
 export default {
+
   getPlaces() {
     // return axios.get('/api/v1/place', { params: {} })
-    return Api().get('/place')
+    return api.get('/place')
   },
   getLights(params) {
     let url = "/place/" + params.place_id + "/lights"
-    return Api().get(url)
+    return api.get(url)
   },
   getPowers(params) {
     let url = "/place/" + params.place_id + "/powers"
-    return Api().get(url)
+    return api.get(url)
   },
-  loginRequest(user) {
+  login(user) {
     let url = "/login"
-    return Api().post(url, user)
+    return api.post(url, user)
+  },
+  register(user) {
+    let url = "/register"
+    return api.post(url, user)
   },
 
   sendCommand(params) {
     let url = "/cmd/" + params.place_id
 
-    // const config = {
-    //   headers: {
-    //     'content-type': 'application/json'
-    //   }
-    // }
-
-    return Api().post(url, params.data, config)
+    return api.post(url, params.data)
   },
 
   // Debug data
