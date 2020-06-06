@@ -55,16 +55,7 @@ const actions = {
         },
         error => {
           console.log("Failed to request light units: " + error)
-          if (Services.isDebug()) {
-            console.warn('>>> Fill light data with samples')
-            commit('setState', {
-              id: 'sample_0',
-              enabled: true
-            })
-            resolve()
-          } else {
-            reject(error)
-          }
+          reject(error)
         }
       )
     })

@@ -49,15 +49,8 @@ export default new Vuex.Store({
             resolve(places)
           })
           .catch(err => {
-            if (!Services.isDebug()) {
-              console.log("Failed to request places")
-              reject(err)
-            } else {
-              console.warn(">>> Set sample places")
-              const places = Services.getTestPlaces()
-              commit('setPlaces', places)
-              resolve(places)
-            }
+            console.log("Failed to request places")
+            reject(err)
           })
       })
     },

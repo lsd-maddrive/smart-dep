@@ -1,9 +1,7 @@
 import Api from '@/services/Api'
+import fakeServices from '@/services/FakeServices'
 
-// const api = Api();
-
-export default {
-
+const realServices = {
   getPlaces() {
     // return axios.get('/api/v1/place', { params: {} })
     return Api().get('/place')
@@ -31,23 +29,11 @@ export default {
     return Api().post(url, params.data)
   },
 
-  // Debug data
-  getTestPlaces() {
-    return [{
-        id: '8201',
-        name: 'KEMZ',
-      },
-      {
-        id: '8203',
-        name: 'ELESI'
-      }
-    ]
-  },
-  getSampleToken() {
-      return "dakfemvevm;adeoafpemfs21412fwqf23f3q"
-  },
-
   isDebug() {
     return process.env.NODE_ENV !== 'production'
   },
 }
+
+const isFake = process.env.FAKE_SERVICES ? process.env.FAKE_SERVICES : false && process.env.NODE_ENV !== 'production';
+
+export default isFake ? fakeServices : realServices;
