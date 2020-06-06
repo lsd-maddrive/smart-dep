@@ -6,8 +6,7 @@ Vue.use(Vuex)
 import light from './modules/light'
 import power from './modules/power'
 import environ from './modules/environ'
-
-const debug = process.env.NODE_ENV !== 'production'
+import auth from './modules/auth'
 
 import Services from "@/services/Services";
 
@@ -21,68 +20,106 @@ export default new Vuex.Store({
   modules: {
     light,
     power,
-    environ
+    environ,
+    auth
   },
   getters: {
     currentPlace: (state, getters) => {
       return state.places.find(
         place => place.id == state.currentPlaceId
       );
-    }
+    },
+    places: (state) => {
+      return state.places
+    },
   },
   actions: {
-    async syncPlaces({ commit }) {
-      try {
-        let response = await Services.getPlaces()
-        console.log(response)
-        commit('setPlaces', response.data)
-      } catch (error) {
-        console.log("Failed to request places")
-        console.log(error)
-        commit('setPlaces', [
-          {
-            id: '8201',
-            name: 'KEMZ',
-          },
-          {
-            id: '8203',
-            name: 'ELESI'
-          }
-        ])
+    /**
+     * Action to update places and receive last state
+     * Return: new places list
+     */
+    syncPlaces({
+      commit
+    }) {
+      return new Promise((resolve, reject) => {
+        Services.getPlaces()
+          .then(resp => {
+            const places = resp.data
+            commit('setPlaces', places)
+            resolve(places)
+          })
+          .catch(err => {
+            if (!Services.isDebug()) {
+              console.log("Failed to request places")
+              reject(err)
+            } else {
+              console.warn(">>> Set sample places")
+              const places = Services.getTestPlaces()
+              commit('setPlaces', places)
+              resolve(places)
+            }
+          })
+      })
+    },
+    /**
+     * Action to validate if room is valid
+     * Return: found during validation place object
+     */
+    validatePlace({
+      commit,
+      dispatch,
+    }, data) {
+      const placeId = data.placeId
+      return new Promise((resolve, reject) => {
+        // TODO - make sync optional (use cached version)
+        dispatch("syncPlaces")
+          .then((resp) => {
+            const places = resp;
+            const place = places.find(
+              place => place.id == placeId
+            )
+            if (place === undefined) {
+              reject("Not found in list")
+            } else {
+              console.log("Found: " + place.id)
+              resolve(place)
+            }
+          }).catch((err) => {
+            console.log("Failed to sync places: " + err)
+            reject(err)
+          })
+      })
+    },
+
+    startSocketLink({}, data) {
+      const placeId = data.placeId
+      
+      /**
+       * Lazy connection
+       */
+      if (!this._vm.$socket.client.connected) {
+        this._vm.$socket.client.connect()
       }
-    },
 
-    switchPlace({ commit, dispatch }, payload) {
-      commit("setCurrentPlace", {
-        place_id: payload.place_id
-      });
-
-      console.log("Update light units");
-      dispatch("light/syncUnits");
-
-      console.log("Update power units");
-      dispatch("power/syncUnits");
-
-      commit("environ/clearState");
-
-      console.log('Send emit on "start_states"');
       this._vm.$socket.client.emit("start_states", {
-        period: 3,
-        place_id: payload.place_id
+        period: 1,
+        placeId: placeId
       });
     },
 
-    socket_state({ commit, dispatch }, payload) {
-      // console.log(payload)
-
+    /**
+     * Socket handler for input data
+     */
+    socket_state({
+      commit,
+      dispatch
+    }, payload) {
       for (let unit of payload) {
         if (unit.type == "light") {
           dispatch('light/setExtState', unit)
-        }
-        else if (unit.type == "power") {
+        } else if (unit.type == "power") {
           dispatch('power/setExtState', unit)
-        }
-        else if (unit.type == "env") {
+        } else if (unit.type == "env") {
           commit('environ/setExtState', unit)
         }
       }
@@ -112,6 +149,6 @@ export default new Vuex.Store({
     }
   },
 
-  strict: debug,
+  strict: Services.isDebug(),
   plugins: []
 })

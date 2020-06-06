@@ -1,13 +1,14 @@
 <template>
   <div id="app">
-    <b-navbar toggleable="lg" type="dark" variant="dark">
+    <b-navbar v-if="isLoggedIn" toggleable="lg" type="dark" variant="dark">
       <!-- <b-container> -->
       <MenuButton />
       <!-- </b-container> -->
+      <b-button class="my-0" @click="logout">Выход</b-button>
     </b-navbar>
 
     <Sidebar>
-      <b-button :to="{path: '/'}" class="my-2 w-100">Главная</b-button>
+      <b-button :to="{name: 'Home'}" class="my-2 w-100">Главная</b-button>
       <b-dropdown id="dropdown-1" text="Доступные комнаты" class="my-2 w-100">
         <b-dropdown-item v-for="place in places" :key="place.id">
           <b-button
@@ -25,6 +26,8 @@
 import Sidebar from "@/components/Menu/Side.vue";
 import MenuButton from "@/components/Menu/Button.vue";
 
+import axios from 'axios'
+
 export default {
   name: "App",
   components: {
@@ -37,10 +40,31 @@ export default {
   computed: {
     places() {
       return this.$store.state.places || [];
+    },
+    isLoggedIn() {
+      return this.$store.getters["auth/isAuthenticated"];
     }
   },
-  beforeMount() {
-    this.$store.dispatch("syncPlaces");
+  methods: {
+    logout: function() {
+      this.$store.dispatch("auth/logout").then(() => {
+        this.$router.push({ name: "Login" });
+      });
+    }
+  },
+  created: function() {
+    axios.interceptors.response.use(undefined, function(err) {
+      return new Promise(function(resolve, reject) {
+        if (err.status === 401 && err.config && !err.config.__isRetryRequest) {
+          this.$store.dispatch("auth/logout");
+        }
+        throw err;
+      });
+    });
+
+  },
+  mounted() {
+    
   }
 };
 </script>

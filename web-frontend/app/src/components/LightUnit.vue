@@ -23,7 +23,14 @@ export default {
         return this.$store.getters["light/enabled"](this.id);
       },
       set(value) {
-        this.$store.dispatch("light/setState", { id: this.id, enabled: value });
+        this.$store
+          .dispatch("light/setState", { id: this.id, enabled: value })
+          .then(resp => {
+            this.$toasted.show("Команда отправлена");
+          })
+          .catch(err => {
+            this.$toasted.show("Не удалось отправить команду");
+          });
       }
     }
   },

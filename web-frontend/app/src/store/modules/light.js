@@ -36,50 +36,69 @@ const getters = {
 
 // actions
 const actions = {
-  syncUnits({ state, commit, rootState }) {
+  syncUnits({
+    state,
+    commit,
+    rootState
+  }, data) {
     commit('clearStates')
-
-    Services.getLights({
-      place_id: rootState.currentPlaceId
-    }).then(
-      response => {
-        for (let unit of response.data) {
-          commit('setState', extData2Internal(unit))
+    const placeId = data.placeId
+    return new Promise((resolve, reject) => {
+      Services.getLights({
+        place_id: placeId
+      }).then(
+        response => {
+          for (let unit of response.data) {
+            commit('setState', extData2Internal(unit))
+          }
+          resolve()
+        },
+        error => {
+          console.log("Failed to request light units: " + error)
+          if (Services.isDebug()) {
+            console.warn('>>> Fill light data with samples')
+            commit('setState', {
+              id: 'sample_0',
+              enabled: true
+            })
+            resolve()
+          } else {
+            reject(error)
+          }
         }
-      },
-      error => {
-        console.log("Failed to request light units")
-        console.log(error)
-        // Debug light
-        commit('setState', {
-          id: 'sample_0',
-          enabled: true
-        })
-      }
-    )
+      )
+    })
   },
 
-  setExtState: ({ commit }, payload) => {
+  setExtState: ({
+    commit
+  }, payload) => {
     commit('setState', extData2Internal(payload))
   },
 
-  setState({ state, commit, rootState }, payload) {
+  setState({
+    state,
+    commit,
+    rootState
+  }, payload) {
     payload.place_id = rootState.currentPlaceId
-    Services.sendCommand({
-      place_id: rootState.currentPlaceId,
-      data: internal2ExtData(payload)
-    })
-      .then((response) => {
-        console.log(response);
 
-        commit('setState', payload)
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-    // this._vm.$socket.client.emit('command', );
+    return new Promise((resolve, reject) => {
+      Services.sendCommand({
+          place_id: rootState.currentPlaceId,
+          data: internal2ExtData(payload)
+        })
+        .then(resp => {
+          console.log(resp);
+          resolve(resp)
+        }, err => {
+          console.log(err);
+          reject(err)
+        });
+    })
   }
 }
+
 
 // mutations
 const mutations = {
