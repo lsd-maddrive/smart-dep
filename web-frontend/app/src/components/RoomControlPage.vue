@@ -34,10 +34,7 @@ export default {
   },
   computed: {
     place_name() {
-      if (this.placeObj === null) {
-        return "";
-      }
-      return this.placeObj.name;
+      return this.placeObj ? this.placeObj.name : "";
     }
   },
   components: {

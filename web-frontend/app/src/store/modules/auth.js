@@ -85,7 +85,7 @@ const actions = {
     getters
   }) => {
     if (getters.isAuthenticated) {
-      console.log('Setup token for axios')
+      console.log('Setup token for axios: ' + state.token)
       axios.defaults.headers.common['Authorization'] = 'Bearer ' + state.token
     }
   }
