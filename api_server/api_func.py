@@ -1,6 +1,6 @@
 import logging
 import os
-
+# TODO: check if reauest is needed? 
 from flask import Flask, request
 
 logging.basicConfig(level=logging.DEBUG)

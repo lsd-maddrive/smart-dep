@@ -4,11 +4,13 @@ import logging
 import os
 
 from flask import request, current_app
+from flask_login import current_user, login_user
 from flask_restplus import Resource, Namespace, fields
 from kombu import Connection, Exchange, Producer
 from pprint import pformat
 
 import api_server.database as asdb 
+
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
