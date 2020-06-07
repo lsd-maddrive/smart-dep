@@ -1,6 +1,15 @@
 <template>
   <v-app id="inspire">
-    <h1>Комната {{ place_name }}</h1>
+    <h1>
+      Комната {{ place_name }}
+      <v-btn
+        class="ml-2"
+        icon
+        :to="{name: 'EditRoom', params: {id: placeId}, query: {returnUrl: this.$router.currentRoute}}"
+      >
+        <v-icon>mdi-puzzle-edit</v-icon>
+      </v-btn>
+    </h1>
     <v-container fluid>
       <v-row>
         <v-col cols="12">
@@ -22,13 +31,15 @@ export default {
   name: "RoomControl",
   data() {
     return {
-      placeObj: null,
-      placeId: null
+      placeObj: null
     };
   },
   computed: {
     place_name() {
       return this.placeObj ? this.placeObj.name : "";
+    },
+    placeId() {
+      return this.placeObj ? this.placeObj.id : "";
     }
   },
   components: {
@@ -42,12 +53,10 @@ export default {
         resp => {
           console.log("Room " + placeId + " found!");
           this.placeObj = resp;
-          this.placeId = placeId;
           this.$store.commit("setCurrentPlace", placeId);
 
           this.$store.dispatch("light/syncUnits", { placeId: placeId }).then(
-            resp => {
-            },
+            resp => {},
             err => {
               this.$toasted.error(
                 "Не удалось обновить состояние контроллеров света =("
@@ -56,8 +65,7 @@ export default {
           );
 
           this.$store.dispatch("power/syncUnits", { placeId: placeId }).then(
-            resp => {
-            },
+            resp => {},
             err => {
               this.$toasted.error(
                 "Не удалось обновить состояние контроллеров электричества =("
@@ -66,20 +74,17 @@ export default {
           );
 
           this.$store.dispatch("environ/syncData", { placeId: placeId }).then(
-            resp => {
-            },
+            resp => {},
             err => {
-              console.log(err)
-              this.$toasted.error(
-                "Не удалось обновить состояние окружения =("
-              );
+              console.log(err);
+              this.$toasted.error("Не удалось обновить состояние окружения =(");
             }
           );
 
           this.$store.dispatch("startSocketLink", { placeId: placeId });
         },
         err => {
-          this.$toasted.error("Комната " + this.placeId + " не найдена =(");
+          this.$toasted.error("Комната " + placeId + " не найдена =(");
           console.log("Room " + placeId + " not found: " + err);
           this.$router.push({ name: "Home" });
         }

@@ -200,7 +200,7 @@ export default {
   },
   methods: {
     cancelSubmit: function() {
-      this.$router.push({ name: "Home" });
+      this.$router.push(this.$route.query.returnUrl || { name: "Home" });
     },
     createSubmit: function() {
       let validationResult = this.$refs.placeForm.validate();
