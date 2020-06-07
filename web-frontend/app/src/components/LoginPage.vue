@@ -1,84 +1,95 @@
 <template>
-  <!-- <div>
-    <form class="login" @submit.prevent="login">
-      <h1>Вход</h1>
-      <label>Имя пользователя</label>
-      <input required v-model="username" type="text" placeholder="Snoopy" />
-      <label>Пароль</label>
-      <input required v-model="password" type="password" placeholder="Password" />
-      <hr />
-      <button type="submit">Вход</button>
-    </form>
-  </div>
-  -->
+  <v-app id="inspire">
+    <v-content>
+      <v-container class="fill-height" fluid>
+        <v-row align="center" justify="center">
+          <v-col cols="12" sm="8" md="4">
+            <v-card class="elevation-12">
+              <v-toolbar color="primary" dark flat>
+                <v-toolbar-title>Вход</v-toolbar-title>
+              </v-toolbar>
+              <v-card-text>
+                <v-form ref="form">
+                  <v-text-field
+                    label="Логин"
+                    v-model.trim="username"
+                    :rules="nameRules"
+                    name="login"
+                    prepend-icon="mdi-account"
+                    type="text"
+                    required
+                  ></v-text-field>
 
-  <div>
-    <h2>Вход</h2>
-    <form @submit.prevent="handleSubmit">
-      <div class="form-group">
-        <label for="username">Имя пользователя</label>
-        <input
-          type="text"
-          v-model="username"
-          name="username"
-          class="form-control"
-          :class="{ 'is-invalid': submitted && !username }"
-        />
-        <div v-show="submitted && !username" class="invalid-feedback">Имя пользователя не указано</div>
-      </div>
-
-      <div class="form-group">
-        <label for="password">Пароль</label>
-        <input
-          type="password"
-          v-model="password"
-          name="password"
-          class="form-control"
-          :class="{ 'is-invalid': submitted && !password }"
-        />
-        <div v-show="submitted && !password" class="invalid-feedback">Пароль не указан</div>
-      </div>
-
-      <div class="form-group">
-        <button class="btn btn-primary" :disabled="status.processing">Вход</button>
-        <img
-          v-show="status.processing"
-          src="data:image/gif;base64,R0lGODlhEAAQAPIAAP///wAAAMLCwkJCQgAAAGJiYoKCgpKSkiH/C05FVFNDQVBFMi4wAwEAAAAh/hpDcmVhdGVkIHdpdGggYWpheGxvYWQuaW5mbwAh+QQJCgAAACwAAAAAEAAQAAADMwi63P4wyklrE2MIOggZnAdOmGYJRbExwroUmcG2LmDEwnHQLVsYOd2mBzkYDAdKa+dIAAAh+QQJCgAAACwAAAAAEAAQAAADNAi63P5OjCEgG4QMu7DmikRxQlFUYDEZIGBMRVsaqHwctXXf7WEYB4Ag1xjihkMZsiUkKhIAIfkECQoAAAAsAAAAABAAEAAAAzYIujIjK8pByJDMlFYvBoVjHA70GU7xSUJhmKtwHPAKzLO9HMaoKwJZ7Rf8AYPDDzKpZBqfvwQAIfkECQoAAAAsAAAAABAAEAAAAzMIumIlK8oyhpHsnFZfhYumCYUhDAQxRIdhHBGqRoKw0R8DYlJd8z0fMDgsGo/IpHI5TAAAIfkECQoAAAAsAAAAABAAEAAAAzIIunInK0rnZBTwGPNMgQwmdsNgXGJUlIWEuR5oWUIpz8pAEAMe6TwfwyYsGo/IpFKSAAAh+QQJCgAAACwAAAAAEAAQAAADMwi6IMKQORfjdOe82p4wGccc4CEuQradylesojEMBgsUc2G7sDX3lQGBMLAJibufbSlKAAAh+QQJCgAAACwAAAAAEAAQAAADMgi63P7wCRHZnFVdmgHu2nFwlWCI3WGc3TSWhUFGxTAUkGCbtgENBMJAEJsxgMLWzpEAACH5BAkKAAAALAAAAAAQABAAAAMyCLrc/jDKSatlQtScKdceCAjDII7HcQ4EMTCpyrCuUBjCYRgHVtqlAiB1YhiCnlsRkAAAOwAAAAAAAAAAAA=="
-        />
-        <router-link to="/register" class="btn btn-link">Регистрация</router-link>
-      </div>
-    </form>
-  </div>
+                  <v-text-field
+                    id="password"
+                    label="Пароль"
+                    name="password"
+                    v-model="password"
+                    :rules="[v => !!v || 'Пароль обязателен!']"
+                    prepend-icon="mdi-lock"
+                    type="password"
+                    required
+                  ></v-text-field>
+                </v-form>
+              </v-card-text>
+              <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn color="primary" @click="handleSubmit" :loading="loading">Вход</v-btn>
+                <v-btn color="primary" :to="{name: 'Register'}" :disabled="loading">Регистрация</v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-col>
+        </v-row>
+      </v-container>
+    </v-content>
+  </v-app>
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
-
 export default {
   data() {
     return {
       username: "",
+      nameRules: [
+        v => !!v || 'Логин обязателен!',
+        // v => (v && v.length <= 10) || 'Name must be less than 10 characters',
+      ],
       password: "",
-      submitted: false
+      loading: false,
+      returnUrl: "",
+
+      emailRules: [
+        v => !!v || 'E-mail is required',
+        v => /.+@.+\..+/.test(v) || 'E-mail must be valid',
+      ],
     };
   },
+  created() {
+    // get return url from route parameters or default to Home
+    this.returnUrl = this.$route.query.returnUrl || { name: "Home" };
+  },
   computed: {
-    ...mapState("auth", ["status"])
   },
   methods: {
     handleSubmit: function() {
-      this.submitted = true;
+      let validationResult = this.$refs.form.validate()
+      if (!validationResult) {
+        return
+      }
+
+      this.loading = true;
       const { username, password } = this;
       if (username && password) {
-        this.$store
-          .dispatch("auth/login", { username, password })
-          .then(() => {
-            this.$toasted.show("Успешный вход!");
-            this.$router.push({ name: "Home" });
-          })
-          .catch(() => {
-            this.$toasted.show("Вход не удался");
-          });
+        this.$store.dispatch("auth/login", { username, password }).then(
+          () => {
+            this.$toasted.success("Успешный вход!");
+            this.$router.push(this.returnUrl);
+          },
+          error => {
+            this.$toasted.error("Вход не удался: " + error);
+            this.loading = false;
+          }
+        );
       }
     }
   }

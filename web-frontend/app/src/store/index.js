@@ -13,7 +13,6 @@ import Services from "@/services/Services";
 export default new Vuex.Store({
   state: {
     isConnected: false,
-    isSidemenuOpen: false,
     places: [],
     currentPlaceId: null
   },
@@ -129,16 +128,12 @@ export default new Vuex.Store({
       state.isConnected = false;
     },
 
-    toggleSidemenu(state) {
-      state.isSidemenuOpen = !state.isSidemenuOpen
-    },
-
     setPlaces(state, places) {
       state.places = places
     },
 
-    setCurrentPlace(state, payload) {
-      state.currentPlaceId = payload.place_id
+    setCurrentPlace(state, placeId) {
+      state.currentPlaceId = placeId
     }
   },
 

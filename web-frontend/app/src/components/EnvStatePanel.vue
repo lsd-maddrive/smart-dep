@@ -1,26 +1,24 @@
 <template>
-  <div>
-    <b-card no-body>
-      <b-card-header>
-        <b-button block href="#" v-b-toggle.env-panel-data>Состояние комнаты</b-button>
-      </b-card-header>
-      <b-collapse id="env-panel-data" visible role="tabpanel">
-        <b-card-body class="card-body power-panel">
-          <div class="state-data">
-            <ion-icon name="thermometer-outline"></ion-icon>
-            <span>Температура: {{ Math.round(temperature) }}&#176;C </span>
-          </div>
-          <div class="state-data">
-            <ion-icon name="water-outline"></ion-icon>
+  <v-card class="elevation-8">
+    <v-card-title class="justify-center">Состояние комнаты</v-card-title>
+    <v-container fluid>
+      <v-row>
+        <v-col cols="12">
+          <v-row justify="center">
+            <span>Температура: {{ Math.round(temperature) }}&#176;C</span>
+          </v-row>
+          <v-row justify="center">
             <span>Влажность: {{ Math.round(humidity) }} %</span>
-          </div>
-          <div class="chart">
-            <TempChart :styles="myStyles" :chart-data="chartData" />
-          </div>
-        </b-card-body>
-      </b-collapse>
-    </b-card>
-  </div>
+          </v-row>
+          <v-row justify="center">
+            <v-col cols="12">
+              <TempChart :styles="myStyles" :chart-data="chartData" />
+            </v-col>
+          </v-row>
+        </v-col>
+      </v-row>
+    </v-container>
+  </v-card>
 </template>
 
 <script>
@@ -30,8 +28,7 @@ export default {
   data() {
     return {
       chartData: {
-        datasets: [
-        ]
+        datasets: []
       }
     };
   },
@@ -64,7 +61,7 @@ export default {
 
     myStyles() {
       return {
-        height: "50vh",
+        height: "40vh",
         position: "relative"
       };
     }
@@ -76,14 +73,14 @@ export default {
         datasets: [
           {
             label: "Температура",
-            yAxisID: '1',
+            yAxisID: "1",
             borderColor: "#ff2f2f8f",
             fill: false,
             data: this.temp_vals
           },
           {
             label: "Влажность",
-            yAxisID: '2',
+            yAxisID: "2",
             borderColor: "#2f2fff8f",
             fill: false,
             data: this.humid_vals
@@ -100,12 +97,4 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-.state-data {
-  padding: 3px 5px;
-}
-
-ion-icon {
-  float: left;
-  font-size: 24px;
-}
 </style>

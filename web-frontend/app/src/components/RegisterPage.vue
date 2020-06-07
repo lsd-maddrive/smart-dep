@@ -1,52 +1,51 @@
 <template>
-  <div>
-    <h2>Регистрация</h2>
-    <form @submit.prevent="handleSubmit">
-      <div class="form-group">
-        <label for="username">Имя пользователя</label>
-        <input
-          type="text"
-          v-model="user.username"
-          v-validate="'required'"
-          name="username"
-          class="form-control"
-          :class="{ 'is-invalid': submitted && errors.has('username') }"
-        />
-        <div
-          v-if="submitted && errors.has('username')"
-          class="invalid-feedback"
-        >{{ errors.first('username') }}</div>
-      </div>
-      <div class="form-group">
-        <label for="password">Пароль</label>
-        <input
-          type="password"
-          v-model="user.password"
-          v-validate="{ required: true, min: 6 }"
-          name="password"
-          class="form-control"
-          :class="{ 'is-invalid': submitted && errors.has('password') }"
-        />
-        <div
-          v-if="submitted && errors.has('password')"
-          class="invalid-feedback"
-        >{{ errors.first('password') }}</div>
-      </div>
-      <div class="form-group">
-        <button class="btn btn-primary" :disabled="status.processing">Зарегистрироваться</button>
-        <img
-          v-show="status.processing"
-          src="data:image/gif;base64,R0lGODlhEAAQAPIAAP///wAAAMLCwkJCQgAAAGJiYoKCgpKSkiH/C05FVFNDQVBFMi4wAwEAAAAh/hpDcmVhdGVkIHdpdGggYWpheGxvYWQuaW5mbwAh+QQJCgAAACwAAAAAEAAQAAADMwi63P4wyklrE2MIOggZnAdOmGYJRbExwroUmcG2LmDEwnHQLVsYOd2mBzkYDAdKa+dIAAAh+QQJCgAAACwAAAAAEAAQAAADNAi63P5OjCEgG4QMu7DmikRxQlFUYDEZIGBMRVsaqHwctXXf7WEYB4Ag1xjihkMZsiUkKhIAIfkECQoAAAAsAAAAABAAEAAAAzYIujIjK8pByJDMlFYvBoVjHA70GU7xSUJhmKtwHPAKzLO9HMaoKwJZ7Rf8AYPDDzKpZBqfvwQAIfkECQoAAAAsAAAAABAAEAAAAzMIumIlK8oyhpHsnFZfhYumCYUhDAQxRIdhHBGqRoKw0R8DYlJd8z0fMDgsGo/IpHI5TAAAIfkECQoAAAAsAAAAABAAEAAAAzIIunInK0rnZBTwGPNMgQwmdsNgXGJUlIWEuR5oWUIpz8pAEAMe6TwfwyYsGo/IpFKSAAAh+QQJCgAAACwAAAAAEAAQAAADMwi6IMKQORfjdOe82p4wGccc4CEuQradylesojEMBgsUc2G7sDX3lQGBMLAJibufbSlKAAAh+QQJCgAAACwAAAAAEAAQAAADMgi63P7wCRHZnFVdmgHu2nFwlWCI3WGc3TSWhUFGxTAUkGCbtgENBMJAEJsxgMLWzpEAACH5BAkKAAAALAAAAAAQABAAAAMyCLrc/jDKSatlQtScKdceCAjDII7HcQ4EMTCpyrCuUBjCYRgHVtqlAiB1YhiCnlsRkAAAOwAAAAAAAAAAAA=="
-        />
-        <router-link to="/login" class="btn btn-link">Отмена</router-link>
-      </div>
-    </form>
-  </div>
+  <v-app id="inspire">
+    <v-content>
+      <v-container class="fill-height" fluid>
+        <v-row align="center" justify="center">
+          <v-col cols="12" sm="8" md="4">
+            <v-card class="elevation-12">
+              <v-toolbar color="primary" dark flat>
+                <v-toolbar-title>Регистрация</v-toolbar-title>
+              </v-toolbar>
+              <v-card-text>
+                <v-form ref="form">
+                  <v-text-field
+                    label="Логин"
+                    v-model.trim="user.username"
+                    :rules="nameRules"
+                    name="login"
+                    prepend-icon="mdi-account"
+                    type="text"
+                    required
+                  ></v-text-field>
+
+                  <v-text-field
+                    id="password"
+                    label="Пароль"
+                    name="password"
+                    v-model="user.password"
+                    :rules="[v => !!v || 'Пароль обязателен!']"
+                    prepend-icon="mdi-lock"
+                    type="password"
+                    required
+                  ></v-text-field>
+                </v-form>
+              </v-card-text>
+              <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn color="primary" @click="handleSubmit" :loading="loading">Зарегистрироваться</v-btn>
+                <v-btn color="primary" :to="{name: 'Login'}" :disabled="loading">Отмена</v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-col>
+        </v-row>
+      </v-container>
+    </v-content>
+  </v-app>
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
-
 export default {
   data() {
     return {
@@ -54,28 +53,32 @@ export default {
         username: "",
         password: ""
       },
-      submitted: false
+      nameRules: [
+        v => !!v || 'Логин обязателен!',
+        // v => (v && v.length <= 10) || 'Name must be less than 10 characters',
+      ],
+      loading: false
     };
   },
-  computed: {
-    ...mapState("auth", ["status"])
-  },
+  computed: {},
   methods: {
     handleSubmit: function() {
-      this.submitted = true;
-      this.$validator.validate().then(valid => {
-        if (valid) {
-          this.$store.dispatch("auth/register", this.user).then(
-            () => {
-              this.$toasted.show("Успешная регистрация!");
-              this.$router.push({ name: "Home" });
-            },
-            err => {
-              this.$toasted.show("Ошибка регистрации");
-            }
-          );
+      let validationResult = this.$refs.form.validate();
+      if (!validationResult) {
+        return;
+      }
+
+      this.loading = true;
+      this.$store.dispatch("auth/register", this.user).then(
+        () => {
+          this.$toasted.success("Успешная регистрация!");
+          this.$router.push({ name: "Home" });
+        },
+        err => {
+          this.$toasted.error("Ошибка регистрации");
+          this.loading = false;
         }
-      });
+      );
     }
   }
 };

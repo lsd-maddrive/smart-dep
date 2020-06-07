@@ -10,6 +10,10 @@ const services = {
           {
             id: '8203',
             name: 'ELESI'
+          },
+          {
+            id: '8103',
+            name: 'FirstFloor'
           }
         ]
         resolve({data: data});
@@ -63,7 +67,9 @@ const services = {
     return new Promise((resolve, reject) => {
         setTimeout(() => {
           const data = {
-              token: "dakfemvevm;adeoafpemfs21412fwqf23f3q"
+              token: "dakfemvevm;adeoafpemfs21412fwqf23f3q",
+              username: user.username,
+              role: "Guest"
             };
           resolve({data: data});
         }, timeout);
@@ -74,7 +80,9 @@ const services = {
     return new Promise((resolve, reject) => {
         setTimeout(() => {
           const data = {
-              token: "dakfemvevm;adeoafpemfs21412fwqf23f3q"
+              token: "dakfemvevm;adeoafpemfs21412fwqf23f3q",
+              username: user.username,
+              role: "Guest"
             };
           resolve({data: data});
         }, timeout);
