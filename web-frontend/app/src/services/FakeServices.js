@@ -170,7 +170,7 @@ const services = {
 
           data.push({
             ts: (new Date().getTime() / 1000) - (50 - i),
-            state: state
+            state: Object.assign({}, state)
           })
         };
         resolve({

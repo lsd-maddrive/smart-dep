@@ -25,7 +25,7 @@
         <span>Домой</span>
       </v-tooltip>
 
-      <v-tooltip v-if="socketsConnected" bottom>
+      <v-tooltip v-if="isLoggedIn && socketsConnected" bottom>
         <template v-slot:activator="{ on }">
           <v-btn icon v-on="on">
             <v-icon>mdi-link</v-icon>
@@ -33,7 +33,7 @@
         </template>
         <span>Сервер подключен</span>
       </v-tooltip>
-      <v-tooltip v-else bottom>
+      <v-tooltip v-if="isLoggedIn && !socketsConnected" bottom>
         <template v-slot:activator="{ on }">
           <v-btn icon v-on="on">
             <v-icon>mdi-link-off</v-icon>
