@@ -1,7 +1,7 @@
 <template>
   <v-app>
     <v-app-bar app hide-on-scroll color="primary" dark>
-      <v-app-bar-nav-icon @click.stop="sidebarMenu = !sidebarMenu"></v-app-bar-nav-icon>
+      <v-app-bar-nav-icon v-if="isLoggedIn" @click.stop="sidebarMenu = !sidebarMenu"></v-app-bar-nav-icon>
       <v-toolbar-title>
         <router-link :to="{name: 'Home'}" tag="span" style="cursor: pointer">Умная кафедра</router-link>
       </v-toolbar-title>
@@ -62,11 +62,33 @@
           <v-list-item v-for="n in 5" :key="n" @click="() => {}">
             <v-list-item-title>Option {{ n }}</v-list-item-title>
           </v-list-item>
-        </v-list> -->
+        </v-list>-->
       </v-menu>
     </v-app-bar>
 
-    <v-navigation-drawer v-model="sidebarMenu" floating app color="primary" dark></v-navigation-drawer>
+    <v-navigation-drawer v-model="sidebarMenu" floating app color="primary" dark>
+      <v-list-item>
+        <v-list-item-content>
+          <v-list-item-title class="title">Меню</v-list-item-title>
+          <v-list-item-subtitle>Крутое меню =)</v-list-item-subtitle>
+        </v-list-item-content>
+      </v-list-item>
+
+      <v-divider></v-divider>
+
+      <v-list dense nav>
+        <!-- <v-list-item link>
+          <v-list-item-icon>
+            <v-icon>mdi-devices</v-icon>
+          </v-list-item-icon>
+
+          <v-list-item-content>
+            <v-list-item-title>Устройства</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item> -->
+      </v-list>
+    </v-navigation-drawer>
+
     <v-content>
       <v-container fluid>
         <router-view></router-view>
@@ -82,16 +104,15 @@ import axios from "axios";
 
 export default {
   name: "App",
-  components: {
-  },
+  components: {},
   data() {
     return {
-      sidebarMenu: false,
+      sidebarMenu: false
     };
   },
   computed: {
     socketsConnected() {
-      return this.$store.state.isConnected
+      return this.$store.state.isConnected;
     },
     places() {
       return this.$store.state.places || [];

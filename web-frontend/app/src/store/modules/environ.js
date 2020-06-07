@@ -45,7 +45,7 @@ const actions = {
     commit,
     rootState
   }, data) {
-    commit('clearState')
+    commit('clear')
     const placeId = data.placeId
 
     return new Promise((resolve, reject) => {
@@ -70,7 +70,7 @@ const actions = {
 
 // mutations
 const mutations = {
-  clearState: (state) => {
+  clear: (state) => {
     state.data = [];
   },
 

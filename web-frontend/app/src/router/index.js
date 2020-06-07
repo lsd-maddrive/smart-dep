@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 import RoomsPage from '@/components/RoomsPage'
+import EditRoomPage from '@/components/EditRoomPage'
 import RoomControlPage from '@/components/RoomControlPage'
 import LoginPage from '@/components/LoginPage'
 import RegisterPage from '@/components/RegisterPage'
@@ -21,6 +22,22 @@ let router = new Router({
       path: '/room/:id',
       name: 'RoomControl',
       component: RoomControlPage,
+      meta: {
+        requiresAuth: true
+      }
+    },
+    {
+      path: '/editroom/:id',
+      name: 'EditRoom',
+      component: EditRoomPage,
+      meta: {
+        requiresAuth: true
+      }
+    },
+    {
+      path: '/newroom',
+      name: 'NewRoom',
+      component: EditRoomPage,
       meta: {
         requiresAuth: true
       }

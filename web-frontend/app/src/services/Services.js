@@ -6,6 +6,29 @@ const realServices = {
     // return axios.get('/api/v1/place', { params: {} })
     return Api().get('/place')
   },
+  updatePlace(place) {
+    return Api().post('/place/' + place.id, place)
+  },
+  createPlace(place) {
+    return Api().post('/place/' + place.id, place)
+  },
+  deletePlace(place) {
+    return Api().delete('/place/' + place.id, place)
+  },
+
+  getPlaceDevices(place) {
+    return Api().get('/place/' + place.id + "/devices")
+  },
+  createDevice(device) {
+    return Api().post('/device', device)
+  },
+  updateDevice(device) {
+    return Api().post('/device', device)
+  },
+  deleteDevice(device) {
+    return Api().detele('/device', device)
+  },
+
   getLights(params) {
     let url = "/place/" + params.place_id + "/lights"
     return Api().get(url)

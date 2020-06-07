@@ -92,6 +92,10 @@ export default {
     this._initialization();
   },
   beforeDestroy() {
+    // Remove devices
+    this.$store.commit("light/clear");
+    this.$store.commit("power/clear");
+    this.$store.commit("environ/clear");
     console.log("beforeDestroy()");
   },
   // We should use this as $route has parameters after creation

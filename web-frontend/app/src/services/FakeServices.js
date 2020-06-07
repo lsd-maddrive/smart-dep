@@ -23,6 +23,90 @@ const services = {
     });
   },
 
+  createPlace(place) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        resolve({
+          data: place
+        });
+      }, timeout);
+    });
+  },
+  deletePlace(place) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        resolve({
+          data: place
+        });
+      }, timeout);
+    });
+  },
+  updatePlace(place) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        resolve({
+          data: place
+        });
+      }, timeout);
+    });
+  },
+
+  getPlaceDevices(place) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        const data = [{
+          id: "11:11:11",
+          type: "light",
+          name: "a",
+          place: place.id
+        }, {
+          id: "22:22:22",
+          type: "power",
+          name: "b",
+          place: place.id
+        }, {
+          id: "333:333:333",
+          type: "environ",
+          name: "v",
+          place: place.id
+        }]
+
+        resolve({
+          data: data
+        });
+      }, timeout);
+    });
+  },
+
+  createDevice(device) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        resolve({
+          data: device
+        });
+      }, timeout);
+    });
+  },
+  updateDevice(device) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        resolve({
+          data: device
+        });
+      }, timeout);
+    });
+  },
+  deleteDevice(device) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        resolve({
+          data: device
+        });
+      }, timeout);
+    });
+  },
+
+
   getLights(params) {
     return new Promise((resolve, reject) => {
       setTimeout(() => {

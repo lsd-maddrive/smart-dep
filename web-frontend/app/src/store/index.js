@@ -28,6 +28,11 @@ export default new Vuex.Store({
         place => place.id == state.currentPlaceId
       );
     },
+    getPlaceById: (state, getters) => (id) => {
+      return state.places.find(
+        place => place.id == id
+      )
+    },
     places: (state) => {
       return state.places
     },
@@ -85,7 +90,7 @@ export default new Vuex.Store({
 
     startSocketLink({}, data) {
       const placeId = data.placeId
-      
+
       /**
        * Lazy connection
        */
@@ -126,6 +131,10 @@ export default new Vuex.Store({
 
     SOCKET_DISCONNECT(state) {
       state.isConnected = false;
+    },
+
+    clearPlaces(state) {
+      state.places = []
     },
 
     setPlaces(state, places) {

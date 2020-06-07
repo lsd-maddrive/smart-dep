@@ -41,7 +41,7 @@ const actions = {
     commit,
     rootState
   }, data) {
-    commit('clearStates')
+    commit('clear')
     const placeId = data.placeId
     return new Promise((resolve, reject) => {
       Services.getPowers({
@@ -91,7 +91,7 @@ const actions = {
 
 // mutations
 const mutations = {
-  clearStates: (state) => {
+  clear: (state) => {
     state.units = [];
   },
 

@@ -1,0 +1,378 @@
+<template>
+  <v-app id="inspire">
+    <h1 v-if="editMode">Редактирование комнаты</h1>
+    <h1 v-else>Создание комнаты</h1>
+    <v-container fluid>
+      <v-row justify="center">
+        <v-col cols="12" sm="6" md="4">
+          <v-form ref="placeForm">
+            <v-text-field
+              label="Название"
+              v-model.trim="place.name"
+              :rules="nameRules"
+              name="login"
+              type="text"
+              required
+            ></v-text-field>
+
+            <v-text-field
+              label="Номер комнаты"
+              v-model.trim="place.id"
+              :rules="idRules"
+              name="login"
+              type="number"
+              required
+            ></v-text-field>
+
+            <v-row justify="center">
+              <v-spacer></v-spacer>
+              <v-btn
+                v-if="!editMode"
+                color="blue darken-1"
+                @click="createSubmit"
+                :loading="loading.createUpdate"
+                text
+              >Создать</v-btn>
+              <v-btn
+                v-if="editMode"
+                color="blue darken-1"
+                @click="updateSubmit"
+                :loading="loading.createUpdate"
+                text
+              >Сохранить</v-btn>
+              <v-btn
+                v-if="editMode"
+                color="red darken-1"
+                @click="deleteSubmit"
+                :loading="loading.delete"
+                text
+              >Удалить</v-btn>
+              <v-btn color="gray darken-1" @click="cancelSubmit" text>Отмена</v-btn>
+            </v-row>
+          </v-form>
+        </v-col>
+      </v-row>
+
+      <v-row justify="center" v-if="editMode">
+        <v-col cols="12">
+          <v-data-table
+            :headers="headers"
+            :items="devices"
+            item-key="name"
+            show-select
+            :loading="loading.table"
+            loading-text="Загружаю устройства"
+            class="elevation-1"
+          >
+            <template v-slot:top>
+              <v-toolbar flat color="white">
+                <v-toolbar-title>Устройства</v-toolbar-title>
+                <v-divider class="mx-4" inset vertical></v-divider>
+                <v-spacer></v-spacer>
+                <v-dialog v-model="deviceEditDialogue" max-width="500px">
+                  <template v-slot:activator="{ on }">
+                    <v-btn color="primary" dark class="mb-2" @click="addDevice" v-on="on">Добавить</v-btn>
+                  </template>
+                  <v-card>
+                    <v-card-title>
+                      <span class="headline">{{ deviceEditTitle }}</span>
+                    </v-card-title>
+
+                    <v-card-text>
+                      <v-container>
+                        <v-form ref="deviceForm">
+                          <v-row>
+                            <v-col cols="12" sm="6" md="4">
+                              <v-text-field
+                                :rules="[v => !!v || 'Наименование обязательно']"
+                                v-model="deviceEditItem.name"
+                                label="Наименование"
+                              ></v-text-field>
+                            </v-col>
+                            <v-col cols="12" sm="6" md="4" v-if="deviceEditItem.id">
+                              <v-text-field v-model="deviceEditItem.id" label="ID" readonly></v-text-field>
+                            </v-col>
+                            <v-col cols="12" sm="6" md="4">
+                              <v-select
+                                v-model="deviceEditItem.type"
+                                :rules="[v => !!v || 'Тип обязателен']"
+                                :items="['light', 'power', 'environ']"
+                                label="Тип"
+                              ></v-select>
+                            </v-col>
+                            <v-col cols="12" sm="6" md="4">
+                              <v-text-field
+                                v-model="deviceEditItem.place"
+                                label="Помещение"
+                                readonly
+                              ></v-text-field>
+                            </v-col>
+                          </v-row>
+                        </v-form>
+                      </v-container>
+                    </v-card-text>
+
+                    <v-card-actions>
+                      <v-spacer></v-spacer>
+                      <v-btn
+                        color="blue darken-1"
+                        text
+                        @click="close"
+                        :disabled="loading.deviceSave"
+                      >Отмена</v-btn>
+                      <v-btn
+                        color="blue darken-1"
+                        text
+                        @click="save"
+                        :loading="loading.deviceSave"
+                      >Сохранить</v-btn>
+                    </v-card-actions>
+                  </v-card>
+                </v-dialog>
+              </v-toolbar>
+            </template>
+
+            <template v-slot:item.actions="{ item }">
+              <v-icon small class="mr-2" @click="editDevice(item)">mdi-pencil</v-icon>
+              <v-icon small @click="deleteDevice(item)">mdi-delete</v-icon>
+            </template>
+          </v-data-table>
+        </v-col>
+      </v-row>
+    </v-container>
+  </v-app>
+</template>
+
+<script>
+import RoomDevicesTable from "@/components/RoomDevicesTable";
+import Services from "@/services/Services";
+
+export default {
+  name: "RoomEditorCreator",
+  data() {
+    return {
+      place: {},
+      loading: {
+        createUpdate: false,
+        delete: false,
+        table: false,
+        deviceSave: false
+      },
+      nameRules: [v => !!v || "Название обязательно"],
+      idRules: [v => !!v || "Номер обязателен"],
+
+      // Table data
+      deviceEditDialogue: false,
+      deviceEditItem: {},
+      headers: [
+        {
+          text: "ID",
+          align: "start",
+          sortable: false,
+          value: "id"
+        },
+        { text: "Наименование", value: "name" },
+        { text: "Тип", value: "type" },
+        { text: "Действия", value: "actions", sortable: false }
+      ],
+      devices: []
+    };
+  },
+  computed: {
+    editMode() {
+      return this.$route.params.id ? true : false;
+    },
+    placeId() {
+      return this.$route.params.id;
+    },
+
+    isNewDevice() {
+      return typeof this.deviceEditItem.id === "undefined";
+    },
+    deviceEditTitle() {
+      return this.deviceEditItem.id
+        ? "Редактировать устройство"
+        : "Добавить устройство";
+    }
+  },
+  components: {
+    "devices-table": RoomDevicesTable
+  },
+  methods: {
+    cancelSubmit: function() {
+      this.$router.push({ name: "Home" });
+    },
+    createSubmit: function() {
+      let validationResult = this.$refs.placeForm.validate();
+      if (!validationResult) {
+        return;
+      }
+
+      this.loading.createUpdate = true;
+      Services.createPlace(this.place).then(
+        resp => {
+          this.$toasted.success("Помещение успешно создано!");
+          this.$router.push({ name: "Home" });
+        },
+        error => {
+          this.$toasted.error("Создание помещения не удалось");
+          this.loading.createUpdate = false;
+        }
+      );
+    },
+    updateSubmit: function() {
+      let validationResult = this.$refs.placeForm.validate();
+      if (!validationResult) {
+        return;
+      }
+
+      this.loading.createUpdate = true;
+      Services.updatePlace(this.place).then(
+        () => {
+          this.$toasted.success("Помещение успешно обновлено!");
+          this.$router.push({ name: "Home" });
+        },
+        error => {
+          this.$toasted.error("Создание помещения не удалось");
+          this.loading.createUpdate = false;
+        }
+      );
+    },
+    deleteSubmit: function() {
+      let result = confirm(
+        `Вы уверены, что хотите удалить помещение ${this.sourcePlace.id}?`
+      );
+      if (!result) {
+        return;
+      }
+
+      this.loading.delete = true;
+      Services.deletePlace(this.sourcePlace).then(
+        resp => {
+          this.$toasted.success("Помещение успешно удалено!");
+          this.$router.push({ name: "Home" });
+        },
+        error => {
+          this.$toasted.error("Удаление помещения не удалось");
+          this.loading.delete = false;
+        }
+      );
+    },
+    /**
+     * Table dependent methods
+     */
+    addDevice() {
+      this.deviceEditItem = {
+        place: this.sourcePlace.id
+      };
+      this.deviceEditDialogue = true;
+    },
+    editDevice(item) {
+      this.deviceEditItem = Object.assign({}, item);
+      this.deviceEditDialogue = true;
+    },
+
+    deleteDevice(item) {
+      // const index = this.desserts.indexOf(item);
+      let result = confirm(
+        `Вы уверены, что хотите удалить устройство ${item.id}?`
+      );
+      if (result) {
+        this.$toasted.info("Удаление устройства");
+        const device = Object.assign({}, item);
+        Services.deleteDevice(device).then(
+          resp => {
+            this._updateDevices();
+            this.$toasted.success("Устройство успешно удалено!");
+          },
+          error => {
+            this.$toasted.error("Не удалось удалить устройство");
+          }
+        );
+      }
+    },
+    close() {
+      this.deviceEditDialogue = false;
+    },
+
+    save() {
+      let validationResult = this.$refs.deviceForm.validate();
+      if (!validationResult) {
+        return;
+      }
+
+      const device = this.deviceEditItem;
+      this.loading.deviceSave = true;
+
+      if (this.isNewDevice) {
+        Services.createDevice(device).then(
+          () => {
+            this._updateDevices();
+            this.$toasted.success("Устройство успешно добавлено!");
+            this.loading.deviceSave = false;
+            this.close();
+          },
+          error => {
+            this.$toasted.error("Не удалось добавить устройство");
+            this.loading.deviceSave = false;
+          }
+        );
+      } else {
+        Services.updateDevice(device).then(
+          () => {
+            this._updateDevices();
+            this.$toasted.success("Устройство успешно обновлено!");
+            this.loading.deviceSave = false;
+            this.close();
+          },
+          error => {
+            this.$toasted.error("Не удалось обновить устройство");
+            this.loading.deviceSave = false;
+          }
+        );
+      }
+    },
+    _updateDevices() {
+      this.devices = []
+      const placeId = this.$route.params.id;
+      this.loading.table = true;
+      Services.getPlaceDevices({ id: placeId }).then(
+        resp => {
+          this.loading.table = false;
+          this.devices = resp.data;
+        },
+        err => {
+          this.loading.table = false;
+          this.$toasted.error("Не удалось получить список устройств");
+        }
+      );
+    }
+  },
+  components: {},
+  created() {
+    const placeId = this.$route.params.id;
+    if (placeId) {
+      this.$store.dispatch("validatePlace", { placeId: placeId }).then(
+        resp => {
+          console.log("Room " + placeId + " found!");
+          // Copy to have external data copy
+          this.sourcePlace = Object.assign({}, resp);
+          this.place = Object.assign({}, resp);
+
+          // Update list of devices
+          this._updateDevices();
+        },
+        err => {
+          this.$toasted.error("Комната " + this.placeId + " не найдена =(");
+          console.log("Room " + placeId + " not found: " + err);
+          this.$router.push({ name: "Home" });
+        }
+      );
+    }
+  }
+};
+</script>
+
+<!-- Add "scoped" attribute to limit CSS to this component only -->
+<style scoped>
+</style>
