@@ -1,3 +1,5 @@
+import Services from "@/services/Services";
+
 // initial state
 const state = {
   data: [],
@@ -25,7 +27,7 @@ const getters = {
     return item.light
   },
   times: (state, getters, rootState) => {
-    // Looks like it keep in [ms]
+    // Looks like it requires in [ms]
     return state.data.map(pnt => pnt.ts * 1000)
   },
   temps: (state) => {
@@ -38,6 +40,32 @@ const getters = {
 
 // actions
 const actions = {
+  syncData({
+    state,
+    commit,
+    rootState
+  }, data) {
+    commit('clearState')
+    const placeId = data.placeId
+
+    return new Promise((resolve, reject) => {
+      Services.getEnvironmentStates({
+        place_id: placeId,
+        count: state.dataLimit
+      }).then(
+        response => {
+          for (let data of response.data) {
+            commit('setExtState', data)
+          }
+          resolve()
+        },
+        error => {
+          console.log("Failed to request environment data: " + error)
+          reject(error)
+        }
+      )
+    })
+  },
 }
 
 // mutations
@@ -60,7 +88,7 @@ const mutations = {
     if (state.data.length > state.dataLimit) {
       state.data.shift()
     }
-  },
+  }
 }
 
 export default {

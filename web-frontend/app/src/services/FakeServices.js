@@ -16,7 +16,9 @@ const services = {
             name: 'FirstFloor'
           }
         ]
-        resolve({data: data});
+        resolve({
+          data: data
+        });
       }, timeout);
     });
   },
@@ -37,7 +39,9 @@ const services = {
             },
           }
         ]
-        resolve({data: data});
+        resolve({
+          data: data
+        });
       }, timeout);
     });
   },
@@ -58,46 +62,81 @@ const services = {
             },
           }
         ]
-        resolve({data: data});
+        resolve({
+          data: data
+        });
+      }, timeout);
+    });
+  },
+
+  getEnvironmentStates(params) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        var i;
+        let data = []
+        let count = 50;
+        let state = {
+          temperature: 25,
+          lightness: 93,
+          humidity: 39
+        }
+        for (i = 0; i < count; i++) {
+          state.temperature += (Math.random() * 2 - 1) * 2;
+          state.humidity += (Math.random() * 2 - 1) * 1;
+
+          data.push({
+            ts: (new Date().getTime() / 1000) - (50 - i),
+            state: state
+          })
+        };
+        resolve({
+          data: data
+        });
       }, timeout);
     });
   },
 
   login(user) {
     return new Promise((resolve, reject) => {
-        setTimeout(() => {
-          const data = {
-              token: "dakfemvevm;adeoafpemfs21412fwqf23f3q",
-              username: user.username,
-              role: "Guest"
-            };
-          resolve({data: data});
-        }, timeout);
-      });
+      setTimeout(() => {
+        const data = {
+          token: "dakfemvevm;adeoafpemfs21412fwqf23f3q",
+          username: user.username,
+          role: "Guest"
+        };
+        resolve({
+          data: data
+        });
+      }, timeout);
+    });
   },
 
   register(user) {
     return new Promise((resolve, reject) => {
-        setTimeout(() => {
-          const data = {
-              token: "dakfemvevm;adeoafpemfs21412fwqf23f3q",
-              username: user.username,
-              role: "Guest"
-            };
-          resolve({data: data});
-        }, timeout);
-      });
+      setTimeout(() => {
+        const data = {
+          token: "dakfemvevm;adeoafpemfs21412fwqf23f3q",
+          username: user.username,
+          role: "Guest"
+        };
+        resolve({
+          data: data
+        });
+      }, timeout);
+    });
   },
 
   sendCommand(params) {
     return new Promise((resolve, reject) => {
-        setTimeout(() => {
-          const data = {
-              msg: "Ok"
-            };
-          resolve({data: data});
-        }, timeout);
-      });
+      setTimeout(() => {
+        const data = {
+          msg: "Ok"
+        };
+        resolve({
+          data: data
+        });
+      }, timeout);
+    });
   },
 
   isDebug() {

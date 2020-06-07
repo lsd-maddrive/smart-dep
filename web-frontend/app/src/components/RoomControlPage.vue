@@ -65,7 +65,17 @@ export default {
             }
           );
 
-          this.$store.commit("environ/clearState");
+          this.$store.dispatch("environ/syncData", { placeId: placeId }).then(
+            resp => {
+            },
+            err => {
+              console.log(err)
+              this.$toasted.error(
+                "Не удалось обновить состояние окружения =("
+              );
+            }
+          );
+
           this.$store.dispatch("startSocketLink", { placeId: placeId });
         },
         err => {
