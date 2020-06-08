@@ -65,3 +65,10 @@ def test_get_devices_states(timescaleDB):
         db_last_devices.append(test)
     
     assert db_last_devices == right_devices
+
+
+def test_get_user_data(timescaleDB):
+    test_query = asdb.get_user_data("test_user", db_session=timescaleDB)
+
+    assert test_query.username == 'test_user', "No valid username"
+    assert test_query.check_password('test_password'), "No valid password"

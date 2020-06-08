@@ -196,3 +196,8 @@ class Login(Resource):
 #         # return redirect(url_for('index'))
 #         return 
     pass
+
+
+@api.route('/register', methods=['GET', 'POST'])
+class Signup(Resource):
+    pass

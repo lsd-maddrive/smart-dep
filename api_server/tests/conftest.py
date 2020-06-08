@@ -13,7 +13,7 @@ from api_server.api_v1 import api as ns
 from api_server.api_func import create_app
 from api_server.database import db 
 from api_server.sockets import socketio
-from db.models import Model, States 
+from db.models import Model, States, Users
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d/%H:%M:%S')
 logger = logging.getLogger(__name__)
@@ -47,10 +47,10 @@ def timescaleDB(request, test_db):
         'power'
     ]
 
-    states = []
+    db_data = []
 
     for i in range(len(devices)):
-        states.append(
+        db_data.append(
                 States(
                     timestamp=datetime.now(), 
                     state= {'enabled': False}, 
@@ -59,11 +59,21 @@ def timescaleDB(request, test_db):
                     type=types[i]
                 )
             )
+    
+    test_user = Users(
+        username = "test_user", 
+        created_on = datetime.now(), 
+        updated_on = None, 
+        avatar_photo = None
+    )
+    test_user.set_password("test_password")
 
-    logger.debug(f"DB DATA STATES:\n{pformat(states)}")
+    db_data.append(test_user)
+
+    logger.debug(f"DB DATA STATES:\n{pformat(db_data)}")
 
     session.bulk_save_objects(
-        objects=states
+        objects=db_data
     )
 
     session.commit() 

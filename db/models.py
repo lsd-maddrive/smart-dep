@@ -1,4 +1,5 @@
 from flask_login import UserMixin
+from pprint import pformat
 from sqlalchemy import MetaData, Column, Integer, String, DateTime
 from sqlalchemy.dialects.postgresql import JSONB, BYTEA
 from sqlalchemy.ext.declarative import declarative_base
@@ -18,8 +19,8 @@ class Commands(Model):
     type = Column(String(10))
 
     def __repr__(self):
-        return f"Command Type: {self.type}, Device ID: {self.device_id} \
-                 DateTime: {self.timestamp}, Place ID: {self.place_id}"
+        return f"Command Type: {self.type}, Device ID: {self.device_id},\
+DateTime: {self.timestamp}, Place ID: {self.place_id}, Command: {pformat(self.command)}"
 
 
 class Configs(Model):
@@ -33,8 +34,8 @@ class Configs(Model):
     type = Column(String(10))
 
     def __repr__(self):
-        return f"Params Type: {self.type}, Device ID: {self.device_id} \
-                 DateTime: {self.timestamp}, Place ID: {self.place_id}"
+        return f"Params Type: {self.type}, Device ID: {self.device_id},\
+DateTime: {self.timestamp}, Place ID: {self.place_id}, Config: {pformat(self.config)}"
 
 
 class States(Model):
@@ -48,9 +49,10 @@ class States(Model):
     type = Column(String(10))
 
     def __repr__(self):
-        return f"State Type: {self.type}, Device ID: {self.device_id} \
-                 DateTime: {self.timestamp}, Place ID: {self.place_id}"
+        return f"State Type: {self.type}, Device ID: {self.device_id},\
+DateTime: {self.timestamp}, Place ID: {self.place_id}, State: {pformat(self.state)}"
     
+
 class Users(UserMixin, Model):
     __tablename__ = "users"
 
@@ -60,15 +62,15 @@ class Users(UserMixin, Model):
     created_on = Column(DateTime)
     updated_on = Column(DateTime)
     avatar_photo = Column(BYTEA)
-
-    def __repr__(self):
-        return f"User: {self.username}"
     
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+    def __repr__(self):
+        return f"User: {self.username}, Created Date: {self.created_on}"
 
 
 # from api_server.app import login 
