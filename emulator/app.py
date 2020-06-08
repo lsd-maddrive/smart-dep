@@ -3,6 +3,7 @@ import json
 import sys
 import paho.mqtt.client as mqtt
 import yaml
+import os
 
 from fluent import handler
 import logging
@@ -37,7 +38,7 @@ logger = logging.getLogger('emulator')
 class ControlDevice(object):
     def __init__(self, config, type_):
         self.config = config
-        self.device_id = config['mac']
+        self.device_id = config['id']
         self.place_id = config['place_id']
         self.type = type_
 
@@ -215,8 +216,51 @@ class EnvironmentDevice(ControlDevice):
 
 # Utilization
 
+import importlib
+
+class ReloadWrapper():
+    def __init__(self):
+        self.updateRequired = False
+        self.unit = None
+
+    def reload(self):
+        self.updateRequired = self.unit is not None
+
+    def _reload(self):
+        import intcode
+        importlib.reload(intcode)
+        self.unit = intcode.Code()
+        self.updateRequired = False
+
+    def _load(self):
+        try:
+            import intcode
+            self.unit = intcode.Code()
+            return True
+        except Exception as e:
+            logger.error(f'Error loading: {e}')
+
+        return False
+
+    def get_test_msg(self):
+        if self.unit is None:
+            result = self._load()
+            if not result:
+                return None
+
+        if self.updateRequired:
+            self._reload()
+
+        return self.unit.test_msg()
 
 def main():
+    device_id = os.getenv('DEVICE_ID')
+    if device_id is None:
+        logger.critical(f'DEVICE_ID not set - exit')
+        exit(1)
+
+    reloader = ReloadWrapper()
+
     with open("config.yml") as f:
         try:
             g_config = yaml.safe_load(f)
@@ -226,19 +270,28 @@ def main():
     app_config = g_config['app']
     mqtt_config = app_config['mqtt']
 
-    def callback(mqttc, obj, msg):
+    def on_message(client, userd, msg):
         try:
             data = json.loads(msg.payload)
             logger.debug(f'Received data: {data}')
-            for device in devices:
-                device._callback(msg.topic, data)
+
+            code_str = data['code']
+            with open('intcode.py', 'w') as f:
+                f.write(code_str)
+
+            logger.debug('Code writed!')
+            reloader.reload()
         except Exception as e:
             logger.error(f'Error in callback: {e}')
 
+    def on_connect(client, userd, flags, rc):
+        logger.debug(f"Connected with result code {rc} / {userdata}")
+
     is_connected = False
 
-    g_client = mqtt.Client()
-    g_client.on_message = callback
+    g_client = mqtt.Client(device_id)
+    g_client.on_message = on_message
+    g_client.on_connect = on_connect
     g_client.username_pw_set(
         username=mqtt_config['username'], password=mqtt_config['password'])
 
@@ -258,34 +311,18 @@ def main():
         exit(1)
 
     logger.debug('Connected to MQTT')
-
-    def get_device(device_name, config, client):
-        type_ = config['type']
-
-        types = {
-            'light': LightControlDevice,
-            'power': PowerControlDevice,
-            'env': EnvironmentDevice
-        }
-
-        if type_ not in types:
-            return None
-
-        return types[type_](config, client)
-
-    devices = []
-    for device_name, device_config in app_config['devices'].items():
-        device = get_device(device_name, device_config, g_client)
-        if device:
-            logger.debug(f'Created device: {device}')
-            devices.append(device)
-
+    g_client.subscribe('cfg/updates')
     g_client.loop_start()
 
     while True:
         try:
-            for device in devices:
-                device.step(g_client)
+            msg = "Test1"
+
+            new_msg = reloader.get_test_msg()
+            if new_msg is not None:
+                msg = new_msg
+
+            g_client.publish('state/8201/test', msg)
         except Exception as e:
             logger.error(f'Error in steps: {e}')
             if type(e) == KeyboardInterrupt:
