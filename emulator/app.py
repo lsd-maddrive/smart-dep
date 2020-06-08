@@ -242,6 +242,17 @@ class ReloadWrapper():
 
         return False
 
+    def get_unit(self):
+        if self.unit is None:
+            result = self._load()
+            if not result:
+                return None
+
+        if self.updateRequired:
+            self._reload()
+
+        return self.unit
+
     def get_test_msg(self):
         if self.unit is None:
             result = self._load()
@@ -286,6 +297,7 @@ def main():
 
     def on_connect(client, userd, flags, rc):
         logger.debug(f"Connected with result code {rc} / {userdata}")
+        client.subscribe('cfg/updates')
 
     is_connected = False
 
@@ -316,13 +328,11 @@ def main():
 
     while True:
         try:
-            msg = "Test1"
-
-            new_msg = reloader.get_test_msg()
-            if new_msg is not None:
-                msg = new_msg
-
-            g_client.publish('state/8201/test', msg)
+            unit = reloader.get_unit()
+            if unit is None:
+                time.sleep(1)
+            else:
+                unit.step(g_client)
         except Exception as e:
             logger.error(f'Error in steps: {e}')
             if type(e) == KeyboardInterrupt:
