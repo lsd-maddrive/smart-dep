@@ -3,18 +3,18 @@
     <v-card-title class="justify-center">Управление устройствами</v-card-title>
     <v-card-actions>
       <v-row>
-        <v-col cols="12" md="6">
-          <div class="pb-2 text-center">Управление светом</div>
-          <v-row class="ma-1" align="stretch" v-for="unit in light_units" :key="unit.id">
-            <unit :id="unit.id" prefix="Свет" type="light" icon="mdi-lightbulb-on"></unit>
+        <v-col cols="12" md="12">
+          <!-- <div class="pb-2 text-center">Управление устройствами</div> -->
+          <v-row class="ma-1" align="stretch" v-for="unit in units" :key="unit.id">
+            <unit :id="unit.id"></unit>
           </v-row>
         </v-col>
-        <v-col cols="12" md="6">
+        <!-- <v-col cols="12" md="12">
           <div class="pb-2 text-center">Управление электричеством</div>
           <v-row class="ma-1" align="stretch" v-for="unit in power_units" :key="unit.id">
-            <unit :id="unit.id" prefix="Модуль" type="power" icon="mdi-lightning-bolt"></unit>
+            <unit :id="unit.id"></unit>
           </v-row>
-        </v-col>
+        </v-col> -->
       </v-row>
     </v-card-actions>
   </v-card>
@@ -29,12 +29,9 @@ export default {
     return {};
   },
   computed: {
-    light_units() {
-      return this.$store.state.light.units;
+    units() {
+      return this.$store.state.deviceStates;
     },
-    power_units() {
-      return this.$store.state.power.units;
-    }
   },
   components: {
     unit: BinaryUnit

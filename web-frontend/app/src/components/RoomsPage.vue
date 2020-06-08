@@ -3,22 +3,22 @@
     <h1>Привет! Это интерфейс умной кафедры!</h1>
     <h2>Вот доступные места:</h2>
     <v-container fluid>
-      <v-row>
+      <v-row align="center">
         <v-col cols="12" sm="6" md="4" v-for="place in places" :key="place.id">
           <v-card class="elevation-12">
             <v-card-title class="justify-center">
-              {{ place.id.substring(0,5) }}
+              {{ place.name }} [{{ place.num }}]
               <v-btn class="ml-2" icon :to="{name: 'EditRoom', params: {id: place.id}}">
                 <v-icon>mdi-puzzle-edit</v-icon>
               </v-btn>
             </v-card-title>
-            <v-card-text class="headline text-center">Комната {{ place.name }}</v-card-text>
+            <!-- <v-card-text class="text-center">Комната {{ place.name }}</v-card-text> -->
             <v-card-actions>
               <v-btn
                 block
                 color="primary"
                 :to="{name: 'RoomControl', params: {id: place.id}}"
-              >Пройдемте-с</v-btn>
+              >Состояние</v-btn>
             </v-card-actions>
           </v-card>
         </v-col>

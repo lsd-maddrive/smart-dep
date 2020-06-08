@@ -4,7 +4,7 @@
     <h1 v-else>Создание комнаты</h1>
     <v-container fluid>
       <v-row justify="center">
-        <v-col cols="12" sm="6" md="4">
+        <v-col cols="12" sm="8" md="6">
           <v-form ref="placeForm">
             <v-text-field
               label="Название"
@@ -17,8 +17,8 @@
 
             <v-text-field
               label="Номер комнаты"
-              v-model.trim="place.id"
-              :rules="idRules"
+              v-model.trim="place.num"
+              :rules="numRules"
               name="login"
               type="number"
               required
@@ -59,7 +59,6 @@
             :headers="headers"
             :items="devices"
             item-key="name"
-            show-select
             :loading="loading.table"
             loading-text="Загружаю устройства"
             class="elevation-1"
@@ -96,7 +95,7 @@
                               <v-select
                                 v-model="deviceEditItem.type"
                                 :rules="[v => !!v || 'Тип обязателен']"
-                                :items="['light', 'power', 'environ']"
+                                :items="['light', 'power', 'env']"
                                 label="Тип"
                               ></v-select>
                             </v-col>
@@ -159,7 +158,7 @@ export default {
         deviceSave: false
       },
       nameRules: [v => !!v || "Название обязательно"],
-      idRules: [v => !!v || "Номер обязателен"],
+      numRules: [v => !!v || "Номер обязателен"],
 
       // Table data
       deviceEditDialogue: false,
@@ -240,7 +239,7 @@ export default {
     },
     deleteSubmit: function() {
       let result = confirm(
-        `Вы уверены, что хотите удалить помещение ${this.sourcePlace.id}?`
+        `Вы уверены, что хотите удалить помещение ${this.sourcePlace.num}?`
       );
       if (!result) {
         return;
@@ -263,7 +262,7 @@ export default {
      */
     addDevice() {
       this.deviceEditItem = {
-        place: this.sourcePlace.id
+        place: this.sourcePlace.num
       };
       this.deviceEditDialogue = true;
     },

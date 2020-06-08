@@ -53,22 +53,13 @@ export default {
         resp => {
           console.log("Room " + placeId + " found!");
           this.placeObj = resp;
-          this.$store.commit("setCurrentPlace", placeId);
+          this.$store.commit("enterPlace", placeId);
 
-          this.$store.dispatch("light/syncUnits", { placeId: placeId }).then(
+          this.$store.dispatch("syncDeviceStates", { placeId: placeId }).then(
             resp => {},
             err => {
               this.$toasted.error(
-                "Не удалось обновить состояние контроллеров света =("
-              );
-            }
-          );
-
-          this.$store.dispatch("power/syncUnits", { placeId: placeId }).then(
-            resp => {},
-            err => {
-              this.$toasted.error(
-                "Не удалось обновить состояние контроллеров электричества =("
+                "Не удалось обновить состояние контроллеров =("
               );
             }
           );
@@ -81,7 +72,7 @@ export default {
             }
           );
 
-          this.$store.dispatch("startSocketLink", { placeId: placeId });
+          this.$store.dispatch("startSocketLink");
         },
         err => {
           this.$toasted.error("Комната " + placeId + " не найдена =(");
@@ -98,9 +89,7 @@ export default {
   },
   beforeDestroy() {
     // Remove devices
-    this.$store.commit("light/clear");
-    this.$store.commit("power/clear");
-    this.$store.commit("environ/clear");
+    this.$store.commit("clearDeviceStates");
     console.log("beforeDestroy()");
   },
   // We should use this as $route has parameters after creation

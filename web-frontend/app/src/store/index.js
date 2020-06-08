@@ -3,8 +3,6 @@ import Vuex from 'vuex'
 
 Vue.use(Vuex)
 
-import light from './modules/light'
-import power from './modules/power'
 import environ from './modules/environ'
 import auth from './modules/auth'
 
@@ -14,11 +12,10 @@ export default new Vuex.Store({
   state: {
     isConnected: false,
     places: [],
-    currentPlaceId: null
+    currentPlaceId: null,
+    deviceStates: []
   },
   modules: {
-    light,
-    power,
     environ,
     auth
   },
@@ -33,9 +30,11 @@ export default new Vuex.Store({
         place => place.id == id
       )
     },
-    places: (state) => {
-      return state.places
-    },
+    getDeviceById: (state, getters) => (id) => {
+      return state.deviceStates.find(
+        dev => dev.id == id
+      )
+    }
   },
   actions: {
     /**
@@ -88,8 +87,8 @@ export default new Vuex.Store({
       })
     },
 
-    startSocketLink({}, data) {
-      const placeId = data.placeId
+    startSocketLink({state}) {
+      const placeId = state.currentPlaceId
 
       /**
        * Lazy connection
@@ -111,16 +110,71 @@ export default new Vuex.Store({
       commit,
       dispatch
     }, payload) {
-      for (let unit of payload) {
-        if (unit.type == "light") {
-          dispatch('light/setExtState', unit)
-        } else if (unit.type == "power") {
-          dispatch('power/setExtState', unit)
-        } else if (unit.type == "env") {
-          commit('environ/setExtState', unit)
+      dispatch("processInputStates", payload)
+    },
+
+    syncDeviceStates({
+      commit,
+      dispatch
+    }, data) {
+      commit('clearDeviceStates')
+      const placeId = data.placeId
+
+      return new Promise((resolve, reject) => {
+        Services.getDevicesLastStates({
+          id: placeId
+        }).then(
+          response => {
+            dispatch("processInputStates", response.data)
+            resolve()
+          },
+          error => {
+            console.log("Failed to request light units: " + error)
+            reject(error)
+          }
+        )
+      })
+    },
+
+    processInputStates({
+      commit,
+      dispatch
+    }, states) {
+      for (let state of states) {
+        if (['light', 'power'].indexOf(state.type) != -1) {
+          commit('setDeviceState', state)
+        } else if (state.type == "env") {
+          commit('environ/setExtState', state)
         }
       }
     },
+
+    commandState({
+      state,
+      commit,
+      getters
+    }, data) {
+
+      const deviceState = Object.assign({}, getters.getDeviceById(data.id));
+      // Append PlaceID to know where to send
+      deviceState.place_id = state.currentPlaceId
+      deviceState.cmd = {
+        enabled: data.enabled
+      }
+      deviceState.ts = new Date().getTime() / 1000
+      deviceState.source_id = 'browser'
+
+      return new Promise((resolve, reject) => {
+        Services.sendCommand(deviceState)
+          .then(resp => {
+            console.log(resp);
+            resolve(resp)
+          }, err => {
+            console.log(err);
+            reject(err)
+          });
+      })
+    }
   },
 
   mutations: {
@@ -133,6 +187,22 @@ export default new Vuex.Store({
       state.isConnected = false;
     },
 
+    clearDeviceStates(state) {
+      state.deviceStates = []
+    },
+
+    setDeviceState(state, deviceState) {
+      let unit = state.deviceStates.find(dst => dst.id == deviceState.device_id)
+      if (typeof unit === 'undefined') {
+        state.deviceStates.push(deviceState)
+      } else {
+        unit.state = deviceState.state
+      }
+    },
+
+    /**
+     * Places mutations
+     */
     clearPlaces(state) {
       state.places = []
     },
@@ -141,8 +211,11 @@ export default new Vuex.Store({
       state.places = places
     },
 
-    setCurrentPlace(state, placeId) {
+    enterPlace(state, placeId) {
       state.currentPlaceId = placeId
+    },
+    leavePlace(state) {
+      state.currentPlaceId = null
     }
   },
 

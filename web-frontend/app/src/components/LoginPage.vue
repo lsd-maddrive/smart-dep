@@ -56,17 +56,12 @@ export default {
       ],
       password: "",
       loading: false,
-      returnUrl: "",
 
-      emailRules: [
-        v => !!v || 'E-mail is required',
-        v => /.+@.+\..+/.test(v) || 'E-mail must be valid',
-      ],
+      // emailRules: [
+      //   v => !!v || 'E-mail is required',
+      //   v => /.+@.+\..+/.test(v) || 'E-mail must be valid',
+      // ],
     };
-  },
-  created() {
-    // get return url from route parameters or default to Home
-    this.returnUrl = this.$route.query.returnUrl || { name: "Home" };
   },
   computed: {
   },
@@ -83,7 +78,7 @@ export default {
         this.$store.dispatch("auth/login", { username, password }).then(
           () => {
             this.$toasted.success("Успешный вход!");
-            this.$router.push(this.returnUrl);
+            this.$router.push(this.$route.query.returnUrl || { name: "Home" });
           },
           error => {
             this.$toasted.error("Вход не удался: " + error);

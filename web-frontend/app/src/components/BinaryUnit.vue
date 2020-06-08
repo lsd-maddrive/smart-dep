@@ -1,6 +1,6 @@
 <template>
   <v-btn block :outlined="!enabled" :loading="loading" color="primary" @click="enabled=!enabled">
-    <span>{{prefix}} '{{ id.substring(0,5) }}' {{ enabled ? 'включен' : 'выключен' }}</span>
+    <span>'{{ name }}' {{ enabled ? 'включен' : 'выключен' }}</span>
     <v-icon class="pl-2">{{icon}}</v-icon>
   </v-btn>
 </template>
@@ -8,10 +8,7 @@
 <script>
 export default {
   props: {
-    id: String,
-    prefix: String,
-    type: String,
-    icon: String
+    id: String
   },
   data() {
     return {
@@ -19,27 +16,45 @@ export default {
     };
   },
   computed: {
+    name() {
+      const deviceState = this.$store.getters[`getDeviceById`](this.id);
+      return deviceState ? deviceState.name : "";
+    },
+    icon() {
+      const deviceState = this.$store.getters[`getDeviceById`](this.id);
+      if (deviceState) {
+        if (deviceState.type == "light") {
+          return "mdi-lightbulb-on";
+        } else if (deviceState.type == "power") {
+          return "mdi-lightning-bolt";
+        }
+      }
+      return "";
+    },
     enabled: {
       get() {
-        return this.$store.getters[`${this.type}/enabled`](this.id);
+        const deviceState = this.$store.getters[`getDeviceById`](this.id);
+        return deviceState ? deviceState.state.enabled : false;
       },
       set(value) {
-        this.loading = true
+        this.loading = true;
         this.$store
-          .dispatch(`${this.type}/setState`, { id: this.id, enabled: value })
+          .dispatch("commandState", { id: this.id, enabled: value })
           .then(resp => {
             this.$toasted.success("Команда отправлена, подождите обновления");
-            this.loading = false
+            this.loading = false;
           })
           .catch(err => {
             this.$toasted.error("Не удалось отправить команду");
-            this.loading = false
+            this.loading = false;
           });
       }
     }
   },
   methods: {},
-  mounted() {}
+  mounted() {
+    console.log(`Created  device ${this.id}`)
+  }
 };
 </script>
 

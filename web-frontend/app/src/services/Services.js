@@ -2,54 +2,47 @@ import Api from '@/services/Api'
 import fakeServices from '@/services/FakeServices'
 
 const realServices = {
+  createPlace(place) {
+    return Api().post('/place', place)
+  },
   getPlaces() {
     // return axios.get('/api/v1/place', { params: {} })
     return Api().get('/place')
   },
   updatePlace(place) {
-    return Api().post('/place/' + place.id, place)
-  },
-  createPlace(place) {
-    return Api().post('/place/' + place.id, place)
+    return Api().put('/place', place)
   },
   deletePlace(place) {
-    return Api().delete('/place/' + place.id, place)
+    return Api().delete('/place', place)
   },
 
   getPlaceDevices(place) {
-    return Api().get('/place/' + place.id + "/devices")
+    return Api().get('/place/' + place.id + '/device')
   },
   createDevice(device) {
     return Api().post('/device', device)
   },
   updateDevice(device) {
-    return Api().post('/device', device)
+    return Api().put('/device', device)
   },
   deleteDevice(device) {
     return Api().detele('/device', device)
   },
 
-  getLights(params) {
-    let url = "/place/" + params.place_id + "/lights"
-    return Api().get(url)
+  getDevicesLastStates(place) {
+    // Seconds
+    return Api().get('/place/' + place.id + '/states', { params: { dur: 5*60 } })
   },
-  getPowers(params) {
-    let url = "/place/" + params.place_id + "/powers"
-    return Api().get(url)
-  },
+
   login(user) {
-    let url = "/login"
-    return Api().post(url, user)
+    return Api().post('/login', user)
   },
   register(user) {
-    let url = "/register"
-    return Api().post(url, user)
+    return Api().post('/register', user)
   },
 
-  sendCommand(params) {
-    let url = "/cmd/" + params.place_id
-
-    return Api().post(url, params.data)
+  sendCommand(command) {
+    return Api().post('/cmd', command)
   },
 
   isDebug() {

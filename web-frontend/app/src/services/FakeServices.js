@@ -1,18 +1,46 @@
 const timeout = 400;
+
+function generateEnvironData() {
+  var i;
+  let data = []
+  let count = 20;
+  let state = {
+    temperature: 25,
+    lightness: 93,
+    humidity: 39
+  }
+  for (i = 0; i < count; i++) {
+    state.temperature += (Math.random() * 2 - 1) * 2;
+    state.humidity += (Math.random() * 2 - 1) * 1;
+
+    data.push({
+      ts: (new Date().getTime() / 1000) - (50 - i),
+      state: Object.assign({}, state)
+    })
+  };
+
+  return data;
+}
+
+const environData = generateEnvironData()
+
 const services = {
   getPlaces() {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
         const data = [{
-            id: '8201',
+            id: '1',
+            num: '8201',
             name: 'KEMZ',
           },
           {
-            id: '8203',
+            id: '2',
+            num: '8203',
             name: 'ELESI'
           },
           {
-            id: '8103',
+            id: '3',
+            num: '8103',
             name: 'FirstFloor'
           }
         ]
@@ -66,7 +94,7 @@ const services = {
           place: place.id
         }, {
           id: "333:333:333",
-          type: "environ",
+          type: "env",
           name: "v",
           place: place.id
         }]
@@ -106,44 +134,49 @@ const services = {
     });
   },
 
-
-  getLights(params) {
+  getDevicesLastStates(place) {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
         const data = [{
-            device_id: 'lght0',
+            id: 'lght0',
+            name: 'Освещение доски',
+            type: 'light',
             state: {
               enabled: true
             },
           },
           {
-            device_id: 'lght1',
-            state: {
-              enabled: false
-            },
-          }
-        ]
-        resolve({
-          data: data
-        });
-      }, timeout);
-    });
-  },
-
-  getPowers(params) {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        const data = [{
-            device_id: 'pwr0',
+            id: 'lght1',
+            name: 'Освещение стола',
+            type: 'light',
             state: {
               enabled: false
             },
           },
           {
-            device_id: 'pwr1',
+            id: 'pwr0',
+            name: 'Принтер',
+            type: 'power',
+            state: {
+              enabled: false
+            },
+          },
+          {
+            id: 'pwr1',
+            name: 'Компьютер',
+            type: 'power',
             state: {
               enabled: true
             },
+          },
+          {
+            id: 'env1',
+            type: 'env',
+            state: {
+              temperature: 25,
+              lightness: 93,
+              humidity: 39
+            }
           }
         ]
         resolve({
@@ -156,25 +189,8 @@ const services = {
   getEnvironmentStates(params) {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
-        var i;
-        let data = []
-        let count = 50;
-        let state = {
-          temperature: 25,
-          lightness: 93,
-          humidity: 39
-        }
-        for (i = 0; i < count; i++) {
-          state.temperature += (Math.random() * 2 - 1) * 2;
-          state.humidity += (Math.random() * 2 - 1) * 1;
-
-          data.push({
-            ts: (new Date().getTime() / 1000) - (50 - i),
-            state: Object.assign({}, state)
-          })
-        };
         resolve({
-          data: data
+          data: environData
         });
       }, timeout);
     });
