@@ -55,7 +55,7 @@ class Users(UserMixin, Model):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True)
-    username = Column(String(64))
+    username = Column(String(64), unique=True, nullable=False)
     password_hash = Column(String(128))
     created_on = Column(DateTime)
     updated_on = Column(DateTime)
@@ -70,7 +70,9 @@ class Users(UserMixin, Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-# ???????????????????????????????    
-@login.user_loader
-def load_user(id):
-    return Users.query.get(int(id))
+
+# from api_server.app import login 
+# # # ???????????????????????????????    
+# @login.user_loader
+# def load_user(id, db_session=db.session):
+#     return db_session.query(Users).get(int(id))

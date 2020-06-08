@@ -3,7 +3,7 @@ import json
 import logging
 import os
 
-from flask import request, current_app
+from flask import request, current_app, flash, redirect, url_for
 from flask_login import current_user, login_user
 from flask_restplus import Resource, Namespace, fields
 from kombu import Connection, Exchange, Producer
@@ -172,3 +172,27 @@ class Places(Resource):
             logger.debug(f"PLACES LAST DATA:\n{pformat(places_dict_list)}")
             
             return places_dict_list
+
+
+@api.route('/login', methods=['GET', 'POST'])
+class Login(Resource):
+    # if current_user.is_authenticated:
+    #     logger.debug("Inside IF")
+    # else:
+    #     logger.debug("Else branch")
+#         # if user is already registered 
+#         # redirect person somewhere else 
+#         # return redirect(url_for('index'))
+#         # TODO: add url for redirecting
+#         return 
+#     form = LoginForm()
+#     if form.validate_on_submit():
+#         user = asdb.get_user_data(form.username.data)
+#         if user is None or not user.check_password(form.password.data):
+#             flash('Invalid username or password')
+#             return redirect(url_for('login'))
+#         login_user(user, remember=form.remember_me.data)
+#         # TODO: add url for redirecting
+#         # return redirect(url_for('index'))
+#         return 
+    pass

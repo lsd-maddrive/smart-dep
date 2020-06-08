@@ -3,7 +3,7 @@ from sqlalchemy import desc
 from sqlalchemy import distinct
 from sqlalchemy.orm import Session
 
-from db.models import metadata, States 
+from db.models import metadata, States, Users 
 
 db = SQLAlchemy(metadata=metadata)
 
@@ -64,3 +64,23 @@ def get_devices_states(check_time, db_session=db.session):
            filter(States.timestamp >= check_time). \
            order_by(States.device_id, States.timestamp.desc()). \
            distinct(States.device_id)
+
+# from api_server.app import login 
+# ???????????????????????????????    
+# @login.user_loader
+def load_user(id, db_session=db.session):
+    return db_session.query(Users).get(int(id))
+
+def get_user_data(username, db_session=db.session):
+    """
+        Get all data about specified user
+
+        Args: 
+            username:   registered name of user 
+            db_session (sqlalchemy.orm.session.Session): session object
+        
+        Returns: 
+            Query object that contains data for ONE specified user (one row)
+    """
+    return db_session.query(Users). \
+           filter(Users.username == username).first()
