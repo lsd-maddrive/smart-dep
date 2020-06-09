@@ -62,6 +62,7 @@ class Users(UserMixin, Model):
     created_on = Column(DateTime)
     updated_on = Column(DateTime)
     avatar_photo = Column(BYTEA)
+    role = Column(String(20))
     
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -70,7 +71,7 @@ class Users(UserMixin, Model):
         return check_password_hash(self.password_hash, password)
 
     def __repr__(self):
-        return f"User: {self.username}, Created Date: {self.created_on}"
+        return f"User: {self.username}, Created Date: {self.created_on}, Role: {self.role}"
 
 
 # from api_server.app import login 

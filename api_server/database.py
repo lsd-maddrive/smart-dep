@@ -1,3 +1,10 @@
+from datetime import datetime
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import desc
 from sqlalchemy import distinct
@@ -84,3 +91,24 @@ def get_user_data(username, db_session=db.session):
     """
     return db_session.query(Users). \
            filter(Users.username == username).first()
+
+
+def create_user(username, password, db_session=db.session):
+    if username is None or password is None:
+        logger.critical(f"Username or password is missing")
+        return -1 
+    
+    user = Users(
+        username=username,
+        created_on=datetime.now(), 
+        updated_on=None, 
+        avatar_photo=None, 
+        role='guest'
+    )
+
+    user.set_password(password)
+
+    db_session.add(user)
+    db_session.commit()
+
+    logger.debug(f"User \"{username}\" is added to DB")

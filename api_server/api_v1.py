@@ -3,9 +3,9 @@ import json
 import logging
 import os
 
-from flask import request, current_app, flash, redirect, url_for
+from flask import request, current_app, flash, redirect, url_for, g
 from flask_login import current_user, login_user
-from flask_restplus import Resource, Namespace, fields
+from flask_restplus import Resource, Namespace, fields, abort
 from kombu import Connection, Exchange, Producer
 from pprint import pformat
 
@@ -174,8 +174,58 @@ class Places(Resource):
             return places_dict_list
 
 
+@api.route('/register', methods=['POST'])
+class Signup(Resource):
+    def post(self):
+        username = request.json.get('username')
+        password = request.json.get('password')
+
+        if username is None or password is None:
+            logger.critical(f"Username or password is missing")
+            # Raise a HTTPException for the given http_status_code
+            abort(400)
+        
+        if asdb.get_user_data(username) is not None: 
+            logger.critical(f"User {username} is already existed")
+            abort(400) 
+
+        asdb.create_user(username, password)
+
+        data = {
+            'token': None, 
+            'username': username, 
+            'role': 'guest'
+        }
+
+        return data
+
+
 @api.route('/login', methods=['GET', 'POST'])
 class Login(Resource):
+    def get(self):
+        logger.debug("Inside login get")
+        username = request.json.get('username')
+        password = request.json.get('password')  
+
+        if username is None or password is None:
+            logger.critical(f"Username or password is missing")
+            # Raise a HTTPException for the given http_status_code
+            abort(400)
+        
+        if asdb.get_user_data(username) is None: 
+            logger.critical(f"User \"{username}\" doesn't existed")
+            abort(400)   
+        
+    
+    def post(self):
+        logger.debug("Inside login post")
+        username = request.json.get('username')
+        password = request.json.get('password')
+
+# class Login(Resource):
+#     logger.debug("Inside Login")
+#     content = request.get_json
+#     logger.debug(f"{pformat(content)}")
     # if current_user.is_authenticated:
     #     logger.debug("Inside IF")
     # else:
@@ -195,9 +245,4 @@ class Login(Resource):
 #         # TODO: add url for redirecting
 #         # return redirect(url_for('index'))
 #         return 
-    pass
-
-
-@api.route('/register', methods=['GET', 'POST'])
-class Signup(Resource):
-    pass
+    # pass

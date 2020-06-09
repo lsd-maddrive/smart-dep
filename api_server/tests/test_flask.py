@@ -1,6 +1,7 @@
 import json
 import logging
 
+from flask_login import current_user, login_user
 import pytest
 
 from api_server.database import db 
@@ -60,3 +61,48 @@ def test_place_request(timescaleDB, client):
     rv = client.get('http://localhost:5000/api/v1/place')
 
     assert right_states == json.loads(rv.data)
+
+
+def test_register_missing_data(client):
+    missing_username = {
+        'username': None,
+        'password': 'test_password'
+    }
+    rv_username = client.post('http://localhost:5000/api/v1/register', json=missing_username)
+    
+    missing_password = {
+        'username': None,
+        'password': 'test_password'
+    }
+    rv_password = client.post('http://localhost:5000/api/v1/register', json=missing_password)
+    
+    assert rv_username.status_code == 400
+    assert rv_password.status_code == 400 
+
+
+def test_register(client):
+    existing_user = {
+        'username': 'test_user',
+        'password': 'test_password'
+    }
+    rv_existing = client.post('http://localhost:5000/api/v1/register', json=existing_user)
+
+    test_user = {
+        'username': 'user',
+        'password': 'test_password'
+    }
+    rv_new = client.post('http://localhost:5000/api/v1/register', json=test_user)
+
+    assert rv_existing.status_code == 400
+    assert rv_new.status_code == 200 
+
+
+
+# def test_login(client):
+
+#     test_json = {
+#         'username': 'guest',
+#         'password': 'test_password'
+#     }
+#     rv = client.get('http://localhost:5000/api/v1/login')
+#     assert True

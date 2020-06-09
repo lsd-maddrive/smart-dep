@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 import logging
 
+from flask_login import LoginManager
 from flask_restplus import Api
 from pprint import pformat
 import pytest
@@ -11,7 +12,7 @@ import testing.postgresql
 
 from api_server.api_v1 import api as ns 
 from api_server.api_func import create_app
-from api_server.database import db 
+from api_server.database import db, load_user 
 from api_server.sockets import socketio
 from db.models import Model, States, Users
 
@@ -64,7 +65,8 @@ def timescaleDB(request, test_db):
         username = "test_user", 
         created_on = datetime.now(), 
         updated_on = None, 
-        avatar_photo = None
+        avatar_photo = None,
+        role = 'guest'
     )
     test_user.set_password("test_password")
 
@@ -100,11 +102,34 @@ def flask_app(test_db, timescaleDB):
     logger.debug(f'Test App DB: {app.config["SQLALCHEMY_DATABASE_URI"]}')
     db.init_app(app)
 
+    login_manager = LoginManager(app)
+    login_manager.init_app(app)
+
+    @login_manager.user_loader
+    def load_user(id):
+        logger.debug(f"Inside TEST load_user func")
+        return load_user(id)
+
     socketio.init_app(app)
     api = Api(app)
     api.add_namespace(ns)
 
     return app
+
+@pytest.fixture(scope='session')
+def login_manager(flask_app):
+    login_manager = LoginManager(flask_app)
+    login_manager.init_app(flask_app)
+
+    @login_manager.user_loader
+    def load_user(id):
+        logger.debug(f"Inside TEST load_user func")
+        return load_user(id)
+
+    return login_manager
+
+
+
 
 
 @pytest.fixture(scope='function')
