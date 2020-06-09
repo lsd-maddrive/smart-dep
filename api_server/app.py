@@ -1,6 +1,7 @@
 import logging
 import os
 
+from flask import Blueprint
 from flask_login import LoginManager
 from flask_restplus import Api
 from flask_cors import CORS

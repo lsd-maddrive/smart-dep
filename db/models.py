@@ -1,4 +1,7 @@
+from datetime import datetime
+
 from flask_login import UserMixin
+import jwt
 from pprint import pformat
 from sqlalchemy import MetaData, Column, Integer, String, DateTime
 from sqlalchemy.dialects.postgresql import JSONB, BYTEA
@@ -69,6 +72,44 @@ class Users(UserMixin, Model):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+    def encode_auth_token(self, user_id):
+    """
+        Generates the Auth Token
+        :return: string
+    """
+        try:
+            payload = {
+                # expiration date of the token
+                'exp': datetime.utcnow() + timedelta(days=0, seconds=5),
+                # the time the token is generated
+                'iat': datetime.utcnow(),
+                # the subject of the token (the user whom it identifies)
+                'sub': user_id
+            }
+
+            return jwt.encode(
+                payload,
+                os.getenv('API_SECRET_KEY'),
+                algorithm='HS256'
+            )
+        except Exception as e:
+            return e
+
+    @staticmethod
+    def decode_auth_token(auth_token):
+        """
+            Decodes the auth token
+            :param auth_token:
+            :return: integer|string
+        """
+        try:
+            payload = jwt.decode(auth_token, os.getenv('API_SECRET_KEY'))
+            return payload['sub']
+        except jwt.ExpiredSignatureError:
+            return 'Signature expired. Please log in again.'
+        except jwt.InvalidTokenError:
+            return 'Invalid token. Please log in again.'
 
     def __repr__(self):
         return f"User: {self.username}, Created Date: {self.created_on}, Role: {self.role}"

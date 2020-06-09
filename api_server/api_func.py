@@ -9,9 +9,12 @@ logger = logging.getLogger(__name__)
 def create_app(test_config=False):
     app = Flask(__name__)
     if test_config == False:
-        logger.debug('Inside test config')
+        logger.debug('Usage of environmental configuration')
         app.config['FLASK_DEBUG'] = os.getenv('API_SERVER_DEBUG', True)
         app.config['TESTING'] = os.getenv('API_SERVER_TESTING', False)
+        
+        # TODO: default value of SECRET KEY or handle 
+        app.config['SECRET_KEY'] = os.getenv('API_SECRET_KEY')
 
         db_uri = os.getenv('DB_URI')
         if db_uri is None: 
