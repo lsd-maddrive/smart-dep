@@ -1,0 +1,36 @@
+FROM ubuntu:18.04
+
+WORKDIR /app
+RUN apt update && apt install -y wget
+
+RUN wget https://www.riverbankcomputing.com/static/Downloads/sip/4.19.23/sip-4.19.23.tar.gz
+RUN tar xf sip-4.19.23.tar.gz
+RUN wget https://sourceforge.net/projects/pyqt/files/PyQt4/PyQt-4.12.3/PyQt4_gpl_x11-4.12.3.tar.gz
+RUN tar xf PyQt4_gpl_x11-4.12.3.tar.gz
+RUN wget https://sourceforge.net/projects/pyqt/files/QScintilla2/QScintilla-2.9.1/QScintilla-gpl-2.9.1.tar.gz
+RUN tar xf QScintilla-gpl-2.9.1.tar.gz
+
+RUN apt install -y qt4-dev-tools qt4-doc qt4-qtconfig qt4-demos qt4-designer \
+        libqwt5-qt4 libqwt5-qt4-dev \
+        python3.6-dev python3-distutils build-essential
+
+RUN cd sip-4.19.23 && python3.6 configure.py && make install -j`nproc --all`
+
+RUN cd PyQt4_gpl_x11-4.12.3 && python3.6 configure.py --confirm-license && make -j`nproc --all` && make install
+
+RUN cd QScintilla-gpl-2.9.1/Qt4Qt5 && qmake && make -j`nproc --all` && make install
+
+RUN apt install -y python3-pip git
+RUN pip3 install pyinstaller
+
+
+# RUN ls /usr/lib/python3.6
+
+# RUN cd QScintilla-gpl-2.9.1/Python && python3.6 configure.py && make -j`nproc --all` && make install
+
+
+RUN git clone https://github.com/DFRobot/uPyCraft_src.git uPyCraft
+RUN cd uPyCraft && pyinstaller -F uPyCraft.py
+
+
+

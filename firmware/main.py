@@ -1,3 +1,5 @@
+
+
 from umqtt.simple import MQTTClient
 import ubinascii
 import network
@@ -6,7 +8,11 @@ import time
 import dht
 from machine import Pin
 
-import env
+from machine import reset
+import sys
+
+WiFi_SSID="Wunderwafle"
+WiFi_PASS="MurMurda2511"
 
 # Definitions
 
@@ -19,8 +25,9 @@ def connect_wifi():
     wlan.active(True)
     if not wlan.isconnected():
         print('connecting to network...')
-        wlan.connect(env.WiFi_SSID, env.WiFi_PASS)
+        wlan.connect(WiFi_SSID, WiFi_PASS)
         while not wlan.isconnected():
+
             pass
     print('network config:', wlan.ifconfig())
 
@@ -57,7 +64,6 @@ class LightControlDevice(ControlDevice):
         print('Data: {} / {} / {}'.format(topic, msg, data))
 
     def _send_state(self, state, client):
-        # Hello comment =)
         msg = {
             'type': 'light',
             'device_id': self.unique_id,
@@ -130,7 +136,7 @@ connect_wifi()
 
 global_config = {
     'mqtt': {
-        'server': '192.168.31.90',
+        'server': 'tigra-acs.duckdns.org',
         'port': 1883,
         'user': 'rabbitmq',
         'pass': 'rabbitmq'
@@ -147,16 +153,34 @@ client = MQTTClient(client_id=unique_id,
                     password=mqtt_config['pass'])
 
 def callback(topic, msg):
-    for device in devices:
-        device._callback(topic, msg)
+  data = ujson.loads(msg)
+  print('>> {} / {}'.format(topic, msg))
+  if topic == b'config/updates':
+    print('Writing to \'code.py\'')
+    with open('code.py', 'w') as f:
+      f.write(data['code'])
+
+    #sys.exit()
+    reset()
+
+
+#  if topic == 'updates':
+
+#    for device in devices:
+#        device._callback(topic, msg)
 
 client.set_callback(callback)
 client.connect()
 
 devices = [
-    LightControlDevice(global_config, client),
-    EnvironmentDevice(global_config, client)
+    # LightControlDevice(global_config, client),
+    # EnvironmentDevice(global_config, client)
 ]
+
+
+device = Pin(2, Pin.OUT)
+device.on()
+client.subscribe('config/updates')
 
 while True:
     try:
@@ -168,4 +192,15 @@ while True:
         print(e)
         # break
 
+    try:
+      import code
+      data = code.get_string()
+    except Exception as e:
+      print('Failed to use module: {}'.format(e))
+      data = 'Default!'
+
+    client.publish('test', data)
+    client.check_msg()
     time.sleep(1)
+
+
