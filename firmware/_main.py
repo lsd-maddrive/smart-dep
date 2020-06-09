@@ -10,9 +10,10 @@ from machine import Pin
 
 from machine import reset
 import sys
+import os
 
-WiFi_SSID="Wunderwafle"
-WiFi_PASS="MurMurda2511"
+WiFi_SSID="-"
+WiFi_PASS="-"
 
 # Definitions
 
@@ -180,7 +181,7 @@ devices = [
 
 device = Pin(2, Pin.OUT)
 device.on()
-client.subscribe('config/updates')
+client.subscribe('cfg/updates')
 
 while True:
     try:
@@ -199,8 +200,9 @@ while True:
       print('Failed to use module: {}'.format(e))
       data = 'Default!'
 
-    client.publish('test', data)
-    client.check_msg()
+    print(os.getcwd())
+    # client.publish('test', data)
+    # client.check_msg()
     time.sleep(1)
 
 

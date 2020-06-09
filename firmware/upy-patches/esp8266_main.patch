@@ -1,0 +1,11 @@
+--- micropython/ports/esp8266/main.c.old 2020-06-09 23:11:23.278000000 +0300
++++ micropython/ports/esp8266/main.c     2020-06-09 23:11:36.314282378 +0300
+@@ -80,7 +80,7 @@
+     pyexec_frozen_module("_boot.py");
+     pyexec_file_if_exists("boot.py");
+     if (pyexec_mode_kind == PYEXEC_MODE_FRIENDLY_REPL) {
+-        pyexec_file_if_exists("main.py");
++        pyexec_frozen_module("_main.py");
+     }
+     #endif
+ }
