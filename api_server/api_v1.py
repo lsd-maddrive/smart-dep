@@ -189,13 +189,22 @@ class Signup(Resource):
             logger.critical(f"User {username} is already existed")
             abort(400) 
 
-        asdb.create_user(username, password)
-
+        new_user = asdb.create_user(username, password)
+        logger.debug(f"API user ID: {new_user.id}")
         data = {
-            'token': None, 
+            # TODO: FIX TOKEN. return Invalid token for now
+            # TypeError: Expected string! WHYYYY?
+            'token': str(
+                new_user.decode_auth_token(
+                    new_user.encode_auth_token(new_user.id)
+                )
+            ), 
+            # 'token': str(new_user.encode_auth_token(new_user.id)),
             'username': username, 
             'role': 'guest'
         }
+
+        logger.debug(f"SIGNUP: {pformat(data)}")
 
         return data
 

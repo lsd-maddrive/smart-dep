@@ -112,3 +112,5 @@ def create_user(username, password, db_session=db.session):
     db_session.commit()
 
     logger.debug(f"User \"{username}\" is added to DB")
+
+    return user 
