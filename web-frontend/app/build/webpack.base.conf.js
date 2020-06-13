@@ -74,6 +74,30 @@ module.exports = {
         }
       },
       {
+        test: /\.s(c|a)ss$/,
+        use: [
+          'vue-style-loader',
+          'css-loader',
+          {
+            loader: 'sass-loader',
+            // Requires sass-loader@^7.0.0
+            options: {
+              implementation: require('sass'),
+              fiber: require('fibers'),
+              indentedSyntax: true // optional
+            },
+            // Requires sass-loader@^8.0.0
+            options: {
+              implementation: require('sass'),
+              sassOptions: {
+                fiber: require('fibers'),
+                indentedSyntax: true // optional
+              },
+            },
+          },
+        ],
+      },
+      {
         // css
         test: /\.css$/,
         use: [
@@ -92,29 +116,29 @@ module.exports = {
           }
         ]
       },
-      {
-        // scss
-        test: /\.scss$/,
-        use: [
-          "style-loader",
-          MiniCssExtractPlugin.loader,
-          {
-            loader: "css-loader",
-            options: { sourceMap: true }
-          },
-          {
-            loader: "postcss-loader",
-            options: {
-              sourceMap: true,
-              config: { path: `./postcss.config.js` }
-            }
-          },
-          {
-            loader: "sass-loader",
-            options: { sourceMap: true }
-          }
-        ]
-      },
+      // {
+      //   // scss
+      //   test: /\.scss$/,
+      //   use: [
+      //     "style-loader",
+      //     MiniCssExtractPlugin.loader,
+      //     {
+      //       loader: "css-loader",
+      //       options: { sourceMap: true }
+      //     },
+      //     {
+      //       loader: "postcss-loader",
+      //       options: {
+      //         sourceMap: true,
+      //         config: { path: `./postcss.config.js` }
+      //       }
+      //     },
+      //     {
+      //       loader: "sass-loader",
+      //       options: { sourceMap: true }
+      //     }
+      //   ]
+      // },
     ]
   },
   plugins: [
