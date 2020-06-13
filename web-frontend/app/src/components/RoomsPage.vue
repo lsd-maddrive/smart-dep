@@ -1,5 +1,5 @@
 <template>
-  <v-app id="inspire">
+  <v-main>
     <h1>Привет! Это интерфейс умной кафедры!</h1>
     <h2>Вот доступные места:</h2>
     <v-container fluid>
@@ -34,7 +34,7 @@
         </v-col>
       </v-row>
     </v-container>
-  </v-app>
+  </v-main>
 </template>
 
 <script>
@@ -55,7 +55,9 @@ export default {
   created() {
     this.$store
       .dispatch("syncPlaces")
-      .then(resp => {})
+      .then(resp => {
+        this.$toasted.info("Проверка");
+      })
       .catch(err => {
         this.$toasted.error("Не удалось обновить комнаты =(");
       });

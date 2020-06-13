@@ -60,8 +60,8 @@
         <span>Выход</span>
       </v-tooltip>
 
-      <v-menu left class="hidden-md-and-up">
-        <!-- <template v-slot:activator="{ on }">
+      <!-- <v-menu left class="hidden-md-and-up">
+        <template v-slot:activator="{ on }">
           <v-btn icon v-on="on">
             <v-icon>mdi-dots-vertical</v-icon>
           </v-btn>
@@ -71,8 +71,8 @@
           <v-list-item v-for="n in 5" :key="n" @click="() => {}">
             <v-list-item-title>Option {{ n }}</v-list-item-title>
           </v-list-item>
-        </v-list>-->
-      </v-menu>
+        </v-list>
+      </v-menu> -->
     </v-app-bar>
 
     <v-navigation-drawer v-model="sidebarMenu" floating app color="primary" dark>
@@ -85,8 +85,8 @@
 
       <v-divider></v-divider>
 
-      <v-list dense nav>
-        <!-- <v-list-item link>
+      <!-- <v-list dense nav>
+        <v-list-item link>
           <v-list-item-icon>
             <v-icon>mdi-devices</v-icon>
           </v-list-item-icon>
@@ -95,8 +95,8 @@
             <v-list-item-title>
             </v-list-item-title>
           </v-list-item-content>
-        </v-list-item> -->
-      </v-list>
+        </v-list-item>
+      </v-list> -->
     </v-navigation-drawer>
 
     <v-main>

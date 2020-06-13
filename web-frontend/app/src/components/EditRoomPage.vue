@@ -20,7 +20,6 @@
               v-model.trim="place.num"
               :rules="numRules"
               name="login"
-              type="number"
               required
             ></v-text-field>
 
@@ -91,20 +90,26 @@
                             <v-col cols="12" sm="6" md="4" v-if="deviceEditItem.id">
                               <v-text-field v-model="deviceEditItem.id" label="ID" readonly></v-text-field>
                             </v-col>
-                            <v-col cols="12" sm="6" md="4">
+                            <!-- <v-col cols="12" sm="6" md="4">
                               <v-select
                                 v-model="deviceEditItem.type"
                                 :rules="[v => !!v || 'Тип обязателен']"
-                                :items="['light', 'power', 'env']"
+                                :items="deviceTypes"
+                                :item-text="typeDesc"
+                                :item-value="itemId"
                                 label="Тип"
                               ></v-select>
-                            </v-col>
+                            </v-col> -->
                             <v-col cols="12" sm="6" md="4">
-                              <v-text-field
-                                v-model="deviceEditItem.place"
+                              <v-select
+                                disabled
+                                v-model="deviceEditItem.place_id"
+                                :rules="[v => !!v || 'Помещение обязательно']"
+                                :items="places"
+                                :item-text="placeNum"
+                                :item-value="itemId"
                                 label="Помещение"
-                                readonly
-                              ></v-text-field>
+                              ></v-select>
                             </v-col>
                           </v-row>
                         </v-form>
@@ -174,7 +179,9 @@ export default {
         { text: "Тип", value: "type" },
         { text: "Действия", value: "actions", sortable: false }
       ],
-      devices: []
+      devices: [],
+      deviceTypes: [],
+      places: []
     };
   },
   computed: {
@@ -198,6 +205,9 @@ export default {
     "devices-table": RoomDevicesTable
   },
   methods: {
+    typeDesc: item => item.desc,
+    itemId: item => item.id,
+    placeNum: item => item.num,
     cancelSubmit: function() {
       this.$router.push(this.$route.query.returnUrl || { name: "Home" });
     },
@@ -277,15 +287,15 @@ export default {
         `Вы уверены, что хотите удалить устройство ${item.id}?`
       );
       if (result) {
-        this.$toasted.info("Удаление устройства");
+        // this.$toasted.info("Удаление устройства");
         const device = Object.assign({}, item);
         Services.deleteDevice(device).then(
           resp => {
             this._updateDevices();
-            this.$toasted.success("Устройство успешно удалено!");
+            // this.$toasted.success("Устройство успешно удалено!");
           },
           error => {
-            this.$toasted.error("Не удалось удалить устройство");
+            // this.$toasted.error("Не удалось удалить устройство");
           }
         );
       }
@@ -332,7 +342,7 @@ export default {
       }
     },
     _updateDevices() {
-      this.devices = []
+      this.devices = [];
       const placeId = this.$route.params.id;
       this.loading.table = true;
       Services.getPlaceDevices({ id: placeId }).then(
@@ -349,6 +359,23 @@ export default {
   },
   components: {},
   created() {
+    this.$store
+      .dispatch("syncDeviceTypes")
+      .then(resp => {
+        this.deviceTypes = resp;
+      })
+      .catch(err => {
+        this.$toasted.error("Не удалось обновить типы контроллеров =(");
+      });
+    this.$store
+      .dispatch("syncPlaces")
+      .then(resp => {
+        this.places = resp;
+      })
+      .catch(err => {
+        this.$toasted.error("Не удалось обновить комнаты =(");
+      });
+
     const placeId = this.$route.params.id;
     if (placeId) {
       this.$store.dispatch("validatePlace", { placeId: placeId }).then(

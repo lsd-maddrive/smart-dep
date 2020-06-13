@@ -37,7 +37,6 @@ _model_power = api.inherit('Power', _model_state, {
 })
 
 
-
 # def json_serial(obj):
 #     """
 #       JSON serializer for objects not serializable by default json code
@@ -75,7 +74,8 @@ class PowerUnits(Resource):
                         }
                     )
 
-                logger.debug(f"POWER LAST STATES:\n{pformat(powers_dict_list)}")
+                logger.debug(
+                    f"POWER LAST STATES:\n{pformat(powers_dict_list)}")
 
             return powers_dict_list
 
@@ -112,6 +112,66 @@ class LightUnits(Resource):
             return lights_dict_list
 
 
+_model_place_get = api.model('Place_get', {
+    'id': fields.String,
+    'num': fields.String,
+    'name': fields.String,
+})
+
+_model_place_new = api.model('Place_new', {
+    'num': fields.String,
+    'name': fields.String,
+})
+
+_model_place_del = api.model('Place_del', {
+    'id': fields.String,
+})
+
+
+@api.route('/place', endpoint='places_CRUD')
+class Places(Resource):
+    @api.marshal_with(_model_place_get, as_list=True)
+    def get(self):
+        current_timestamp = datetime.now()
+        check_time = current_timestamp - time_delta
+
+        places = asdb.get_places()
+
+        result_places = []
+        for place in places:
+            result_places.append({
+                'id': place.id,
+                'num': place.num,
+                'name': place.name
+            })
+
+        logger.debug(f"Requested places:\n{pformat(places)}")
+
+        return places
+
+    @api.expect(_model_place_new, validate=True)
+    def post(self):
+        place_info = request.get_json()
+        logger.debug(f"Requested to create place:\n{pformat(place_info)}")
+
+        new_place = asdb.create_place(place_info)
+        logger.debug(f'Created new place: {new_place}')
+
+    @api.expect(_model_place_new, validate=True)
+    def put(self):
+        place_info = request.get_json()
+        logger.debug(f"Requested to update place:\n{pformat(place_info)}")
+
+        asdb.update_place(place_info)
+
+    @api.expect(_model_place_del, validate=True)
+    def delete(self):
+        place_info = request.get_json()
+        logger.debug(f"Requested to delete place:\n{pformat(place_info)}")
+
+        asdb.delete_place(place_info)
+
+
 @api.route('/cmd/<string:place_id>', endpoint='command')
 @api.param('place_id', 'ID of place')
 class CommandResender(Resource):
@@ -138,9 +198,140 @@ class CommandResender(Resource):
             producer.publish(message)
         return f'Message sent: {message}'
 
+
+_model_device_types = api.model('Device_types', {
+    'id': fields.String,
+    'name': fields.String,
+    'desc': fields.String,
+})
+
+
+@api.route('/device/types', endpoint='device_types')
+class DeviceTypes(Resource):
+    @api.expect(_model_device_types, as_list=True)
+    def get(self):
+        types = [
+            {
+                'id': 1,
+                'name': 'light',
+                'desc': 'Освещение',
+                'default_config': {
+                    'period': 3
+                }
+            },
+            {
+                'id': 2,
+                'name': 'power',
+                'desc': 'Электричество',
+                'default_config': {
+                    'period': 3
+                }
+            },
+            {
+                'id': 3,
+                'name': 'env',
+                'desc': 'Окружение',
+                'default_config': {
+                    'period': 3
+                }
+            },
+        ]
+
+        return types
+
+
+_model_device_new = api.model('Device_new', {
+    'id': fields.String,
+    'ip_addr': fields.String,
+    'reg_ts': fields.String,
+})
+
+
+@api.route('/device/new', endpoint='new_devices')
+class DevicesNew(Resource):
+    @api.expect(_model_device_new, as_list=True)
+    def get(self):
+        devices = asdb.get_new_devices()
+
+        result = []
+        for dev in devices:
+            result.append({
+                'id': str(dev.id),
+                'ip_addr': dev.ip_addr,
+                'reg_ts': dev.register_date.timestamp()
+            })
+
+        logger.debug(f"Requested new devices:\n{pformat(result)}")
+
+        return result
+
+
+_model_device_get_in = api.model('Device_get', {
+    'id': fields.String,
+})
+
+_model_device_get_out = api.model('Device_get', {
+    'id': fields.String,
+    'name': fields.String,
+    'type': fields.String,
+    'place_id': fields.String,
+})
+
+_model_device_upd = api.model('Device_upd', {
+    'id': fields.String,
+    'name': fields.String,
+    'type': fields.String,
+    'place_id': fields.String
+    # 'config': fields.String,
+})
+
+_model_device_del = api.model('Device_de;', {
+    'id': fields.String,
+})
+
+
+@api.route('/device', endpoint='device_RUD')
+class Device(Resource):
+    @api.expect(_model_device_get_in)
+    @api.marshal_with(_model_device_get_out, as_list=True)
+    def get(self):
+        place_id = request.args.get('place_id')
+        logger.debug(f"Requested devices for place: {place_id}")
+
+        devices = asdb.get_devices(place_id)
+
+        result = []
+        for dev in devices:
+            result.append({
+                'id': str(dev.id),
+                'name': dev.name,
+                'type': dev.type,
+                'place_id': dev.place_id
+            })
+
+        logger.debug(f"Requested devices:\n{pformat(result)}")
+
+        return result
+
+    @api.expect(_model_device_upd, validate=True)
+    def put(self):
+        device_info = request.get_json()
+        logger.debug(f"Requested to update device:\n{pformat(device_info)}")
+
+        asdb.update_device(device_info)
+
+    @api.expect(_model_device_del, validate=True)
+    def delete(self):
+        device_info = request.get_json()
+        logger.debug(f"Requested to delete device:\n{pformat(device_info)}")
+
+        asdb.delete_device(device_info)
+
+
 _model_ping_in = api.model('Ping_in', {
     'id': fields.String,
 })
+
 
 @api.route('/device/ping', endpoint='device_ping')
 class DevicePing(Resource):
@@ -164,37 +355,3 @@ class DevicePing(Resource):
                                 routing_key=f'cfg.ping')
             producer.publish(message)
         return 200
-
-
-
-_model_place = api.model('Place', {
-    'id': fields.String,
-    'name': fields.String,
-})
-
-
-@api.route('/place', endpoint='place')
-class Places(Resource):
-    @api.marshal_with(_model_place, as_list=True)
-    def get(self):
-        if current_app.debug:
-            return _place_db
-        else:
-            current_timestamp = datetime.now()
-            check_time = current_timestamp - time_delta
-
-            query = asdb.get_last_places(check_time)
-
-            places_dict_list = []
-
-            for q in query:
-                places_dict_list.append(
-                    {
-                        'id': q.place_id,
-                        'name': q.place_id
-                    }
-                )
-
-            logger.debug(f"PLACES LAST DATA:\n{pformat(places_dict_list)}")
-
-            return places_dict_list

@@ -1,5 +1,5 @@
 <template>
-  <v-app id="inspire">
+  <v-main>
     <h1>
       Комната {{ place_name }}
       <v-btn
@@ -20,7 +20,7 @@
         </v-col>
       </v-row>
     </v-container>
-  </v-app>
+  </v-main>
 </template>
 
 <script>

@@ -1,51 +1,53 @@
+import time
+from datetime import datetime
+
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import desc
 from sqlalchemy import distinct
 from sqlalchemy.orm import Session
 
-from models import metadata, States
+from models import metadata, States, Device
 
 db = SQLAlchemy(metadata=metadata)
 
-def get_last_states(check_time, place_id, type_, db_session=db.session):
-    """
-        Get last states from DB in defined period of time
-        from check time till now for defined place and type
+
+def commit(db_session=db.session):
+    db_session.commit()
 
 
-        Args:
-            check_time (datetime):   the lower bound of time
-            place_id (str):          number/name of place
-            type_ (str):             type of interaction [light, env, power]
-            db_session (sqlalchemy.orm.session.Session): session object
+def set_device_enabled_info(unique_id, device_id, info, db_session=db.session):
+    q = db_session.query(Device). \
+        filter(Device.id == device_id)
 
-        Returns:
-            Query object that containts unique data for each
-            device in defined period of time
-    """
-    return db_session.query(States). \
-           filter(States.timestamp >= check_time). \
-           filter(States.place_id == place_id). \
-           filter(States.type == type_). \
-           order_by(States.device_id, States.timestamp.desc()). \
-           distinct(States.device_id)
+    if unique_id is not None:
+        q.filter(Device.unique_id == unique_id)
 
-def get_last_places(check_time, db_session=db.session):
-    """
-        Get last place ID from DB in defined period of time
-        from check time till now
+    device = q.one_or_none()
+    if device is None:
+        return None
 
-        Args:
-            check_time (datetime): the lower bound of time
-            db_session (sqlalchemy.orm.session.Session): session object
+    if 'ip_addr' in info:
+        device.ip_addr = info['ip_addr']
+    device.enabled_date = datetime.utcnow()
 
-        Returns:
-            Query object that containts unique place id
-    """
-    return db_session.query(States.place_id). \
-           filter(States.timestamp >= check_time). \
-           order_by(States.place_id, States.timestamp.desc()). \
-           distinct(States.place_id)
+    commit(db_session)
+
+    return device
+
+
+def get_devices_with_uid(unique_id, db_session=db.session):
+    return db_session.query(Device). \
+        filter(Device.unique_id == unique_id)
+
+
+def register_device(unique_id, db_session=db.session):
+    device = Device(
+        unique_id=unique_id,
+        register_date=datetime.utcnow()
+    )
+
+    db_session.add(device)
+    return device
 
 
 def get_devices_states(check_time, db_session=db.session):
@@ -61,6 +63,6 @@ def get_devices_states(check_time, db_session=db.session):
             Query object that containts data for each unique device
     """
     return db_session.query(States). \
-           filter(States.timestamp >= check_time). \
-           order_by(States.device_id, States.timestamp.desc()). \
-           distinct(States.device_id)
+        filter(States.timestamp >= check_time). \
+        order_by(States.device_id, States.timestamp.desc()). \
+        distinct(States.device_id)

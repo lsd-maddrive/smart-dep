@@ -6,17 +6,17 @@ import time
 
 
 def get_app(host, version=None):
-
-    if version is not None:
-        url = '{}/api/v1/app/version?version={}'.format(host, version)
-    else:
-        url = '{}/api/v1/app/version'.format(host)
-
-    result = requests.get(url)
-    if result.status_code >= 400:
-        return False
-
     try:
+
+        if version is not None:
+            url = '{}/api/v1/app/version?version={}'.format(host, version)
+        else:
+            url = '{}/api/v1/app/version'.format(host)
+
+        result = requests.get(url)
+        if result.status_code >= 400:
+            return False
+
         data = result.json()
 
         set_next_version(data['version'])
@@ -28,8 +28,8 @@ def get_app(host, version=None):
         # Sanity check
         from next.app import main
         return True
-    except:
-        pass
+    except Exception as e:
+        print('Failed to get_app(): {}'.format(e))
 
     return False
 

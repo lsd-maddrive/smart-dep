@@ -36,7 +36,7 @@ Vue.use(VuetifyToast, {
 	multiLine: false, // default
 	vertical: false, // default
 	queueable: false, // default
-	showClose: false, // default
+	showClose: true, // default
 	closeText: '', // default
 	closeIcon: 'close', // default
 	closeColor: '', // default

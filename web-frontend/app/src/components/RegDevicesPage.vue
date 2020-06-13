@@ -38,19 +38,24 @@
                             </v-col>
                             <v-col cols="12" sm="6" md="6">
                               <v-select
-                                v-model="deviceEditItem.type_name"
+                                v-model="deviceEditItem.type_id"
                                 :rules="[v => !!v || 'Тип обязателен']"
-                                :items="['light', 'power', 'env']"
+                                :items="deviceTypes"
+                                :item-text="typeDesc"
+                                :item-value="itemId"
                                 label="Тип"
                               ></v-select>
                             </v-col>
                             <v-col cols="12" sm="6" md="6">
                               <v-select
-                                v-model="deviceEditItem.place_num"
+                                v-model="deviceEditItem.place_id"
                                 :rules="[v => !!v || 'Помещение обязательно']"
                                 :items="places"
+                                :item-text="placeNum"
+                                :item-value="itemId"
                                 label="Помещение"
-                              ></v-select>
+                              >
+                              </v-select>
                             </v-col>
                           </v-row>
                         </v-form>
@@ -97,7 +102,6 @@ export default {
   name: "RoomEditorCreator",
   data() {
     return {
-      places: [],
       loading: {
         table: false,
         deviceSave: false
@@ -119,7 +123,9 @@ export default {
         { text: "IP адрес", value: "ip_addr" },
         { text: "Действия", value: "actions", sortable: false }
       ],
-      devices: []
+      devices: [],
+      places: [],
+      deviceTypes: []
     };
   },
   computed: {
@@ -129,6 +135,9 @@ export default {
   },
   components: {},
   methods: {
+    typeDesc: item => item.desc,
+    itemId: item => item.id,
+    placeNum: item => item.num,
     /**
      * Table dependent methods
      */
@@ -144,7 +153,7 @@ export default {
         err => {
           this.$toasted.success("Не удалось отправить пинг: " + err);
         }
-      )
+      );
     },
 
     deleteDevice(item) {
@@ -176,8 +185,12 @@ export default {
         return;
       }
 
-      const device = this.deviceEditItem;
+      let device = this.deviceEditItem;
       this.loading.deviceSave = true;
+
+      let currentType = this.deviceTypes.find(x => x.id == device.type_id)
+      device.type = currentType.name
+      device.config = currentType.default_config
 
       Services.updateDevice(device).then(
         () => {
@@ -218,9 +231,19 @@ export default {
     this._updateDevices();
     this.$store
       .dispatch("syncPlaces")
-      .then(resp => {this.places = resp.map(x => x.num)})
+      .then(resp => {
+        this.places = resp;
+      })
       .catch(err => {
         this.$toasted.error("Не удалось обновить комнаты =(");
+      });
+    this.$store
+      .dispatch("syncDeviceTypes")
+      .then(resp => {
+        this.deviceTypes = resp;
+      })
+      .catch(err => {
+        this.$toasted.error("Не удалось обновить типы контроллеров =(");
       });
   }
 };

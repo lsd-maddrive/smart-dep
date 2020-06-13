@@ -13,28 +13,31 @@ const realServices = {
     return Api().put('/place', place)
   },
   deletePlace(place) {
-    return Api().delete('/place', place)
+    return Api().delete('/place', { data: place })
   },
 
+  getDeviceTypes() {
+    return Api().get('/device/types')
+  },
   getPlaceDevices(place) {
-    return Api().get('/place/' + place.id + '/device')
+    return Api().get('/device?place_id=' + place.id)
   },
   getNewDevices() {
-    return Api().get('/device?new=true')
+    return Api().get('/device/new')
   },
   createDevice(device) {
-    return Api().post('/device', device)
+    // return Api().post('/device', device)
   },
   updateDevice(device) {
     return Api().put('/device', device)
   },
   deleteDevice(device) {
-    return Api().detele('/device', device)
+    return Api().delete('/device', { data: device })
   },
 
   getDevicesLastStates(place) {
     // Seconds
-    return Api().get('/place/' + place.id + '/states', { params: { dur: 5*60 } })
+    return Api().get('/place/' + place.id + '/states', { params: { dur: 5 * 60 } })
   },
 
   login(user) {

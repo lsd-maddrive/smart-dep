@@ -13,7 +13,8 @@ export default new Vuex.Store({
     isConnected: false,
     places: [],
     currentPlaceId: null,
-    deviceStates: []
+    deviceStates: [],
+    deviceTypes: []
   },
   modules: {
     environ,
@@ -53,6 +54,22 @@ export default new Vuex.Store({
           })
           .catch(err => {
             console.log("Failed to request places")
+            reject(err)
+          })
+      })
+    },
+    syncDeviceTypes({
+      commit
+    }) {
+      return new Promise((resolve, reject) => {
+        Services.getDeviceTypes()
+          .then(resp => {
+            const types = resp.data
+            commit('setDeviceTypes', types)
+            resolve(types)
+          })
+          .catch(err => {
+            console.log("Failed to request device types")
             reject(err)
           })
       })
@@ -209,6 +226,10 @@ export default new Vuex.Store({
 
     setPlaces(state, places) {
       state.places = places
+    },
+
+    setDeviceTypes(state, types) {
+      state.deviceTypes = types
     },
 
     enterPlace(state, placeId) {

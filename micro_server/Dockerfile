@@ -7,7 +7,7 @@ RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY micro_server/app.py .
-COPY micro_server/sample_code.py .
+COPY micro_server/units ./units
 COPY micro_server/api_v1.py .
 COPY micro_server/database.py .
 COPY micro_server/wsgi.py .
