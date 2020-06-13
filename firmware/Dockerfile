@@ -11,6 +11,7 @@ RUN cd micropython && make -C mpy-cross -j `nproc --all`
 
 # Update modules
 COPY _main.py micropython/ports/esp8266/modules/
+COPY _utils.py micropython/ports/esp8266/modules/
 COPY upy-patches/ .
 
 RUN patch -d micropython/ports/esp8266/boards/GENERIC < esp8266_manifest.patch

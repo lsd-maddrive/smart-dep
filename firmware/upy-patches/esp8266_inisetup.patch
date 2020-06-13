@@ -17,7 +17,7 @@
 -#import webrepl
 -#webrepl.start()
 +import webrepl
-+webrepl.start()
++webrepl.start(password="9238")
  gc.collect()
  """
          )

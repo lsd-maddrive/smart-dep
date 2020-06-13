@@ -1,35 +1,39 @@
-
-
-from umqtt.simple import MQTTClient
-import ubinascii
 import network
 import ujson
 import time
 import dht
 from machine import Pin
-
 from machine import reset
 import sys
 import os
 
-WiFi_SSID="-"
-WiFi_PASS="-"
+import _utils as ut
+
+g_config = {
+    'wifi': {
+        'ssid': '',
+        'pass': ''
+    },
+    'mqtt': {
+        'server': 'tigra-acs.duckdns.org',
+        'port': 1883,
+        'user': 'rabbitmq',
+        'pass': 'rabbitmq'
+    },
+    'micro_server': 'http://192.168.31.175:5001'
+}
 
 # Definitions
 
-def get_mac():
-    return ubinascii.hexlify(network.WLAN().config('mac'), ':').decode()
 
-
-def connect_wifi():
+def connect_wifi(config):
     wlan = network.WLAN(network.STA_IF)
     wlan.active(True)
     if not wlan.isconnected():
         print('connecting to network...')
-        wlan.connect(WiFi_SSID, WiFi_PASS)
+        wlan.connect(config['wifi']['ssid'], config['wifi']['pass'])
         while not wlan.isconnected():
-
-            pass
+            time.sleep(1)
     print('network config:', wlan.ifconfig())
 
 
@@ -87,6 +91,7 @@ class LightControlDevice(ControlDevice):
 
         return True
 
+
 class EnvironmentDevice(ControlDevice):
     def __init__(self, config, client):
         super().__init__(config, 'env')
@@ -133,76 +138,75 @@ class EnvironmentDevice(ControlDevice):
 
 # Utilization
 
-connect_wifi()
+file_config = ut.get_config()
+if file_config is not None:
+    g_config.update(file_config)
 
-global_config = {
-    'mqtt': {
-        'server': 'tigra-acs.duckdns.org',
-        'port': 1883,
-        'user': 'rabbitmq',
-        'pass': 'rabbitmq'
-    },
-    'place_id': '8203',
-}
+connect_wifi(g_config)
 
-mqtt_config = global_config['mqtt']
-unique_id = get_mac()
-client = MQTTClient(client_id=unique_id,
-                    server=mqtt_config['server'],
-                    port=mqtt_config['port'],
-                    user=mqtt_config['user'],
-                    password=mqtt_config['pass'])
-
-def callback(topic, msg):
-  data = ujson.loads(msg)
-  print('>> {} / {}'.format(topic, msg))
-  if topic == b'config/updates':
-    print('Writing to \'code.py\'')
-    with open('code.py', 'w') as f:
-      f.write(data['code'])
-
-    #sys.exit()
-    reset()
+# device = Pin(2, Pin.OUT)
+# device.on()
 
 
-#  if topic == 'updates':
-
-#    for device in devices:
-#        device._callback(topic, msg)
-
-client.set_callback(callback)
-client.connect()
-
-devices = [
-    # LightControlDevice(global_config, client),
-    # EnvironmentDevice(global_config, client)
-]
+def import_app():
+    from last.app import main
+    return main
 
 
-device = Pin(2, Pin.OUT)
-device.on()
-client.subscribe('cfg/updates')
+def perform_update(config):
+    update_version = None
+    c_ver = ut.get_current_version()
+    # If current version not exists - update to last one
+    if c_ver is not None:
+        print('Current version: {}'.format(c_ver))
+        # There is current version - compare with planned version
+        n_ver = ut.get_next_version()
+        print('Next version: {}'.format(n_ver))
+        if n_ver is None:
+            print('No next version')
+            # No next version - no need to update
+            return True
+
+        if c_ver == n_ver:
+            print('Versions are equal')
+            # Versions are equal - ok
+            return True
+        else:
+            update_version = n_ver
+
+    print('Start downloading update')
+    result = ut.get_app(config['micro_server'], update_version)
+    if not result:
+        # Failed to receive code or validation failed
+        return False
+
+    ut.rename_dir('next', 'last')
+    print('Full update completed')
+    return True
+
+
+main = None
 
 while True:
+    if perform_update(g_config):
+        print('Module updated')
+    else:
+        print('Update failed - soft reset')
+        time.sleep(10)
+        break
+
     try:
-        for device in devices:
-            device.step(client)
+        main = import_app()
     except Exception as e:
-        if type(e) == KeyboardInterrupt:
+        print('Failed to import main() - WTF?')
+        break
+
+    try:
+        ret = main(g_config)
+        # Success return - soft reset
+        if ret == 0:
             break
-        print(e)
-        # break
-
-    try:
-      import code
-      data = code.get_string()
     except Exception as e:
-      print('Failed to use module: {}'.format(e))
-      data = 'Default!'
+        print('main() execution failed: {}'.format(e))
 
-    print(os.getcwd())
-    # client.publish('test', data)
-    # client.check_msg()
     time.sleep(1)
-
-
