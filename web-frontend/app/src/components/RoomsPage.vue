@@ -1,36 +1,40 @@
 <template>
-  <div>
-    <h3>Привет! Это интерфейс умной кафедры!</h3>
-    <!-- <h4 v-if="isProd">Production</h4> -->
-    <!-- <h4 v-else>Not Production</h4> -->
-    <h4>Вот доступные места:</h4>
-    <b-container>
-      <div>
-        <b-card-group deck>
-          <b-card
-            title="Помещение"
-            tag="article"
-            style="max-width: 20rem;"
-            class="mb-2"
-            v-for="place in this.$store.state.places"
-            :key="place.id"
-          >
-            <b-card-text>Комната {{ place.name }} [{{ place.id.substring(0,5) }}]</b-card-text>
-            <b-button :to="{name: 'RoomControl', params: {id: place.id}}" variant="dark">Пройдем-с</b-button>
-          </b-card>
-          <!--
-        <b-button-group size="lg" class="my-2 w-75" vertical>
-          <b-button
-            class="my-2 w-100"
-            v-for="room in this.$store.state.rooms"
-            :key="room.id"
-            :to="{name: 'RoomControl', params: {id: room.id}}"
-          >Комната {{ room.name }}</b-button>
-          </b-button-group>-->
-        </b-card-group>
-      </div>
-    </b-container>
-  </div>
+  <v-app id="inspire">
+    <h1>Привет! Это интерфейс умной кафедры!</h1>
+    <h2>Вот доступные места:</h2>
+    <v-container fluid>
+      <v-row align="center">
+        <v-col cols="12" sm="6" md="4" v-for="place in places" :key="place.id">
+          <v-card class="elevation-12">
+            <v-card-title class="justify-center">
+              {{ place.name }} [{{ place.num }}]
+              <v-btn class="ml-2" icon :to="{name: 'EditRoom', params: {id: place.id}}">
+                <v-icon>mdi-puzzle-edit</v-icon>
+              </v-btn>
+            </v-card-title>
+            <!-- <v-card-text class="text-center">Комната {{ place.name }}</v-card-text> -->
+            <v-card-actions>
+              <v-btn
+                block
+                color="primary"
+                :to="{name: 'RoomControl', params: {id: place.id}}"
+              >Состояние</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-col>
+        <!-- Another card with new room -->
+        <v-col cols="12" sm="6" md="4">
+          <v-card class="elevation-12">
+            <v-card-actions>
+              <v-btn block color="primary" :to="{name: 'NewRoom'}">
+                <v-icon>mdi-plus</v-icon>Новое помещение
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-col>
+      </v-row>
+    </v-container>
+  </v-app>
 </template>
 
 <script>
@@ -39,8 +43,7 @@ import Services from "@/services/Services";
 export default {
   name: "RoomsSelector",
   data() {
-    return {
-    };
+    return {};
   },
   computed: {
     places() {
@@ -52,11 +55,9 @@ export default {
   created() {
     this.$store
       .dispatch("syncPlaces")
-      .then(resp => {
-        this.$toasted.show("Комнаты обновлены!");
-      })
+      .then(resp => {})
       .catch(err => {
-        this.$toasted.show("Не удалось обновить комнаты =(");
+        this.$toasted.error("Не удалось обновить комнаты =(");
       });
   }
 };
@@ -64,8 +65,4 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-h3 h4 {
-  text-align: center;
-  padding: 10px;
-}
 </style>

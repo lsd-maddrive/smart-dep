@@ -18,29 +18,21 @@ const actions = {
     dispatch,
     commit
   }, user) {
-    commit('registerRequest', user);
+    commit('authRequest', user);
     return new Promise((resolve, reject) => { // The Promise used for router redirect in login
-    Services.register(user)
-      .then(
-        user => {
-          commit('registerSuccess', user);
-          router.push('/login');
-          // setTimeout(() => {
-            // display success message after route change completes
-            // dispatch('alert/success', 'Registration successful', {
-            //   root: true
-            // });
-          // })
-          resolve()
-        },
-        error => {
-          commit('registerFailure', error);
-          // dispatch('alert/error', error, {
-          //   root: true
-          // });
-          reject()
-        }
-      );
+      Services.register(user)
+        .then(
+          resp => {
+            const token = resp.data.token
+            commit("authSuccess", token)
+            dispatch("after_login")
+            resolve(resp)
+          },
+          err => {
+            commit("authError", err)
+            reject(err)
+          }
+        );
     });
   },
   login: ({
@@ -48,26 +40,19 @@ const actions = {
     dispatch
   }, user) => {
     return new Promise((resolve, reject) => { // The Promise used for router redirect in login
-      commit("auth_request")
+      commit("authRequest")
       Services.login(user)
-        .then(resp => {
-          const token = resp.data.token
-          commit("auth_success", token)
-          dispatch("after_login")
-          resolve(resp)
-        }, err => {
-          console.log('Failed login request')
-          if (!Services.isDebug()) {
-            commit("auth_error", err)
-            reject(err)
-          } else {
-            console.warn(">>> Set test token")
-            const token = Services.getSampleToken()
-            commit("auth_success", token)
+        .then(
+          resp => {
+            const token = resp.data.token
+            commit("authSuccess", token)
             dispatch("after_login")
-            resolve()
-          }
-        })
+            resolve(resp)
+          },
+          err => {
+            commit("authError", err)
+            reject(err)
+          })
     })
   },
   logout({
@@ -93,19 +78,19 @@ const actions = {
 
 // mutations
 const mutations = {
-  auth_request: (state) => {
+  authRequest: (state) => {
     state.status = {
-      loggingIn: true
+      processing: true
     };
   },
-  auth_success: (state, token) => {
+  authSuccess: (state, token) => {
     state.status = {
       loggedIn: true
     };
     state.token = token
     localStorage.setItem('user-token', token)
   },
-  auth_error: (state) => {
+  authError: (state) => {
     state.status = {};
     localStorage.removeItem('user-token')
     delete axios.defaults.headers.common['Authorization']
@@ -116,17 +101,6 @@ const mutations = {
     localStorage.removeItem('user-token')
     delete axios.defaults.headers.common['Authorization']
   },
-  registerRequest(state, user) {
-    state.status = {
-      registering: true
-    };
-  },
-  registerSuccess(state, user) {
-    state.status = {};
-  },
-  registerFailure(state, error) {
-    state.status = {};
-  }
 }
 
 export default {

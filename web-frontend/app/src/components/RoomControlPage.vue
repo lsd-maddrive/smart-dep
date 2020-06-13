@@ -1,45 +1,49 @@
 <template>
-  <div>
-    <div id="main">
-      <h3>Комната {{ place_name }}</h3>
-    </div>
-    <b-container>
-      <b-row>
-        <b-col md="6">
-          <lights-panel class="my-2"></lights-panel>
-        </b-col>
-        <b-col md="6">
-          <power-panel class="my-2"></power-panel>
-        </b-col>
-        <b-col md="12">
-          <env-state-panel class="my-2"></env-state-panel>
-        </b-col>
-      </b-row>
-    </b-container>
-  </div>
+  <v-app id="inspire">
+    <h1>
+      Комната {{ place_name }}
+      <v-btn
+        class="ml-2"
+        icon
+        :to="{name: 'EditRoom', params: {id: placeId}, query: {returnUrl: this.$router.currentRoute}}"
+      >
+        <v-icon>mdi-puzzle-edit</v-icon>
+      </v-btn>
+    </h1>
+    <v-container fluid>
+      <v-row>
+        <v-col cols="12">
+          <units-panel></units-panel>
+        </v-col>
+        <v-col cols="12">
+          <env-state-panel></env-state-panel>
+        </v-col>
+      </v-row>
+    </v-container>
+  </v-app>
 </template>
 
 <script>
-import LightsPanel from "@/components/LightsPanel";
-import PowerPanel from "@/components/PowerPanel";
+import BinaryUnitsPanel from "@/components/BinaryUnitsPanel";
 import EnvStatePanel from "@/components/EnvStatePanel";
 
 export default {
   name: "RoomControl",
   data() {
     return {
-      placeObj: null,
-      placeId: null
+      placeObj: null
     };
   },
   computed: {
     place_name() {
       return this.placeObj ? this.placeObj.name : "";
+    },
+    placeId() {
+      return this.placeObj ? this.placeObj.id : "";
     }
   },
   components: {
-    "lights-panel": LightsPanel,
-    "power-panel": PowerPanel,
+    "units-panel": BinaryUnitsPanel,
     "env-state-panel": EnvStatePanel
   },
   methods: {
@@ -49,35 +53,29 @@ export default {
         resp => {
           console.log("Room " + placeId + " found!");
           this.placeObj = resp;
-          this.placeId = placeId;
+          this.$store.commit("enterPlace", placeId);
 
-          this.$store.dispatch("light/syncUnits", { placeId: placeId }).then(
-            resp => {
-              this.$toasted.show("Контроллеры света обновлены");
-            },
+          this.$store.dispatch("syncDeviceStates", { placeId: placeId }).then(
+            resp => {},
             err => {
-              this.$toasted.show(
-                "Не удалось обновить состояние контроллеров света =("
+              this.$toasted.error(
+                "Не удалось обновить состояние контроллеров =("
               );
             }
           );
 
-          this.$store.dispatch("power/syncUnits", { placeId: placeId }).then(
-            resp => {
-              this.$toasted.show("Контроллеры электричества обновлены");
-            },
+          this.$store.dispatch("environ/syncData", { placeId: placeId }).then(
+            resp => {},
             err => {
-              this.$toasted.show(
-                "Не удалось обновить состояние контроллеров электричества =("
-              );
+              console.log(err);
+              this.$toasted.error("Не удалось обновить состояние окружения =(");
             }
           );
 
-          this.$store.commit("environ/clearState");
-          this.$store.dispatch("startSocketLink", { placeId: placeId });
+          this.$store.dispatch("startSocketLink");
         },
         err => {
-          this.$toasted.show("Комната " + this.placeId + " не найдена =(");
+          this.$toasted.error("Комната " + placeId + " не найдена =(");
           console.log("Room " + placeId + " not found: " + err);
           this.$router.push({ name: "Home" });
         }
@@ -90,6 +88,8 @@ export default {
     this._initialization();
   },
   beforeDestroy() {
+    // Remove devices
+    this.$store.commit("clearDeviceStates");
     console.log("beforeDestroy()");
   },
   // We should use this as $route has parameters after creation
@@ -108,8 +108,4 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-h3 {
-  text-align: center;
-  padding: 10px;
-}
 </style>
