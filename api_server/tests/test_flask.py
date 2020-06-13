@@ -1,8 +1,10 @@
+import ast 
 import json
 import logging
 
 from flask_login import current_user, login_user
 import pytest
+import pytest_env
 
 from api_server.database import db 
 from db.models import States 
@@ -98,11 +100,22 @@ def test_register(client):
 
 
 
-# def test_login(client):
+def test_login_post_existing_user(client):
+    test_json = {
+        'username': 'test_user',
+        'password': 'test_password'
+    }
+    rv = client.post('http://localhost:5000/api/v1/login', json=test_json)
 
-#     test_json = {
-#         'username': 'guest',
-#         'password': 'test_password'
-#     }
-#     rv = client.get('http://localhost:5000/api/v1/login')
-#     assert True
+    assert rv.status_code == 200 
+    assert ast.literal_eval(rv.data.decode('utf-8'))['username'] == test_json['username']
+
+
+def test_login_post_non_existing_user(client):
+    test_json = {
+        'username': 'non_existing_user',
+        'password': 'non_existing_password'
+    }
+    rv = client.post('http://localhost:5000/api/v1/login', json=test_json)
+    
+    assert rv.status_code == 400  

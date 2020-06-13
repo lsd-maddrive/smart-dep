@@ -69,6 +69,7 @@ def timescaleDB(request, test_db):
         role = 'guest'
     )
     test_user.set_password("test_password")
+    # test_user.token = test_user.encode_auth_token(test_user.id)
 
     db_data.append(test_user)
 

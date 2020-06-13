@@ -84,43 +84,34 @@ class Users(UserMixin, Model):
             Generates the Auth Token
             :return: string
         """
-        # try:
-            # header = {
-            #     'typ': 'JWT', 
-            #     'alg': 'HS256'
-            # }
+        try:
+            header = {
+                'typ': 'JWT', 
+                'alg': 'HS256'
+            }
 
-        payload = {
-            # the subject of the token 
-            'sub': "auth", 
-            # expiration date of the token
-            'exp': datetime.utcnow() + timedelta(days=0, seconds=30),
-            # the time the token is generated
-            'iat': datetime.utcnow(),
-            # user who receive the token 
-            'user': user_id
-        }
-        logger.debug(f"Payload - created")
-        # logger.debug(f"MODELS ENCODE: {pformat(jwt.encode(payload, os.getenv('API_SECRET_KEY'), algorithm='HS256'))}")
-
-        auth_token = jwt.encode(
-            payload,
-            str(os.getenv('API_SECRET_KEY')),
-            algorithm='HS256'
-        )
-        logger.debug(f"AUTH_TOKEN: {auth_token}")
-        return auth_token
-
-
-
-        # return jwt.encode(
-        #     payload,
-        #     str(os.getenv('API_SECRET_KEY')),
-        #     algorithm='HS256'
-        # )
-        # except Exception as e:
-        #     logger.error(f"Encode Token Payload Error {e}")
-        #     return e
+            payload = {
+                # the subject of the token 
+                'sub': "auth", 
+                # expiration date of the token
+                'exp': datetime.utcnow() + timedelta(days=0, seconds=30),
+                # the time the token is generated
+                'iat': datetime.utcnow(),
+                # user who receive the token 
+                'user': user_id
+            }
+            
+            auth_token = jwt.encode(
+                payload,
+                os.getenv('API_SECRET_KEY'),
+                algorithm='HS256'
+            )
+            # convert from bytes to string 
+            return auth_token.decode('utf-8')
+       
+        except Exception as err:
+            logger.error(f"Encode Token Payload Error {err}")
+            return err
 
     # @staticmethod
     def decode_auth_token(self, auth_token):
@@ -132,6 +123,7 @@ class Users(UserMixin, Model):
         try:
             payload = jwt.decode(auth_token, os.getenv('API_SECRET_KEY'), algorithms=['HS256'])
             # return user_id ?????????????????
+            logger.debug(f"AFTER PAYLOAD: {payload}")
             return payload['user']
         except jwt.ExpiredSignatureError:
             return 'Signature expired. Please log in again.'

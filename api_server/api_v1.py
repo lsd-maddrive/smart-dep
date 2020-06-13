@@ -186,25 +186,18 @@ class Signup(Resource):
             abort(400)
         
         if asdb.get_user_data(username) is not None: 
-            logger.critical(f"User {username} is already existed")
+            logger.critical(f"User \"{username}\" is already existed")
+            # Raise a HTTPException for the given http_status_code
             abort(400) 
 
         new_user = asdb.create_user(username, password)
-        logger.debug(f"API user ID: {new_user.id}")
+        
+        # TODO: add token to DB for that particular user 
         data = {
-            # TODO: FIX TOKEN. return Invalid token for now
-            # TypeError: Expected string! WHYYYY?
-            'token': str(
-                new_user.decode_auth_token(
-                    new_user.encode_auth_token(new_user.id)
-                )
-            ), 
-            # 'token': str(new_user.encode_auth_token(new_user.id)),
+            'token': new_user.encode_auth_token(new_user.id),
             'username': username, 
             'role': 'guest'
         }
-
-        logger.debug(f"SIGNUP: {pformat(data)}")
 
         return data
 
@@ -231,27 +224,22 @@ class Login(Resource):
         username = request.json.get('username')
         password = request.json.get('password')
 
-# class Login(Resource):
-#     logger.debug("Inside Login")
-#     content = request.get_json
-#     logger.debug(f"{pformat(content)}")
-    # if current_user.is_authenticated:
-    #     logger.debug("Inside IF")
-    # else:
-    #     logger.debug("Else branch")
-#         # if user is already registered 
-#         # redirect person somewhere else 
-#         # return redirect(url_for('index'))
-#         # TODO: add url for redirecting
-#         return 
-#     form = LoginForm()
-#     if form.validate_on_submit():
-#         user = asdb.get_user_data(form.username.data)
-#         if user is None or not user.check_password(form.password.data):
-#             flash('Invalid username or password')
-#             return redirect(url_for('login'))
-#         login_user(user, remember=form.remember_me.data)
-#         # TODO: add url for redirecting
-#         # return redirect(url_for('index'))
-#         return 
-    # pass
+        user = asdb.get_user_data(username)
+
+        logger.debug(f"API: {user}")
+        # check is user exists and password is valid 
+        if user is not None and user.check_password(password):
+            auth_token = user.encode_auth_token(user.id)
+            if auth_token:
+                # TODO: fix data
+                data = {
+                    'token': auth_token,
+                    'username': username, 
+                    'role': 'guest'
+                }
+                logger.debug(f"Login Post: {data}")
+                return data 
+        else:
+            logger.critical(f"Login failed! User \"{username}\" doesn't existed")
+            # Raise a HTTPException for the given http_status_code
+            abort(400)  

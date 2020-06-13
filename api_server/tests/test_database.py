@@ -4,7 +4,7 @@ import logging
 import pytest
 
 import api_server.database as asdb
-from db.models import States 
+from db.models import States, Users
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d/%H:%M:%S')
 logger = logging.getLogger(__name__)
@@ -72,3 +72,17 @@ def test_get_user_data(timescaleDB):
 
     assert test_query.username == 'test_user', "No valid username"
     assert test_query.check_password('test_password'), "No valid password"
+
+
+def test_create_user(timescaleDB):
+    new_user = asdb.create_user(
+        username='new_test_user', 
+        password='new_test_password',
+        db_session=timescaleDB
+    )
+
+    num_of_users = timescaleDB.query(Users).count()
+
+    assert num_of_users == 2, "New user wasn't added to DB"
+    assert new_user.username == 'new_test_user'
+    assert new_user.id == 2
