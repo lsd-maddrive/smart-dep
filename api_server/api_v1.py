@@ -201,22 +201,39 @@ class Signup(Resource):
 
         return data
 
+# from db.models import Users 
 
 @api.route('/login', methods=['GET', 'POST'])
 class Login(Resource):
     def get(self):
-        logger.debug("Inside login get")
         username = request.json.get('username')
         password = request.json.get('password')  
+        auth_header = request.headers.get('Authorization')
 
-        if username is None or password is None:
-            logger.critical(f"Username or password is missing")
-            # Raise a HTTPException for the given http_status_code
+        if auth_header: 
+            auth_token = auth_header.split(" ")[1]
+        else:
+            logger.critical(f"TOKEN NOT FOUND")
             abort(400)
+
+        logger.debug(f"TOKEN: {auth_token}")
+        if auth_token:
+            
+            resp = asdb.Users.decode_auth_token(auth_token)
+            logger.debug(f"RESP: {auth_token}\n{resp}")
+            if resp is not None: 
+                user = asdb.get_user_data(username)
+                logger.debug(f"USER: {user}")
+
+
+        # if username is None or password is None:
+        #     logger.critical(f"Username or password is missing")
+        #     # Raise a HTTPException for the given http_status_code
+        #     abort(400)
         
-        if asdb.get_user_data(username) is None: 
-            logger.critical(f"User \"{username}\" doesn't existed")
-            abort(400)   
+        # if asdb.get_user_data(username) is None: 
+        #     logger.critical(f"User \"{username}\" doesn't existed")
+        #     abort(400)   
         
     
     def post(self):

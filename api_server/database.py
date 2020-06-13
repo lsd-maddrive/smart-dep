@@ -89,6 +89,7 @@ def get_user_data(username, db_session=db.session):
         Returns: 
             Query object that contains data for ONE specified user (one row)
     """
+    # BE CAREFULE, return sqlalchemy....result!!! 
     return db_session.query(Users). \
            filter(Users.username == username).first()
 

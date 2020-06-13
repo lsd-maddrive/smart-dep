@@ -69,7 +69,8 @@ def timescaleDB(request, test_db):
         role = 'guest'
     )
     test_user.set_password("test_password")
-    # test_user.token = test_user.encode_auth_token(test_user.id)
+    # 
+    test_user.token = test_user.encode_auth_token(user_id=1)
 
     db_data.append(test_user)
 
@@ -80,6 +81,8 @@ def timescaleDB(request, test_db):
     )
 
     session.commit() 
+
+    session.query(Users)
     
     def resource_teardown():
         logger.debug("Database Resource teardown!")

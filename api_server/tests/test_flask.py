@@ -7,7 +7,7 @@ import pytest
 import pytest_env
 
 from api_server.database import db 
-from db.models import States 
+from db.models import States, Users
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d/%H:%M:%S')
 logger = logging.getLogger(__name__)
@@ -119,3 +119,22 @@ def test_login_post_non_existing_user(client):
     rv = client.post('http://localhost:5000/api/v1/login', json=test_json)
     
     assert rv.status_code == 400  
+
+
+def test_login_get(client, timescaleDB):
+    test_json = {
+        'username': 'test_user',
+        'password': 'test_password'
+    }
+    result = timescaleDB.query(Users.token).first()
+    for t in result:
+        token = t 
+
+    logger.debug(f"TEST TOKEN: {token}\n{type((token))}")
+
+    rv = client.get('http://localhost:5000/api/v1/login',
+                    headers={'Authorization': 'Bearer ' + token}, json=test_json
+    )
+
+    assert True 
+    

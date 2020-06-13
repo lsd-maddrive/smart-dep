@@ -72,6 +72,7 @@ class Users(UserMixin, Model):
     updated_on = Column(DateTime)
     avatar_photo = Column(BYTEA)
     role = Column(String(20))
+    token = Column(String)
     
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -113,8 +114,8 @@ class Users(UserMixin, Model):
             logger.error(f"Encode Token Payload Error {err}")
             return err
 
-    # @staticmethod
-    def decode_auth_token(self, auth_token):
+    @staticmethod
+    def decode_auth_token(auth_token):
         """
             Decodes the auth token
             :param auth_token:
