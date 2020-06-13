@@ -90,8 +90,8 @@ def test_register(client):
     rv_existing = client.post('http://localhost:5000/api/v1/register', json=existing_user)
 
     test_user = {
-        'username': 'user',
-        'password': 'test_password'
+        'username': 'new_user',
+        'password': 'new_password'
     }
     rv_new = client.post('http://localhost:5000/api/v1/register', json=test_user)
 
@@ -126,14 +126,16 @@ def test_login_get(client, timescaleDB):
         'username': 'test_user',
         'password': 'test_password'
     }
-    result = timescaleDB.query(Users.token).first()
-    for t in result:
-        token = t 
 
-    logger.debug(f"TEST TOKEN: {token}\n{type((token))}")
+    user = timescaleDB.query(Users).first()
+    user.token = user.encode_auth_token(user_id=user.id) 
+
+    timescaleDB.flush()
+
+    logger.debug(f"TEST TOKEN: {user.token}\n{type((user.token))}")
 
     rv = client.get('http://localhost:5000/api/v1/login',
-                    headers={'Authorization': 'Bearer ' + token}, json=test_json
+                    headers={'Authorization': 'Bearer ' + user.token}, json=test_json
     )
 
     assert True 

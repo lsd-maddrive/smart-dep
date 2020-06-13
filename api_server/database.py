@@ -98,7 +98,6 @@ def create_user(username, password, db_session=db.session):
     if username is None or password is None:
         logger.critical(f"Username or password is missing")
         return -1 
-    
     user = Users(
         username=username,
         created_on=datetime.now(), 
@@ -106,11 +105,15 @@ def create_user(username, password, db_session=db.session):
         avatar_photo=None, 
         role='guest'
     )
-
+    logger.debug(f"User {user} - created")
+    
     user.set_password(password)
+    logger.debug(f"User's password - set")
 
     db_session.add(user)
+    logger.debug(f"User - added")
     db_session.commit()
+    logger.debug(f"User - commited")
 
     logger.debug(f"User \"{username}\" is added to DB")
 

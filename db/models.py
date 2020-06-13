@@ -132,7 +132,7 @@ class Users(UserMixin, Model):
             return 'Invalid token. Please log in again.'
 
     def __repr__(self):
-        return f"User: {self.username}, Created Date: {self.created_on}, Role: {self.role}"
+        return f"User ID: {self.id}, Username: {self.username}, Created Date: {self.created_on}, Role: {self.role}"
 
 
 # from api_server.app import login 
