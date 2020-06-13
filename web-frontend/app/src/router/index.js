@@ -6,6 +6,7 @@ import RoomControlPage from '@/components/RoomControlPage'
 import LoginPage from '@/components/LoginPage'
 import RegisterPage from '@/components/RegisterPage'
 import TitlePage from '@/components/TitlePage'
+import RegDevicesPage from '@/components/RegDevicesPage'
 
 import store from '@/store'
 
@@ -46,6 +47,14 @@ let router = new Router({
       path: '/home',
       name: 'Home',
       component: RoomsPage,
+      meta: {
+        requiresAuth: true
+      }
+    },
+    {
+      path: '/devices',
+      name: 'RegDevices',
+      component: RegDevicesPage,
       meta: {
         requiresAuth: true
       }

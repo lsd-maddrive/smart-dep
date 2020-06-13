@@ -8,7 +8,7 @@ from flask_restplus import Resource, Namespace, fields
 from kombu import Connection, Exchange, Producer
 from pprint import pformat
 
-import api_server.database as asdb 
+import api_server.database as asdb
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -41,7 +41,7 @@ _model_power = api.inherit('Power', _model_state, {
 # def json_serial(obj):
 #     """
 #       JSON serializer for objects not serializable by default json code
-#       in case if we decide to get timestamp from DB as well 
+#       in case if we decide to get timestamp from DB as well
 #     """
 #     if isinstance(obj, (datetime, date)):
 #         return obj.isoformat()
@@ -62,21 +62,21 @@ class PowerUnits(Resource):
                 query = asdb.get_last_states(
                     check_time, place_id, 'power'
                 )
-                
-                powers_dict_list = [] 
+
+                powers_dict_list = []
                 for q in query:
                     powers_dict_list.append(
                         {
-                            'device_id': q.device_id, 
-                            'type': q.type, 
-                            'state': q.state, 
-                            # 'timestamp': json.dumps(q.timestamp, default=json_serial), 
+                            'device_id': q.device_id,
+                            'type': q.type,
+                            'state': q.state,
+                            # 'timestamp': json.dumps(q.timestamp, default=json_serial),
                             # 'place_id': place_id
                         }
                     )
 
                 logger.debug(f"POWER LAST STATES:\n{pformat(powers_dict_list)}")
-                
+
             return powers_dict_list
 
 
@@ -94,21 +94,21 @@ class LightUnits(Resource):
             query = asdb.get_last_states(
                 check_time, place_id, 'light'
             )
-        
-            lights_dict_list = [] 
+
+            lights_dict_list = []
             for q in query:
                 lights_dict_list.append(
                     {
-                        'device_id': q.device_id, 
-                        'type': q.type, 
-                        'state': q.state, 
-                        # 'timestamp': json.dumps(q.timestamp, default=json_serial), 
+                        'device_id': q.device_id,
+                        'type': q.type,
+                        'state': q.state,
+                        # 'timestamp': json.dumps(q.timestamp, default=json_serial),
                         # 'place_id': place_id
                     }
                 )
 
             logger.debug(f"LIGHT LAST STATES:\n{pformat(lights_dict_list)}")
-            
+
             return lights_dict_list
 
 
@@ -122,21 +122,49 @@ class CommandResender(Resource):
 
         uri = current_app.config['RABBITMQ_URI']
         logger.debug(f"Connect to RabbitMQ {uri}")
-        conn = Connection(uri)
-        logger.debug('>>>>Connection received!')
-        channel = conn.channel()
-        exchange = Exchange('commands', type='topic', durable=True)
+        with Connection(uri) as conn:
+            logger.debug('>>>>Connection received!')
+            channel = conn.channel()
+            exchange = Exchange('commands', type='topic', durable=True)
 
-        place_id = data['place_id']
-        type_ = data['type']
-        routing_key = f'cmd.{place_id}.{type_}'
-        # TODO - Message update
-        message = json.dumps(data)
+            place_id = data['place_id']
+            type_ = data['type']
+            routing_key = f'cmd.{place_id}.{type_}'
+            # TODO - Message update
+            message = json.dumps(data)
 
-        producer = Producer(exchange=exchange,
-                            channel=channel, routing_key=routing_key)
-        producer.publish(message)
+            producer = Producer(exchange=exchange,
+                                channel=channel, routing_key=routing_key)
+            producer.publish(message)
         return f'Message sent: {message}'
+
+_model_ping_in = api.model('Ping_in', {
+    'id': fields.String,
+})
+
+@api.route('/device/ping', endpoint='device_ping')
+class DevicePing(Resource):
+    @api.expect(_model_ping_in)
+    def post(self):
+        device = request.get_json()
+        logger.debug(f'Received ping: {device}')
+
+        uri = current_app.config['RABBITMQ_URI']
+        logger.debug(f"Connect to RabbitMQ {uri}")
+        with Connection(uri) as conn:
+            channel = conn.channel()
+            exchange = Exchange('configurations', type='topic', durable=True)
+
+            # Reformatted message
+            message = json.dumps({
+                'device_id': device['id']
+            })
+            producer = Producer(exchange=exchange,
+                                channel=channel,
+                                routing_key=f'cfg.ping')
+            producer.publish(message)
+        return 200
+
 
 
 _model_place = api.model('Place', {
@@ -156,7 +184,7 @@ class Places(Resource):
             check_time = current_timestamp - time_delta
 
             query = asdb.get_last_places(check_time)
-            
+
             places_dict_list = []
 
             for q in query:
@@ -166,7 +194,7 @@ class Places(Resource):
                         'name': q.place_id
                     }
                 )
-            
+
             logger.debug(f"PLACES LAST DATA:\n{pformat(places_dict_list)}")
-            
+
             return places_dict_list

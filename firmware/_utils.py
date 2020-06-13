@@ -1,6 +1,8 @@
 import urequests as requests
 import ujson as json
 import uos as os
+import network
+import time
 
 
 def get_app(host, version=None):
@@ -30,6 +32,18 @@ def get_app(host, version=None):
         pass
 
     return False
+
+
+def connect_wifi(config):
+    wlan = network.WLAN(network.STA_IF)
+    wlan.active(True)
+    if not wlan.isconnected():
+        print('connecting to network...')
+        wlan.connect(config['wifi']['ssid'], config['wifi']['pass'])
+        while not wlan.isconnected():
+            time.sleep(1)
+    print('network config:', wlan.ifconfig())
+    return wlan.ifconfig()
 
 
 def path_join(*args):

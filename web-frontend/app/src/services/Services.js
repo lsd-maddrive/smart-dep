@@ -19,6 +19,9 @@ const realServices = {
   getPlaceDevices(place) {
     return Api().get('/place/' + place.id + '/device')
   },
+  getNewDevices() {
+    return Api().get('/device?new=true')
+  },
   createDevice(device) {
     return Api().post('/device', device)
   },
@@ -41,6 +44,9 @@ const realServices = {
     return Api().post('/register', user)
   },
 
+  pingDevice(device) {
+    return Api().post('/device/ping', device)
+  },
   sendCommand(command) {
     return Api().post('/cmd', command)
   },
@@ -52,4 +58,12 @@ const realServices = {
 
 const isFake = process.env.FAKE_SERVICES ? process.env.FAKE_SERVICES : false && process.env.NODE_ENV !== 'production';
 
-export default isFake ? fakeServices : realServices;
+let services;
+
+if (isFake) {
+  services = Object.assign(realServices, fakeServices)
+} else {
+  services = realServices
+}
+
+export default services;

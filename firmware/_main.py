@@ -1,4 +1,3 @@
-import network
 import ujson
 import time
 import dht
@@ -11,11 +10,11 @@ import _utils as ut
 
 g_config = {
     'wifi': {
-        'ssid': '',
+        'ssid': 'Wunderwafle',
         'pass': ''
     },
     'mqtt': {
-        'server': 'tigra-acs.duckdns.org',
+        'server': '192.168.31.175',
         'port': 1883,
         'user': 'rabbitmq',
         'pass': 'rabbitmq'
@@ -24,18 +23,6 @@ g_config = {
 }
 
 # Definitions
-
-
-def connect_wifi(config):
-    wlan = network.WLAN(network.STA_IF)
-    wlan.active(True)
-    if not wlan.isconnected():
-        print('connecting to network...')
-        wlan.connect(config['wifi']['ssid'], config['wifi']['pass'])
-        while not wlan.isconnected():
-            time.sleep(1)
-    print('network config:', wlan.ifconfig())
-
 
 class ControlDevice(object):
     def __init__(self, config, type_):
@@ -138,14 +125,14 @@ class EnvironmentDevice(ControlDevice):
 
 # Utilization
 
+
 file_config = ut.get_config()
 if file_config is not None:
     g_config.update(file_config)
 
-connect_wifi(g_config)
+ifconfig = ut.connect_wifi(g_config)
 
-# device = Pin(2, Pin.OUT)
-# device.on()
+
 
 
 def import_app():
@@ -206,6 +193,8 @@ while True:
         # Success return - soft reset
         if ret == 0:
             break
+        else:
+            machine.reset()
     except Exception as e:
         print('main() execution failed: {}'.format(e))
 

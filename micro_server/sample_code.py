@@ -26,6 +26,22 @@ def register_device(host, data):
 
     return None
 
+def enabled_device(host, data):
+    try:
+        url = '{}/api/v1/enabled'.format(host)
+        headers = {
+            'Content-Type': 'application/json'
+        }
+        result = requests.post(url, json=data, headers=headers)
+        if result.status_code >= 400:
+            return None
+
+        return result.json()
+    except Exception as e:
+        print('Failed to get registration data: {}'.format(e))
+
+    return None
+
 
 def main(config):
     CLIENT_ID = ubinascii.hexlify(machine.unique_id())
@@ -45,7 +61,18 @@ def main(config):
         local_config = {'device_id': device_id}
         ut.set_config(local_config)
         print('Device received device_id ({}) - restart'.format(device_id))
-        return 0
+        return 1
+    else:
+        # Register enable of device
+        ifconfig = ut.connect_wifi(config)
+        ip_addr = ifconfig[0]
+        data = {
+            'unique_id': CLIENT_ID,
+            'device_id': device_id,
+            'ip_addr': ip_addr,
+        }
+        print('Send enabled state: {}'.format(data))
+        reg_data = enabled_device(config['micro_server'], data)
 
     # After DeviceID is in system - we can start processing
     mqtt_config = config['mqtt']
@@ -60,14 +87,21 @@ def main(config):
         'reload_required': False
     }
 
+    led = machine.Pin(2, machine.Pin.OUT)
+
     def mqtt_callback(topic, msg):
         msg = json.loads(msg)
+        print('Received message: {} on {}'.format(msg, topic))
+        if topic == b'cfg/ping':
+            led.value(not led.value())
+
 
     mqttc.set_callback(mqtt_callback)
     mqttc.connect()
 
-    mqttc.subscribe('cfg/updates')
+    mqttc.subscribe('cfg/update')
+    mqttc.subscribe('cfg/ping')
 
     while True:
-
+        mqttc.check_msg()
         time.sleep(1)

@@ -105,6 +105,29 @@ const services = {
       }, timeout);
     });
   },
+  getNewDevices() {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        const data = [{
+          id: "11:11:11",
+          ip_addr: "1.1.1.1",
+          reg_ts: "1592044151",
+        }, {
+          id: "22:22:22",
+          ip_addr: "1.1.1.2",
+          reg_ts: "1592044150",
+        }, {
+          id: "333:333:333",
+          ip_addr: "1.1.1.3",
+          reg_ts: "1592044152",
+        }]
+
+        resolve({
+          data: data
+        });
+      }, timeout);
+    });
+  },
 
   createDevice(device) {
     return new Promise((resolve, reject) => {

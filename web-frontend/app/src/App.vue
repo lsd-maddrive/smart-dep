@@ -1,7 +1,7 @@
 <template>
   <v-app>
     <v-app-bar app hide-on-scroll color="primary" dark>
-      <v-app-bar-nav-icon v-if="isLoggedIn" @click.stop="sidebarMenu = !sidebarMenu"></v-app-bar-nav-icon>
+      <!-- <v-app-bar-nav-icon v-if="isLoggedIn" @click.stop="sidebarMenu = !sidebarMenu"></v-app-bar-nav-icon> -->
       <v-toolbar-title>
         <router-link :to="{name: 'Home'}" tag="span" style="cursor: pointer">Умная кафедра</router-link>
       </v-toolbar-title>
@@ -15,6 +15,15 @@
         <!-- </v-btn> -->
       </v-btn>
       <!-- <router-link v-if="isLoggedIn" :to="{ name: 'Login' }" tag="v-btn"> -->
+
+      <v-tooltip v-if="isLoggedIn" bottom>
+        <template v-slot:activator="{ on }">
+          <v-btn icon :to="{name: 'RegDevices'}" v-on="on">
+            <v-icon>mdi-devices</v-icon>
+          </v-btn>
+        </template>
+        <span>Новые устройства</span>
+      </v-tooltip>
 
       <v-tooltip v-if="isLoggedIn" bottom>
         <template v-slot:activator="{ on }">
@@ -83,17 +92,18 @@
           </v-list-item-icon>
 
           <v-list-item-content>
-            <v-list-item-title>Устройства</v-list-item-title>
+            <v-list-item-title>
+            </v-list-item-title>
           </v-list-item-content>
         </v-list-item> -->
       </v-list>
     </v-navigation-drawer>
 
-    <v-content>
+    <v-main>
       <v-container fluid>
         <router-view></router-view>
       </v-container>
-    </v-content>
+    </v-main>
 
     <v-footer app></v-footer>
   </v-app>
