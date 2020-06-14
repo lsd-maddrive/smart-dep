@@ -1,4 +1,4 @@
-from db.models import metadata, State, Place, Device
+from db.models import metadata, State, Command, Config, Place, Device
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import desc
 from sqlalchemy import distinct
@@ -31,9 +31,9 @@ def get_last_states(start_ts, place_id, db_session=db.session):
     """
     return db_session.query(State) \
         .filter(State.timestamp >= start_ts) \
+        .filter(State.device.has(Device.place_id == place_id)) \
         .order_by(State.device_id, State.timestamp.desc()) \
         .distinct(State.device_id).all()
-        # .filter(State.device.place_id == place_id) \
 
 # Places
 
@@ -104,8 +104,14 @@ def update_device(device_info, db_session=db.session):
 
 
 def delete_device(device_info, db_session=db.session):
-    device = db_session.query(Device).get(device_info['id'])
+    # Moreover remove old data
+    db_session.query(State).filter(State.device_id == device_info['id']).delete()
+    db_session.query(Command).filter(Command.device_id == device_info['id']).delete()
+    db_session.query(Config).filter(Config.device_id == device_info['id']).delete()
 
+    db_session.flush()
+
+    device = db_session.query(Device).get(device_info['id'])
     if device.is_installed:
         device.update_date = datetime.utcnow()
         device.is_installed = False

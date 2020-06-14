@@ -120,6 +120,22 @@ export default new Vuex.Store({
       });
     },
 
+    stopSocketLink({ state }) {
+      const placeId = state.currentPlaceId
+
+      /**
+       * Lazy connection
+       */
+      if (!this._vm.$socket.client.connected) {
+        this._vm.$socket.client.connect()
+      }
+
+      this._vm.$socket.client.emit("stop_states", {
+        period: 1,
+        placeId: placeId
+      });
+    },
+
     /**
      * Socket handler for input data
      */

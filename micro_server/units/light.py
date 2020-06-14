@@ -25,7 +25,11 @@ class Code():
     def callback(self, topic, msg):
         print('Callback data: {} / {}'.format(topic, msg))
         device_id = msg.get('device_id')
-        if device_id == self.device_id:
+
+        if topic == self.cmd_topic:
+            if device_id != self.device_id:
+                return
+
             cmd = msg.get('data')
             if cmd is None:
                 return

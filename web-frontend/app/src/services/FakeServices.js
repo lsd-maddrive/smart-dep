@@ -209,16 +209,6 @@ const services = {
     });
   },
 
-  getEnvironmentStates(params) {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        resolve({
-          data: environData
-        });
-      }, timeout);
-    });
-  },
-
   login(user) {
     return new Promise((resolve, reject) => {
       setTimeout(() => {

@@ -10,8 +10,8 @@ import _utils as ut
 
 g_config = {
     'wifi': {
-        'ssid': 'Wunderwafle',
-        'pass': 'MurMurda2511'
+        'ssid': 'smartdepwifi',
+        'pass': '1234_smartdepwifi_pass'
     },
     'mqtt': {
         'server': '192.168.31.175',

@@ -64,14 +64,6 @@ export default {
             }
           );
 
-          // this.$store.dispatch("environ/syncData", { placeId: placeId }).then(
-          //   resp => {},
-          //   err => {
-          //     console.log(err);
-          //     this.$toasted.error("Не удалось обновить состояние окружения =(");
-          //   }
-          // );
-
           this.$store.dispatch("startSocketLink");
         },
         err => {
@@ -90,6 +82,7 @@ export default {
   beforeDestroy() {
     // Remove devices
     this.$store.commit("clearDeviceStates");
+    this.$store.dispatch("stopSocketLink");
     console.log("beforeDestroy()");
   },
   // We should use this as $route has parameters after creation

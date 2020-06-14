@@ -42,32 +42,6 @@ const getters = {
 
 // actions
 const actions = {
-  // syncData({
-  //   state,
-  //   commit,
-  //   rootState
-  // }, data) {
-  //   commit('clear')
-  //   const placeId = data.placeId
-
-  //   return new Promise((resolve, reject) => {
-  //     Services.getEnvironmentStates({
-  //       place_id: placeId,
-  //       count: state.dataLimit
-  //     }).then(
-  //       response => {
-  //         for (let data of response.data) {
-  //           commit('setExtState', data)
-  //         }
-  //         resolve()
-  //       },
-  //       error => {
-  //         console.log("Failed to request environment data: " + error)
-  //         reject(error)
-  //       }
-  //     )
-  //   })
-  // },
 }
 
 // mutations
