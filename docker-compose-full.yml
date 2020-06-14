@@ -74,7 +74,7 @@ services:
             - "config/.env.${SMART_ENV:-dev}"
         environment:
             - DMINUTES=5
-            - RECREATE_TABLES=True
+            # - RECREATE_TABLES=True
             - PREPARE_RABBITMQ=True
         restart: always
         # For swagger access
@@ -139,6 +139,33 @@ services:
                 max-file: "5"
                 max-size: "20m"
 
+    fluentd:
+        build:
+            context: .
+            dockerfile: ./fluentd/Dockerfile
+        restart: always
+        ports:
+            - 24224:24224
+        logging:
+            driver: "json-file"
+            options:
+                max-file: "5"
+                max-size: "20m"
+
+    loki:
+        image: grafana/loki:latest
+        restart: always
+        ports:
+            - 3100:3100
+        command: -config.file=/etc/loki/local-config.yaml
+        volumes:
+            - loki-data:/data/loki
+        logging:
+            driver: "json-file"
+            options:
+                max-file: "5"
+                max-size: "20m"
+
     state_tracker:
         build:
             context: .
@@ -196,6 +223,23 @@ services:
         depends_on:
             - rabbitmq
             - timescaledb
+        logging:
+            driver: "json-file"
+            options:
+                max-file: "5"
+                max-size: "20m"
+
+    grafana:
+        image: grafana/grafana:6.7.3
+        restart: always
+        ports:
+            - 3000:3000
+        volumes:
+            - ./config/grafana/grafana.ini:/etc/grafana/grafana.ini:ro
+            - ./config/grafana/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml:ro
+            - grafana-data:/var/lib/grafana
+        depends_on:
+            - loki
         logging:
             driver: "json-file"
             options:

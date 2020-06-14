@@ -201,7 +201,7 @@ class ConfigTracker(Tracker):
     def get_record(self, in_data):
         new_cgf = Config(
             timestamp=in_data['timestamp'],
-            config=in_data['data'],
+            config=in_data.get('data'),
             device_id=in_data['device_id'],
         )
         return new_cgf

@@ -89,9 +89,7 @@ class Registration(Resource):
     @api.expect(_model_register_in)
     @api.marshal_with(_model_register_out)
     def post(self):
-        # logger.debug(request.headers)
         data = request.get_json()
-
         logger.debug(data)
         unique_id = data.get('unique_id')
         if unique_id:
@@ -129,7 +127,6 @@ class DeviceEnabled(Resource):
     @api.expect(_model_enabled_in, validate=True)
     # @api.marshal_with(_model_enabled_out)
     def post(self):
-        logger.debug(request.headers)
         data = request.get_json()
         logger.debug(data)
 
