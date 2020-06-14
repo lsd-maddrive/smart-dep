@@ -37,7 +37,7 @@ const realServices = {
 
   getDevicesLastStates(place) {
     // Seconds
-    return Api().get('/place/' + place.id + '/states', { params: { dur: 5 * 60 } })
+    return Api().get('/place/' + place.id + '/states', { params: { duration_s: 5 * 60 } })
   },
 
   login(user) {

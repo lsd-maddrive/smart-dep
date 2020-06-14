@@ -36,12 +36,4 @@ def create_app():
     # Must be initialized after SQLALCHEMY_DATABASE_URI set
     db.init_app(app)
 
-    rabbitmq_uri = os.getenv('RABBITMQ_URI')
-    if rabbitmq_uri is None:
-        logger.critical(f"RABBITMQ URI IS NOT FOUND!")
-        sys.exit(1)
-
-    app.config['RABBITMQ_URI'] = rabbitmq_uri
-    logger.debug(f"RABBITMQ URI is set to {rabbitmq_uri}")
-
     return app

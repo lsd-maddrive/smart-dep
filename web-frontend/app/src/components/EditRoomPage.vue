@@ -26,17 +26,17 @@
 
             <v-row>
               <v-col cols="6" sm="6" md="6">
-                <v-switch v-model="place.attr.projector" class="mx-2" label="Проектор"></v-switch>
+                <v-switch v-model="place.attr_projector" class="mx-2" label="Проектор"></v-switch>
               </v-col>
               <v-col cols="6" sm="6" md="6">
-                <v-switch v-model="place.attr.board" class="mx-2" label="Доска"></v-switch>
+                <v-switch v-model="place.attr_board" class="mx-2" label="Доска"></v-switch>
               </v-col>
             </v-row>
             <v-row>
               <v-col cols="6" sm="6" md="6">
                 <v-text-field
                   label="Вместимость"
-                  v-model="place.attr.people"
+                  v-model="place.attr_people"
                   :rules="[v => !!v || 'Количество обязательно']"
                   type="number"
                   required
@@ -45,7 +45,7 @@
               <v-col cols="6" sm="6" md="6">
                 <v-text-field
                   label="Компьютеры"
-                  v-model="place.attr.computers"
+                  v-model="place.attr_computers"
                   :rules="[v => !!v || 'Количество обязательно']"
                   type="number"
                   required
@@ -55,7 +55,7 @@
             <v-row>
               <v-col cols="6" sm="6" md="6">
                 <v-select
-                  v-model="place.attr.os"
+                  v-model="place.attr_os"
                   :rules="[v => !!v || 'ОС обязательна']"
                   :items="operating_systems"
                   :item-text="typeDesc"
@@ -68,7 +68,7 @@
               </v-col>
               <v-col cols="6" sm="6" md="6">
                 <v-select
-                  v-model="place.attr.software"
+                  v-model="place.attr_software"
                   :rules="[v => !!v || 'ПО обязательно']"
                   :items="software"
                   :item-text="typeDesc"
@@ -215,12 +215,12 @@ export default {
     return {
       // Default data
       place: {
-        attr: {
-          people: 25,
-          computers: 10,
-          os: ["windows"],
-          software: []
-        }
+        attr_people: 25,
+        attr_computers: 10,
+        attr_os: ["windows"],
+        attr_software: [],
+        attr_board: true,
+        attr_projector: false
       },
       loading: {
         createUpdate: false,
@@ -474,10 +474,10 @@ export default {
     if (placeId) {
       this.$store.dispatch("validatePlace", { placeId: placeId }).then(
         resp => {
-          console.log("Room " + placeId + " found!");
+          console.log(resp);
           // Copy to have external data copy
-          this.sourcePlace = Object.assign(this.place, resp);
-          this.place = Object.assign(this.place, resp);
+          this.sourcePlace = Object.assign({}, resp);
+          this.place = Object.assign({}, resp);
 
           // Update list of devices
           this._updateDevices();

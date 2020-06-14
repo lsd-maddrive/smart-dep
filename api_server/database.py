@@ -9,7 +9,7 @@ from db.models import metadata, States, Place, Device
 db = SQLAlchemy(metadata=metadata)
 
 
-def get_last_states(check_time, place_id, type_, db_session=db.session):
+def get_last_states(start_ts, place_id, type_, db_session=db.session):
     """
         Get last states from DB in defined period of time
         from check time till now for defined place and type
@@ -26,11 +26,11 @@ def get_last_states(check_time, place_id, type_, db_session=db.session):
             device in defined period of time
     """
     return db_session.query(States). \
-        filter(States.timestamp >= check_time). \
+        filter(States.timestamp >= start_ts). \
         filter(States.place_id == place_id). \
         filter(States.type == type_). \
         order_by(States.device_id, States.timestamp.desc()). \
-        distinct(States.device_id)
+        distinct(States.device_id).all()
 
 
 def get_devices_states(check_time, db_session=db.session):
@@ -60,7 +60,15 @@ def create_place(place_info, db_session=db.session):
     place = Place(
         name=place_info['name'],
         num=place_info['num'],
-        create_date=datetime.utcnow()
+        create_date=datetime.utcnow(),
+
+        # TODO - use .get() with defaults
+        attr_os = place_info['attr_os'],
+        attr_software = place_info['attr_software'],
+        attr_people = place_info['attr_computers'],
+        attr_computers = place_info['attr_people'],
+        attr_blackboard = place_info['attr_board'],
+        attr_projector = place_info['attr_projector']
     )
 
     db_session.add(place)
@@ -75,6 +83,13 @@ def update_place(place_info, db_session=db.session):
     place.name = place_info['name']
     place.num = place_info['num']
     place.update_date = datetime.utcnow()
+
+    place.attr_os = place_info['attr_os']
+    place.attr_software = place_info['attr_software']
+    place.attr_people = place_info['attr_computers']
+    place.attr_computers = place_info['attr_people']
+    place.attr_blackboard = place_info['attr_board']
+    place.attr_projector = place_info['attr_projector']
 
     db_session.commit()
 

@@ -1,4 +1,4 @@
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 import json
 import logging
 import os
@@ -13,8 +13,6 @@ import api_server.database as asdb
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-time_delta = timedelta(minutes=int(os.getenv('DMINUTES', '5')))
-
 api = Namespace('api/v1', description="Main API namespace")
 
 _model_state = api.model('State', {
@@ -22,94 +20,35 @@ _model_state = api.model('State', {
     'type': fields.String
 })
 
-_model_light = api.inherit('Light', _model_state, {
-    'state': fields.Nested(api.model('LightState', {
-        'enabled': fields.Boolean
-    })
-    ),
-})
 
-_model_power = api.inherit('Power', _model_state, {
-    'state': fields.Nested(api.model('PowerState', {
-        'enabled': fields.Boolean
-    })
-    ),
-})
-
-
-# def json_serial(obj):
-#     """
-#       JSON serializer for objects not serializable by default json code
-#       in case if we decide to get timestamp from DB as well
-#     """
-#     if isinstance(obj, (datetime, date)):
-#         return obj.isoformat()
-#     raise TypeError ("Type %s not serializable" % type(obj))
-
-@api.route('/place/<string:place_id>/powers', endpoint='powers')
-@api.param('place_id', 'ID of place')
-class PowerUnits(Resource):
-    @api.marshal_with(_model_power, as_list=True)
-    def get(self, place_id):
-        if current_app.debug:
-            return _powers_db
-        else:
-            with current_app.app_context():
-                current_timestamp = datetime.now()
-                check_time = current_timestamp - time_delta
-
-                query = asdb.get_last_states(
-                    check_time, place_id, 'power'
-                )
-
-                powers_dict_list = []
-                for q in query:
-                    powers_dict_list.append(
-                        {
-                            'device_id': q.device_id,
-                            'type': q.type,
-                            'state': q.state,
-                            # 'timestamp': json.dumps(q.timestamp, default=json_serial),
-                            # 'place_id': place_id
-                        }
-                    )
-
-                logger.debug(
-                    f"POWER LAST STATES:\n{pformat(powers_dict_list)}")
-
-            return powers_dict_list
-
-
-@api.route('/place/<string:place_id>/lights', endpoint='lights')
+@api.route('/place/<string:place_id>/states', endpoint='units_states')
 @api.param('place_id', 'ID of place')
 class LightUnits(Resource):
-    @api.marshal_with(_model_light, as_list=True)
+    # @api.marshal_with(_model_state, as_list=True)
     def get(self, place_id):
-        if current_app.debug:
-            return _lights_db
-        else:
-            current_timestamp = datetime.now()
-            check_time = current_timestamp - time_delta
+        back_duration_s = request.args.get('duration_s', 5*60)
 
-            query = asdb.get_last_states(
-                check_time, place_id, 'light'
+        start_ts = datetime.now() - back_duration_s
+
+        states = asdb.get_last_states(
+            start_ts, place_id, 'light'
+        )
+
+        result_states = []
+        for st in states:
+            result_states.append(
+                {
+                    'device_id': st.device_id,
+                    'type': st.type,
+                    'state': st.state,
+                    'ts': time.time(),
+                    # 'place_id': place_id
+                }
             )
 
-            lights_dict_list = []
-            for q in query:
-                lights_dict_list.append(
-                    {
-                        'device_id': q.device_id,
-                        'type': q.type,
-                        'state': q.state,
-                        # 'timestamp': json.dumps(q.timestamp, default=json_serial),
-                        # 'place_id': place_id
-                    }
-                )
+        logger.debug(f"Requested devices states: {result_states}")
 
-            logger.debug(f"LIGHT LAST STATES:\n{pformat(lights_dict_list)}")
-
-            return lights_dict_list
+        return result_states
 
 
 _model_place_get = api.model('Place_get', {
@@ -130,29 +69,31 @@ _model_place_del = api.model('Place_del', {
 
 @api.route('/place', endpoint='places_CRUD')
 class Places(Resource):
-    @api.marshal_with(_model_place_get, as_list=True)
+    # @api.marshal_with(_model_place_get, as_list=True)
     def get(self):
-        current_timestamp = datetime.now()
-        check_time = current_timestamp - time_delta
-
         places = asdb.get_places()
-
         result_places = []
         for place in places:
             result_places.append({
                 'id': place.id,
                 'num': place.num,
-                'name': place.name
+                'name': place.name,
+                'attr_os': place.attr_os,
+                'attr_software': place.attr_software,
+                'attr_computers': place.attr_computers,
+                'attr_people': place.attr_people,
+                'attr_board': place.attr_blackboard,
+                'attr_projector': place.attr_projector,
             })
 
-        logger.debug(f"Requested places:\n{pformat(places)}")
+        logger.debug(f"Requested places: {result_places}")
 
-        return places
+        return result_places
 
     @api.expect(_model_place_new, validate=True)
     def post(self):
         place_info = request.get_json()
-        logger.debug(f"Requested to create place:\n{pformat(place_info)}")
+        logger.debug(f"Request to create place:\n{pformat(place_info)}")
 
         new_place = asdb.create_place(place_info)
         logger.debug(f'Created new place: {new_place}')
@@ -160,14 +101,14 @@ class Places(Resource):
     @api.expect(_model_place_new, validate=True)
     def put(self):
         place_info = request.get_json()
-        logger.debug(f"Requested to update place:\n{pformat(place_info)}")
+        logger.debug(f"Request to update place:\n{pformat(place_info)}")
 
         asdb.update_place(place_info)
 
     @api.expect(_model_place_del, validate=True)
     def delete(self):
         place_info = request.get_json()
-        logger.debug(f"Requested to delete place:\n{pformat(place_info)}")
+        logger.debug(f"Request to delete place:\n{pformat(place_info)}")
 
         asdb.delete_place(place_info)
 
@@ -334,7 +275,6 @@ class Device(Resource):
             })
             producer.publish(message)
         return 200
-
 
     @api.expect(_model_device_del, validate=True)
     def delete(self):

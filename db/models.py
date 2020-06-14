@@ -1,7 +1,7 @@
 from sqlalchemy import MetaData, Column, Integer, String, DateTime, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.schema import ForeignKey
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID, ARRAY
 from sqlalchemy.ext.declarative import declarative_base
 
 import uuid
@@ -63,6 +63,13 @@ class Place(Model):
     num = Column(String(20))
     create_date = Column(DateTime)
     update_date = Column(DateTime)
+
+    attr_os = Column(ARRAY(String(20)), default=[])
+    attr_software = Column(ARRAY(String(20)), default=[])
+    attr_people = Column(Integer, default=10)
+    attr_computers = Column(Integer, default=25)
+    attr_blackboard = Column(Boolean, default=False)
+    attr_projector = Column(Boolean, default=False)
 
     # back_populates - refers to member of another class
     devices = relationship("Device", back_populates="place")
