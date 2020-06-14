@@ -20,7 +20,7 @@ Model = declarative_base(metadata=metadata)
 class Commands(Model):
     __tablename__ = 'commands'
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     timestamp = Column(DateTime)
     command = Column(JSONB)
     device_id = Column(String(50))
@@ -35,7 +35,7 @@ DateTime: {self.timestamp}, Place ID: {self.place_id}, Command: {pformat(self.co
 class Configs(Model):
     __tablename__ = "configs"
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     timestamp = Column(DateTime)
     config = Column(JSONB)
     device_id = Column(String(50))
@@ -50,7 +50,7 @@ DateTime: {self.timestamp}, Place ID: {self.place_id}, Config: {pformat(self.con
 class States(Model):
     __tablename__ = "states"
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     timestamp = Column(DateTime)
     state = Column(JSONB)
     device_id = Column(String(20))
@@ -61,18 +61,24 @@ class States(Model):
         return f"State Type: {self.type}, Device ID: {self.device_id},\
 DateTime: {self.timestamp}, Place ID: {self.place_id}, State: {pformat(self.state)}"
     
-
 class Users(UserMixin, Model):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String(64), unique=True, nullable=False)
     password_hash = Column(String(128))
-    created_on = Column(DateTime)
+    created_on = Column(DateTime, nullable=False)
     updated_on = Column(DateTime)
     avatar_photo = Column(BYTEA)
     role = Column(String(20))
     token = Column(String)
+
+
+    def __init__(self, username, role='guest'):
+        self.username = username
+        # self.password_hash = self.set_password(password)
+        self.created_on = datetime.now()
+        self.role = role
     
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -132,7 +138,25 @@ class Users(UserMixin, Model):
             return 'Invalid token. Please log in again.'
 
     def __repr__(self):
-        return f"User ID: {self.id}, Username: {self.username}, Created Date: {self.created_on}, Role: {self.role}"
+        return f"User ID: {self.id}, Username: {self.username}, Created Date: {self.created_on}, Role: {self.role}\nHASH: {self.password_hash}"
+
+
+class BlacklistToken(Model):
+    """
+        Token Model for storing JWT tokens
+    """
+    __tablename__ = 'blacklist_tokens'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    token = Column(String(500), unique=True, nullable=False)
+    blacklisted_on = Column(DateTime, nullable=False)
+
+    def __init__(self, token):
+        self.token = token
+        self.blacklisted_on = datetime.now()
+
+    def __repr__(self):
+        return f"<id: {self.id} token: {self.token}"
 
 
 # from api_server.app import login 

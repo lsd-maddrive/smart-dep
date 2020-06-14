@@ -100,14 +100,11 @@ def create_user(username, password, db_session=db.session):
         return -1 
     user = Users(
         username=username,
-        created_on=datetime.now(), 
-        updated_on=None, 
-        avatar_photo=None, 
-        role='guest'
+        password=password
     )
     logger.debug(f"User {user} - created")
     
-    user.set_password(password)
+    # user.set_password(password)
     logger.debug(f"User's password - set")
 
     db_session.add(user)

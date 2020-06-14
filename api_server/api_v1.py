@@ -251,8 +251,14 @@ class Login(Resource):
 
         user = asdb.get_user_data(username)
 
+        logger.debug(f"GET USER DATA - passed {user}")
+        logger.debug(f"DEBUG API {bool(user)}")
+
+        logger.debug(f"DEBUG password: {user.check_password(password)}")
+
         # check is user exists and password is valid 
         if user is not None and user.check_password(password):
+            logger.debug(f"Inside if branch")
             auth_token = user.encode_auth_token(user.id)
             if auth_token:
                 # TODO: fix data
