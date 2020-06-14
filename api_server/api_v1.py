@@ -113,7 +113,7 @@ class LightUnits(Resource):
 
 
 _model_place_get = api.model('Place_get', {
-    'id': fields.String,
+    'id': fields.Integer,
     'num': fields.String,
     'name': fields.String,
 })
@@ -124,7 +124,7 @@ _model_place_new = api.model('Place_new', {
 })
 
 _model_place_del = api.model('Place_del', {
-    'id': fields.String,
+    'id': fields.Integer,
 })
 
 
@@ -266,11 +266,11 @@ class DevicesNew(Resource):
         return result
 
 
-_model_device_get_in = api.model('Device_get', {
-    'id': fields.String,
+_model_device_get_in = api.model('Device_get_in', {
+    'place_id': fields.String,
 })
 
-_model_device_get_out = api.model('Device_get', {
+_model_device_get_out = api.model('Device_get_out', {
     'id': fields.String,
     'name': fields.String,
     'type': fields.String,
@@ -281,19 +281,19 @@ _model_device_upd = api.model('Device_upd', {
     'id': fields.String,
     'name': fields.String,
     'type': fields.String,
-    'place_id': fields.String
+    'place_id': fields.Integer
     # 'config': fields.String,
 })
 
-_model_device_del = api.model('Device_de;', {
+_model_device_del = api.model('Device_del', {
     'id': fields.String,
 })
 
 
 @api.route('/device', endpoint='device_RUD')
 class Device(Resource):
-    @api.expect(_model_device_get_in)
-    @api.marshal_with(_model_device_get_out, as_list=True)
+    # @api.expect(_model_device_get_in)
+    # @api.marshal_with(_model_device_get_out, as_list=True)
     def get(self):
         place_id = request.args.get('place_id')
         logger.debug(f"Requested devices for place: {place_id}")
@@ -306,10 +306,11 @@ class Device(Resource):
                 'id': str(dev.id),
                 'name': dev.name,
                 'type': dev.type,
-                'place_id': dev.place_id
+                'place_id': dev.place_id,
+                'config': dev.config,
             })
 
-        logger.debug(f"Requested devices:\n{pformat(result)}")
+        logger.debug(f"Requested devices: {result}")
 
         return result
 
@@ -319,6 +320,21 @@ class Device(Resource):
         logger.debug(f"Requested to update device:\n{pformat(device_info)}")
 
         asdb.update_device(device_info)
+
+        uri = current_app.config['RABBITMQ_URI']
+        logger.debug(f"Connect to RabbitMQ {uri}")
+        with Connection(uri) as conn:
+            exchange = Exchange('configurations', type='topic', durable=True)
+            producer = Producer(exchange=exchange,
+                                channel=conn.channel(),
+                                routing_key=f'cfg.reset')
+
+            message = json.dumps({
+                'device_id': device_info['id']
+            })
+            producer.publish(message)
+        return 200
+
 
     @api.expect(_model_device_del, validate=True)
     def delete(self):

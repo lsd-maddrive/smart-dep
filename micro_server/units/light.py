@@ -1,5 +1,6 @@
 import time
 import ujson as json
+from machine import Pin
 
 class Code():
     def __init__(self, config):
@@ -38,7 +39,7 @@ class Code():
 
     def _send_state(self, state, mqttc):
         msg = {
-            'device_id': self.unique_id,
+            'device_id': self.device_id,
             'state': state
         }
         mqttc.publish(self.state_topic, json.dumps(msg))

@@ -126,8 +126,8 @@ _model_enabled_out = api.model('Enabled_out', {
 
 @api.route('/app/enabled', endpoint='enabled')
 class DeviceEnabled(Resource):
-    @api.expect(_model_enabled_in)
-    @api.marshal_with(_model_enabled_out)
+    @api.expect(_model_enabled_in, validate=True)
+    # @api.marshal_with(_model_enabled_out)
     def post(self):
         logger.debug(request.headers)
         data = request.get_json()

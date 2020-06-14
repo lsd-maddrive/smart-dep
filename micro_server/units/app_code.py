@@ -42,7 +42,7 @@ def enable_device(host, data):
 
         return result.json(), False
     except Exception as e:
-        print('Failed to get registration data: {}'.format(e))
+        print('Failed to get enable data: {}'.format(e))
 
     return None, False
 
@@ -146,11 +146,13 @@ def main(config):
         msg = json.loads(msg)
         print('Received message: {} on {}'.format(msg, topic))
         if topic == b'cfg/ping':
-            led.value(not led.value())
-            return
+            if msg['device_id'] == device_id:
+                led.value(not led.value())
+                return
         elif topic == b'cfg/reset':
-            local_ctx['reload_required'] = True
-            return
+            if msg['device_id'] == device_id:
+                local_ctx['reload_required'] = True
+                return
 
         if unit_code is not None:
             unit_code._callback(topic, msg)
@@ -158,7 +160,7 @@ def main(config):
     mqttc.set_callback(mqtt_callback)
     mqttc.connect()
 
-    mqttc.subscribe('cfg/update')
+    mqttc.subscribe('cfg/reset')
     mqttc.subscribe('cfg/ping')
 
     while True:

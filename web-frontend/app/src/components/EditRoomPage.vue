@@ -80,17 +80,17 @@
                       <v-container>
                         <v-form ref="deviceForm">
                           <v-row>
-                            <v-col cols="12" sm="6" md="4">
+                            <v-col cols="12" sm="6" md="6">
                               <v-text-field
                                 :rules="[v => !!v || 'Наименование обязательно']"
                                 v-model="deviceEditItem.name"
                                 label="Наименование"
                               ></v-text-field>
                             </v-col>
-                            <v-col cols="12" sm="6" md="4" v-if="deviceEditItem.id">
+                            <v-col cols="12" sm="6" md="6" v-if="deviceEditItem.id">
                               <v-text-field v-model="deviceEditItem.id" label="ID" readonly></v-text-field>
                             </v-col>
-                            <!-- <v-col cols="12" sm="6" md="4">
+                            <!-- <v-col cols="12" sm="6" md="6">
                               <v-select
                                 v-model="deviceEditItem.type"
                                 :rules="[v => !!v || 'Тип обязателен']"
@@ -100,7 +100,7 @@
                                 label="Тип"
                               ></v-select>
                             </v-col> -->
-                            <v-col cols="12" sm="6" md="4">
+                            <!-- <v-col cols="12" sm="6" md="6">
                               <v-select
                                 disabled
                                 v-model="deviceEditItem.place_id"
@@ -110,7 +110,7 @@
                                 :item-value="itemId"
                                 label="Помещение"
                               ></v-select>
-                            </v-col>
+                            </v-col> -->
                           </v-row>
                         </v-form>
                       </v-container>
