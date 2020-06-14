@@ -12,7 +12,7 @@ from flask_socketio import SocketIO, join_room, leave_room
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-import api_server.database as asdb
+import database as asdb
 
 
 socketio = SocketIO(cors_allowed_origins="*")
