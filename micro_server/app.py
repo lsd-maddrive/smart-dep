@@ -1,7 +1,3 @@
-# For local debug
-import sys
-sys.path.append('../db')
-
 import logging
 from wsgi import create_app
 
