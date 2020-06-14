@@ -1,6 +1,5 @@
 import time
-import ujson as json
-from machine import Pin
+
 
 class Code():
     def __init__(self, config):
@@ -17,17 +16,17 @@ class Code():
         self.last_send_time = time.time()
 
         self.is_enabled = False
-        self.device = Pin(2, Pin.OUT)
+        # self.device = Pin(2, Pin.OUT)
 
     def subscribe(self, mqttc):
+        print('Subscribe to {}'.format(self.cmd_topic))
         mqttc.subscribe(self.cmd_topic)
-        mqttc.subscribe(self.cfg_topic)
 
-    def _callback(self, topic, msg):
+    def callback(self, topic, msg):
         print('Callback data: {} / {}'.format(topic, msg))
         device_id = msg.get('device_id')
         if device_id == self.device_id:
-            cmd = msg.get('cmd')
+            cmd = msg.get('data')
             if cmd is None:
                 return
 
@@ -36,25 +35,29 @@ class Code():
                 return
 
             self.is_enabled = enable
+            # To send permanently
+            self.last_send_time = -1
+            print('Device "light" ({}) switched to {}'.format(
+                self.device_id, self.is_enabled))
 
-    def _send_state(self, state, mqttc):
-        msg = {
-            'device_id': self.device_id,
-            'state': state
-        }
-        mqttc.publish(self.state_topic, json.dumps(msg))
-
-    def step(self, mqttc):
+    def step(self, send):
         # if not self.is_enabled:
         #     self.device.on()
         # else:
         #     self.device.off()
 
         ts = time.time()
-        if ts - self.last_send_time > self.period:
+        if (ts - self.last_send_time) > self.period or \
+                self.last_send_time < 0:
+
             self.last_send_time = ts
-            self._send_state({
-                'enabled': self.is_enabled
-            }, mqttc)
+
+            msg = {
+                'device_id': self.device_id,
+                'state': {
+                    'enabled': self.is_enabled
+                }
+            }
+            send(self.state_topic, msg)
 
         return True

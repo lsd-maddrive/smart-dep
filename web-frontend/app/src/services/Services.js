@@ -37,7 +37,7 @@ const realServices = {
 
   getDevicesLastStates(place) {
     // Seconds
-    return Api().get('/place/' + place.id + '/states', { params: { duration_s: 5 * 60 } })
+    return Api().get('/device/states/' + place.id, { params: { duration_s: 5 * 60 } })
   },
 
   login(user) {
@@ -51,7 +51,7 @@ const realServices = {
     return Api().post('/device/ping', device)
   },
   sendCommand(command) {
-    return Api().post('/cmd', command)
+    return Api().post('/device/cmd', command)
   },
 
   isDebug() {

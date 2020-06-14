@@ -66,7 +66,7 @@ def receive_subapp_code(host, device_type):
         from unit import Code
         return Code
     except Exception as e:
-        print('Failed to get registration data: {}'.format(e))
+        print('Failed to get unit code: {}'.format(e))
 
     return None
 
@@ -155,7 +155,7 @@ def main(config):
                 return
 
         if unit_code is not None:
-            unit_code._callback(topic, msg)
+            unit_code.callback(topic, msg)
 
     mqttc.set_callback(mqtt_callback)
     mqttc.connect()
@@ -163,12 +163,18 @@ def main(config):
     mqttc.subscribe('cfg/reset')
     mqttc.subscribe('cfg/ping')
 
+    def send(topic, data):
+        mqttc.publish(topic, json.dumps(data))
+
+    if unit_code is not None:
+        res = unit_code.subscribe(mqttc)
+
     while True:
         if local_ctx['reload_required']:
             return 1
 
         if unit_code is not None:
-            res = unit_code.step(mqttc)
+            res = unit_code.step(send)
 
         mqttc.check_msg()
         time.sleep(0.1)

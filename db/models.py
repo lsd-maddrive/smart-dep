@@ -10,49 +10,44 @@ metadata = MetaData()
 Model = declarative_base(metadata=metadata)
 
 
-class Commands(Model):
+class Command(Model):
     __tablename__ = 'commands'
 
     id = Column(Integer, primary_key=True)
     timestamp = Column(DateTime)
     command = Column(JSONB)
-    device_id = Column(String(50))
-    place_id = Column(String(20))
-    type = Column(String(10))
+    device_id = Column(ForeignKey("devices.id"))
 
     def __repr__(self):
-        return f"Command Type: {self.type}, Device ID: {self.device_id} \
-                 DateTime: {self.timestamp}, Place ID: {self.place_id}"
+        return f"Command | Device ID: {self.device_id}, DateTime: {self.timestamp}, Cmd: {self.command}"
 
 
-class Configs(Model):
+class Config(Model):
     __tablename__ = "configs"
 
     id = Column(Integer, primary_key=True)
     timestamp = Column(DateTime)
     config = Column(JSONB)
-    device_id = Column(String(50))
-    place_id = Column(String(20))
-    type = Column(String(10))
+    device_id = Column(ForeignKey("devices.id"))
 
     def __repr__(self):
-        return f"Params Type: {self.type}, Device ID: {self.device_id} \
-                 DateTime: {self.timestamp}, Place ID: {self.place_id}"
+        return f"Params | Device ID: {self.device_id}, DateTime: {self.timestamp}, Cfg: {self.config}"
 
-
-class States(Model):
+class State(Model):
     __tablename__ = "states"
 
     id = Column(Integer, primary_key=True)
     timestamp = Column(DateTime)
     state = Column(JSONB)
-    device_id = Column(String(20))
-    place_id = Column(String(20))
-    type = Column(String(10))
+    device_id = Column(ForeignKey("devices.id"), nullable=False)
+
+    device = relationship('Device')
+
+    def get_did(self):
+        return str(self.device_id)
 
     def __repr__(self):
-        return f"State Type: {self.type}, Device ID: {self.device_id} \
-                 DateTime: {self.timestamp}, Place ID: {self.place_id}"
+        return f"State | Device ID: {self.device_id}, DateTime: {self.timestamp}, State: {self.state}, Device: {self.device}"
 
 
 class Place(Model):
@@ -93,6 +88,9 @@ class Device(Model):
     config = Column(JSONB)
 
     place = relationship("Place", back_populates="devices")
+
+    def get_id(self):
+        return str(self.id)
 
     def __repr__(self):
         return f"Device | ID: {self.id}, UID: {self.unique_id}, PlaceID: {self.place_id}, RegDate: {self.register_date}, IP: {self.ip_addr}, Type: {self.type}, Installed: {self.is_installed}, Config: {self.config}"

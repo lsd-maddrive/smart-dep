@@ -104,7 +104,7 @@ export default new Vuex.Store({
       })
     },
 
-    startSocketLink({state}) {
+    startSocketLink({ state }) {
       const placeId = state.currentPlaceId
 
       /**
@@ -127,7 +127,13 @@ export default new Vuex.Store({
       commit,
       dispatch
     }, payload) {
-      dispatch("processInputStates", payload)
+      for (let state of payload) {
+        if (['light', 'power'].indexOf(state.type) != -1) {
+          commit('setDeviceState', state)
+        } else if (state.type == "env") {
+          commit('environ/setExtState', state)
+        }
+      }
     },
 
     syncDeviceStates({
@@ -142,7 +148,13 @@ export default new Vuex.Store({
           id: placeId
         }).then(
           response => {
-            dispatch("processInputStates", response.data)
+            for (let state of response.data) {
+              if (['light', 'power'].indexOf(state.type) != -1) {
+                commit('addDevice', state)
+              } else if (state.type == "env") {
+                commit('environ/setExtState', state)
+              }
+            }
             resolve()
           },
           error => {
@@ -151,19 +163,6 @@ export default new Vuex.Store({
           }
         )
       })
-    },
-
-    processInputStates({
-      commit,
-      dispatch
-    }, states) {
-      for (let state of states) {
-        if (['light', 'power'].indexOf(state.type) != -1) {
-          commit('setDeviceState', state)
-        } else if (state.type == "env") {
-          commit('environ/setExtState', state)
-        }
-      }
     },
 
     commandState({
@@ -176,7 +175,7 @@ export default new Vuex.Store({
       // Append PlaceID to know where to send
       deviceState.place_id = state.currentPlaceId
       deviceState.cmd = {
-        enabled: data.enabled
+        enable: data.enabled
       }
       deviceState.ts = new Date().getTime() / 1000
       deviceState.source_id = 'browser'
@@ -208,10 +207,12 @@ export default new Vuex.Store({
       state.deviceStates = []
     },
 
+    addDevice(state, deviceState) {
+      state.deviceStates.push(deviceState)
+    },
     setDeviceState(state, deviceState) {
-      let unit = state.deviceStates.find(dst => dst.id == deviceState.device_id)
+      let unit = state.deviceStates.find(dst => dst.device_id == deviceState.device_id)
       if (typeof unit === 'undefined') {
-        state.deviceStates.push(deviceState)
       } else {
         unit.state = deviceState.state
       }

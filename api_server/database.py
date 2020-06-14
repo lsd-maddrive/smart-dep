@@ -1,56 +1,42 @@
+from db.models import metadata, State, Place, Device
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import desc
 from sqlalchemy import distinct
 from sqlalchemy.orm import Session
 from datetime import datetime
 
-from db.models import metadata, States, Place, Device
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
 
 db = SQLAlchemy(metadata=metadata)
 
 
-def get_last_states(start_ts, place_id, type_, db_session=db.session):
+def get_last_states(start_ts, place_id, db_session=db.session):
     """
         Get last states from DB in defined period of time
         from check time till now for defined place and type
 
 
         Args:
-            check_time (datetime):   the lower bound of time
+            start_ts (timestamp):    the lower bound of time
             place_id (str):          number/name of place
-            type_ (str):             type of interaction [light, env, power]
             db_session (sqlalchemy.orm.session.Session): session object
 
         Returns:
             Query object that containts unique data for each
             device in defined period of time
     """
-    return db_session.query(States). \
-        filter(States.timestamp >= start_ts). \
-        filter(States.place_id == place_id). \
-        filter(States.type == type_). \
-        order_by(States.device_id, States.timestamp.desc()). \
-        distinct(States.device_id).all()
+    return db_session.query(State) \
+        .filter(State.timestamp >= start_ts) \
+        .order_by(State.device_id, State.timestamp.desc()) \
+        .distinct(State.device_id).all()
+        # .filter(State.device.place_id == place_id) \
 
+# Places
 
-def get_devices_states(check_time, db_session=db.session):
-    """
-        Get last states for all unique devices in defined
-        period of time
-
-        Args:
-            check_time (datetime): the lower bound of time
-            db_session (sqlalchemy.orm.session.Session): session object
-
-        Returns:
-            Query object that containts data for each unique device
-    """
-    return db_session.query(States). \
-        filter(States.timestamp >= check_time). \
-        order_by(States.device_id, States.timestamp.desc()). \
-        distinct(States.device_id)
-
-### Places
 
 def get_places(db_session=db.session):
     return db_session.query(Place).all()
@@ -63,12 +49,12 @@ def create_place(place_info, db_session=db.session):
         create_date=datetime.utcnow(),
 
         # TODO - use .get() with defaults
-        attr_os = place_info['attr_os'],
-        attr_software = place_info['attr_software'],
-        attr_people = place_info['attr_computers'],
-        attr_computers = place_info['attr_people'],
-        attr_blackboard = place_info['attr_board'],
-        attr_projector = place_info['attr_projector']
+        attr_os=place_info['attr_os'],
+        attr_software=place_info['attr_software'],
+        attr_people=place_info['attr_computers'],
+        attr_computers=place_info['attr_people'],
+        attr_blackboard=place_info['attr_board'],
+        attr_projector=place_info['attr_projector']
     )
 
     db_session.add(place)
@@ -100,7 +86,8 @@ def delete_place(place_info, db_session=db.session):
     db_session.delete(place)
     db_session.commit()
 
-### Devices
+# Devices
+
 
 def update_device(device_info, db_session=db.session):
     device = db_session.query(Device).get(device_info['id'])
@@ -114,6 +101,7 @@ def update_device(device_info, db_session=db.session):
     device.config = device_info['config']
 
     db_session.commit()
+
 
 def delete_device(device_info, db_session=db.session):
     device = db_session.query(Device).get(device_info['id'])
@@ -129,6 +117,7 @@ def delete_device(device_info, db_session=db.session):
 
     db_session.commit()
 
+
 def get_devices(place_id=None, db_session=db.session):
     q = db_session.query(Device) \
         .filter(Device.is_installed == True)
@@ -137,6 +126,7 @@ def get_devices(place_id=None, db_session=db.session):
         q = q.filter(Device.place_id == place_id)
 
     return q.all()
+
 
 def get_new_devices(db_session=db.session):
     return db_session.query(Device). \

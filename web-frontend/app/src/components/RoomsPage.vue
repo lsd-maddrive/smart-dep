@@ -15,10 +15,10 @@
             <!-- <v-card-text class="text-center">Комната {{ place.name }}</v-card-text> -->
             <v-card-actions>
               <v-btn
-                block
                 color="primary"
+                text
                 :to="{name: 'RoomControl', params: {id: place.id}}"
-              >Состояние</v-btn>
+              >Управление</v-btn>
             </v-card-actions>
           </v-card>
         </v-col>

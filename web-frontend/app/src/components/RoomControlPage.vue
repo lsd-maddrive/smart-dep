@@ -1,7 +1,7 @@
 <template>
   <v-main>
     <h1>
-      Комната {{ place_name }}
+      Помещение {{ place_name }}
       <v-btn
         class="ml-2"
         icon
@@ -64,13 +64,13 @@ export default {
             }
           );
 
-          this.$store.dispatch("environ/syncData", { placeId: placeId }).then(
-            resp => {},
-            err => {
-              console.log(err);
-              this.$toasted.error("Не удалось обновить состояние окружения =(");
-            }
-          );
+          // this.$store.dispatch("environ/syncData", { placeId: placeId }).then(
+          //   resp => {},
+          //   err => {
+          //     console.log(err);
+          //     this.$toasted.error("Не удалось обновить состояние окружения =(");
+          //   }
+          // );
 
           this.$store.dispatch("startSocketLink");
         },

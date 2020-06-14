@@ -1,6 +1,6 @@
 import logging
 from pprint import pformat
-import time 
+import time
 
 import pytest
 
@@ -14,7 +14,7 @@ def test_socketio_data(sio_client):
         'place_id': '8201',
         'period': 1
     }
-    time_2_sleep = 3 
+    time_2_sleep = 3
 
     expected_obj = {
         'args': [[
@@ -24,7 +24,7 @@ def test_socketio_data(sio_client):
                     'enabled': False
                 },
                 'type': 'env'
-            }, 
+            },
             {
                 'device_id': '11:11:11:11:11:11',
                 'state': {
@@ -53,11 +53,11 @@ def test_socketio_data(sio_client):
     time.sleep(time_2_sleep)
     data = sio_client.get_received()
     sio_client.emit('disconnect')
-    
-    first_time = data[0]['args'][0][3]['time'].second
-    last_time = data[2]['args'][0][3]['time'].second
 
-    # remove time from data to be able compare only data 
+    first_time = data[0]['args'][0][3]['emit_time']
+    last_time = data[2]['args'][0][3]['emit_time']
+
+    # remove time from data to be able compare only data
     for d in data:
         d['args'][0].pop(3)
 

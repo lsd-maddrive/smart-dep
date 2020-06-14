@@ -6,7 +6,7 @@ from sqlalchemy import desc
 from sqlalchemy import distinct
 from sqlalchemy.orm import Session
 
-from models import metadata, States, Device
+from models import metadata, State, Device
 
 db = SQLAlchemy(metadata=metadata)
 

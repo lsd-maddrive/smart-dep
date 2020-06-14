@@ -1,7 +1,8 @@
-from datetime import date, datetime
+import datetime
 import json
 import logging
 import os
+import time
 
 from flask import request, current_app
 from flask_restplus import Resource, Namespace, fields
@@ -19,36 +20,6 @@ _model_state = api.model('State', {
     'device_id': fields.String,
     'type': fields.String
 })
-
-
-@api.route('/place/<string:place_id>/states', endpoint='units_states')
-@api.param('place_id', 'ID of place')
-class LightUnits(Resource):
-    # @api.marshal_with(_model_state, as_list=True)
-    def get(self, place_id):
-        back_duration_s = request.args.get('duration_s', 5*60)
-
-        start_ts = datetime.now() - back_duration_s
-
-        states = asdb.get_last_states(
-            start_ts, place_id, 'light'
-        )
-
-        result_states = []
-        for st in states:
-            result_states.append(
-                {
-                    'device_id': st.device_id,
-                    'type': st.type,
-                    'state': st.state,
-                    'ts': time.time(),
-                    # 'place_id': place_id
-                }
-            )
-
-        logger.debug(f"Requested devices states: {result_states}")
-
-        return result_states
 
 
 _model_place_get = api.model('Place_get', {
@@ -86,7 +57,7 @@ class Places(Resource):
                 'attr_projector': place.attr_projector,
             })
 
-        logger.debug(f"Requested places: {result_places}")
+        logger.debug(f"Request places: {result_places}")
 
         return result_places
 
@@ -111,33 +82,6 @@ class Places(Resource):
         logger.debug(f"Request to delete place:\n{pformat(place_info)}")
 
         asdb.delete_place(place_info)
-
-
-@api.route('/cmd/<string:place_id>', endpoint='command')
-@api.param('place_id', 'ID of place')
-class CommandResender(Resource):
-    def post(self, place_id):
-        logger.debug('COMMAND RESENDER HERE')
-        data = request.get_json()
-        logger.debug(f'Received command: {data}')
-
-        uri = current_app.config['RABBITMQ_URI']
-        logger.debug(f"Connect to RabbitMQ {uri}")
-        with Connection(uri) as conn:
-            logger.debug('>>>>Connection received!')
-            channel = conn.channel()
-            exchange = Exchange('commands', type='topic', durable=True)
-
-            place_id = data['place_id']
-            type_ = data['type']
-            routing_key = f'cmd.{place_id}.{type_}'
-            # TODO - Message update
-            message = json.dumps(data)
-
-            producer = Producer(exchange=exchange,
-                                channel=channel, routing_key=routing_key)
-            producer.publish(message)
-        return f'Message sent: {message}'
 
 
 _model_device_types = api.model('Device_types', {
@@ -188,6 +132,41 @@ _model_device_new = api.model('Device_new', {
 })
 
 
+@api.route('/device/states/<string:place_id>', endpoint='devices_states')
+@api.param('place_id', 'ID of place')
+class UnitsStates(Resource):
+    # @api.marshal_with(_model_state, as_list=True)
+    def get(self, place_id):
+        try:
+            back_duration_s = int(request.args.get('duration_s', 5*60))
+        except:
+            back_duration_s = 5*60
+
+        logger.debug(f'Requested device states for place: {place_id}')
+        start_ts = datetime.datetime.now() - datetime.timedelta(seconds=back_duration_s)
+
+        states = asdb.get_last_states(
+            start_ts, place_id
+        )
+        logger.debug(f"Received states: {states}")
+
+        result_states = []
+        for st in states:
+            result_states.append(
+                {
+                    'device_id': st.get_did(),
+                    'name': st.device.name,
+                    'type': st.device.type,
+                    'state': st.state,
+                    'ts': st.timestamp.timestamp(),
+                }
+            )
+
+        logger.debug(f"Request devices states: {result_states}")
+
+        return result_states
+
+
 @api.route('/device/new', endpoint='new_devices')
 class DevicesNew(Resource):
     @api.expect(_model_device_new, as_list=True)
@@ -197,12 +176,12 @@ class DevicesNew(Resource):
         result = []
         for dev in devices:
             result.append({
-                'id': str(dev.id),
+                'id': dev.get_id(),
                 'ip_addr': dev.ip_addr,
                 'reg_ts': dev.register_date.timestamp()
             })
 
-        logger.debug(f"Requested new devices:\n{pformat(result)}")
+        logger.debug(f"Request new devices:\n{pformat(result)}")
 
         return result
 
@@ -237,13 +216,13 @@ class Device(Resource):
     # @api.marshal_with(_model_device_get_out, as_list=True)
     def get(self):
         place_id = request.args.get('place_id')
-        logger.debug(f"Requested devices for place: {place_id}")
+        logger.debug(f"Request devices for place: {place_id}")
 
         devices = asdb.get_devices(place_id)
 
-        result = []
+        result_devices = []
         for dev in devices:
-            result.append({
+            result_devices.append({
                 'id': str(dev.id),
                 'name': dev.name,
                 'type': dev.type,
@@ -251,37 +230,24 @@ class Device(Resource):
                 'config': dev.config,
             })
 
-        logger.debug(f"Requested devices: {result}")
-
-        return result
+        logger.debug(f"Request devices: {result_devices}")
+        return result_devices
 
     @api.expect(_model_device_upd, validate=True)
     def put(self):
         device_info = request.get_json()
-        logger.debug(f"Requested to update device:\n{pformat(device_info)}")
+        logger.debug(f"Request to update device:\n{pformat(device_info)}")
 
         asdb.update_device(device_info)
-
-        uri = current_app.config['RABBITMQ_URI']
-        logger.debug(f"Connect to RabbitMQ {uri}")
-        with Connection(uri) as conn:
-            exchange = Exchange('configurations', type='topic', durable=True)
-            producer = Producer(exchange=exchange,
-                                channel=conn.channel(),
-                                routing_key=f'cfg.reset')
-
-            message = json.dumps({
-                'device_id': device_info['id']
-            })
-            producer.publish(message)
-        return 200
+        rabbit_reset_device(device_info['id'])
 
     @api.expect(_model_device_del, validate=True)
     def delete(self):
         device_info = request.get_json()
-        logger.debug(f"Requested to delete device:\n{pformat(device_info)}")
+        logger.debug(f"Request to delete device:\n{pformat(device_info)}")
 
         asdb.delete_device(device_info)
+        rabbit_reset_device(device_info['id'])
 
 
 _model_ping_in = api.model('Ping_in', {
@@ -294,20 +260,77 @@ class DevicePing(Resource):
     @api.expect(_model_ping_in)
     def post(self):
         device = request.get_json()
-        logger.debug(f'Received ping: {device}')
+        logger.debug(f'Request to ping: {device}')
 
-        uri = current_app.config['RABBITMQ_URI']
-        logger.debug(f"Connect to RabbitMQ {uri}")
-        with Connection(uri) as conn:
-            channel = conn.channel()
-            exchange = Exchange('configurations', type='topic', durable=True)
+        rabbit_ping_device(device['id'])
 
-            # Reformatted message
-            message = json.dumps({
-                'device_id': device['id']
-            })
-            producer = Producer(exchange=exchange,
-                                channel=channel,
-                                routing_key=f'cfg.ping')
-            producer.publish(message)
-        return 200
+
+@api.route('/device/cmd', endpoint='device_cmd')
+class DeviceCommand(Resource):
+    def post(self):
+        data = request.get_json()
+        logger.debug(f'Request to send command: {data}')
+
+        place_id = data['place_id']
+        type_ = data['type']
+        device_id = data['device_id']
+        cmd = data['cmd']
+
+        rabbit_send_command(
+            device_id,
+            place_id,
+            type_,
+            cmd
+        )
+
+# RabbitMQ functions
+
+
+def rabbit_ping_device(device_id):
+    uri = current_app.config['RABBITMQ_URI']
+    logger.debug(f"Connect to RabbitMQ {uri}")
+    with Connection(uri) as conn:
+        exchange = Exchange('configurations', type='topic', durable=True)
+        producer = Producer(exchange=exchange,
+                            channel=conn.channel(),
+                            routing_key=f'cfg.ping')
+
+        message = json.dumps({
+            'device_id': device_id
+        })
+        producer.publish(message)
+
+
+def rabbit_reset_device(device_id):
+    uri = current_app.config['RABBITMQ_URI']
+    logger.debug(f"Connect to RabbitMQ {uri}")
+    with Connection(uri) as conn:
+        exchange = Exchange('configurations', type='topic', durable=True)
+        producer = Producer(exchange=exchange,
+                            channel=conn.channel(),
+                            routing_key=f'cfg.reset')
+
+        message = json.dumps({
+            'device_id': device_id
+        })
+        producer.publish(message)
+
+
+def rabbit_send_command(device_id, place_id, type_, cmd):
+    uri = current_app.config['RABBITMQ_URI']
+    logger.debug(f"Connect to RabbitMQ {uri}")
+
+    with Connection(uri) as conn:
+        channel = conn.channel()
+        exchange = Exchange('commands', type='topic', durable=True)
+        producer = Producer(exchange=exchange,
+                            channel=channel,
+                            routing_key=f'cmd.{place_id}.{type_}')
+
+        message = json.dumps({
+            'device_id': device_id,
+            'data': cmd
+        })
+
+        producer.publish(message)
+    return f'Message sent: {message}'
