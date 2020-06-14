@@ -26,8 +26,7 @@ def set_device_enabled_info(unique_id, device_id, info, db_session=db.session):
         device.ip_addr = info['ip_addr']
     device.enabled_date = datetime.utcnow()
 
-    commit(db_session)
-
+    db_session.commit()
     return device
 
 

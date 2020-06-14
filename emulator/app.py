@@ -71,6 +71,8 @@ def enable_device(host, data):
     except Exception as e:
         logger.debug('Failed to get enable data: {}'.format(e))
 
+    return None, False
+
 
 def receive_subapp_code(host, device_type):
     try:
