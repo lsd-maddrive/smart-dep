@@ -74,7 +74,7 @@ services:
             - "config/.env.${SMART_ENV:-dev}"
         environment:
             - DMINUTES=5
-            - RECREATE_TABLES=True
+            # - RECREATE_TABLES=True
             - PREPARE_RABBITMQ=True
         restart: always
         # For swagger access
