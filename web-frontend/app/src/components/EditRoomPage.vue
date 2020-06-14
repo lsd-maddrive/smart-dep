@@ -4,7 +4,7 @@
     <h1 v-else>Создание комнаты</h1>
     <v-container fluid>
       <v-row justify="center">
-        <v-col cols="12" sm="8" md="6">
+        <v-col cols="12" sm="8" md="8">
           <v-form ref="placeForm">
             <v-text-field
               label="Название"
@@ -20,8 +20,66 @@
               v-model.trim="place.num"
               :rules="numRules"
               name="login"
+              type="text"
               required
             ></v-text-field>
+
+            <v-row>
+              <v-col cols="6" sm="6" md="6">
+                <v-switch v-model="place.attr.projector" class="mx-2" label="Проектор"></v-switch>
+              </v-col>
+              <v-col cols="6" sm="6" md="6">
+                <v-switch v-model="place.attr.board" class="mx-2" label="Доска"></v-switch>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col cols="6" sm="6" md="6">
+                <v-text-field
+                  label="Вместимость"
+                  v-model="place.attr.people"
+                  :rules="[v => !!v || 'Количество обязательно']"
+                  type="number"
+                  required
+                ></v-text-field>
+              </v-col>
+              <v-col cols="6" sm="6" md="6">
+                <v-text-field
+                  label="Компьютеры"
+                  v-model="place.attr.computers"
+                  :rules="[v => !!v || 'Количество обязательно']"
+                  type="number"
+                  required
+                ></v-text-field>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col cols="6" sm="6" md="6">
+                <v-select
+                  v-model="place.attr.os"
+                  :rules="[v => !!v || 'ОС обязательна']"
+                  :items="operating_systems"
+                  :item-text="typeDesc"
+                  :item-value="itemId"
+                  chips
+                  attach
+                  multiple
+                  label="ОС"
+                ></v-select>
+              </v-col>
+              <v-col cols="6" sm="6" md="6">
+                <v-select
+                  v-model="place.attr.software"
+                  :rules="[v => !!v || 'ПО обязательно']"
+                  :items="software"
+                  :item-text="typeDesc"
+                  :item-value="itemId"
+                  chips
+                  attach
+                  multiple
+                  label="ПО"
+                ></v-select>
+              </v-col>
+            </v-row>
 
             <v-row justify="center">
               <v-spacer></v-spacer>
@@ -68,9 +126,9 @@
                 <v-divider class="mx-4" inset vertical></v-divider>
                 <v-spacer></v-spacer>
                 <v-dialog v-model="deviceEditDialogue" max-width="500px">
-                  <template v-slot:activator="{ on }">
+                  <!-- <template v-slot:activator="{ on }">
                     <v-btn color="primary" dark class="mb-2" @click="addDevice" v-on="on">Добавить</v-btn>
-                  </template>
+                  </template>-->
                   <v-card>
                     <v-card-title>
                       <span class="headline">{{ deviceEditTitle }}</span>
@@ -99,7 +157,7 @@
                                 :item-value="itemId"
                                 label="Тип"
                               ></v-select>
-                            </v-col> -->
+                            </v-col>-->
                             <!-- <v-col cols="12" sm="6" md="6">
                               <v-select
                                 disabled
@@ -110,7 +168,7 @@
                                 :item-value="itemId"
                                 label="Помещение"
                               ></v-select>
-                            </v-col> -->
+                            </v-col>-->
                           </v-row>
                         </v-form>
                       </v-container>
@@ -138,7 +196,7 @@
 
             <template v-slot:item.actions="{ item }">
               <v-icon small class="mr-2" @click="editDevice(item)">mdi-pencil</v-icon>
-              <v-icon small @click="deleteDevice(item)">mdi-delete</v-icon>
+              <v-icon small @click="deleteDevice(item)">mdi-undo</v-icon>
             </template>
           </v-data-table>
         </v-col>
@@ -155,7 +213,15 @@ export default {
   name: "RoomEditorCreator",
   data() {
     return {
-      place: {},
+      // Default data
+      place: {
+        attr: {
+          people: 25,
+          computers: 10,
+          os: ["windows"],
+          software: []
+        }
+      },
       loading: {
         createUpdate: false,
         delete: false,
@@ -181,7 +247,35 @@ export default {
       ],
       devices: [],
       deviceTypes: [],
-      places: []
+      places: [],
+      operating_systems: [
+        {
+          desc: "Linux",
+          id: "linux"
+        },
+        {
+          desc: "Windows",
+          id: "windows"
+        },
+        {
+          desc: "MacOS",
+          id: "mac"
+        }
+      ],
+      software: [
+        {
+          desc: "MATLAB",
+          id: "matlab"
+        },
+        {
+          desc: "MPLabX",
+          id: "mplabx"
+        },
+        {
+          desc: "LabView",
+          id: "labview"
+        }
+      ]
     };
   },
   computed: {
@@ -382,8 +476,8 @@ export default {
         resp => {
           console.log("Room " + placeId + " found!");
           // Copy to have external data copy
-          this.sourcePlace = Object.assign({}, resp);
-          this.place = Object.assign({}, resp);
+          this.sourcePlace = Object.assign(this.place, resp);
+          this.place = Object.assign(this.place, resp);
 
           // Update list of devices
           this._updateDevices();
