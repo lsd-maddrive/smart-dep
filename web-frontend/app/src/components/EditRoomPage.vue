@@ -58,8 +58,8 @@
                   v-model="place.attr_os"
                   :rules="[v => !!v || 'ОС обязательна']"
                   :items="operating_systems"
-                  :item-text="typeDesc"
-                  :item-value="itemId"
+                  item-text="desc"
+                  item-value="id"
                   chips
                   attach
                   multiple
@@ -71,8 +71,8 @@
                   v-model="place.attr_software"
                   :rules="[v => !!v || 'ПО обязательно']"
                   :items="software"
-                  :item-text="typeDesc"
-                  :item-value="itemId"
+                  item-text="desc"
+                  item-value="id"
                   chips
                   attach
                   multiple
@@ -299,9 +299,6 @@ export default {
     "devices-table": RoomDevicesTable
   },
   methods: {
-    typeDesc: item => item.desc,
-    itemId: item => item.id,
-    placeNum: item => item.num,
     cancelSubmit: function() {
       this.$router.push(this.$route.query.returnUrl || { name: "Home" });
     },
@@ -381,15 +378,15 @@ export default {
         `Вы уверены, что хотите удалить устройство ${item.id}?`
       );
       if (result) {
-        // this.$toasted.info("Удаление устройства");
+        this.$toasted.info("Сброс устройства");
         const device = Object.assign({}, item);
         Services.resetDevice(device).then(
           resp => {
             this._updateDevices();
-            // this.$toasted.success("Устройство успешно удалено!");
+            this.$toasted.success("Устройство успешно сброшено!");
           },
           error => {
-            // this.$toasted.error("Не удалось удалить устройство");
+            this.$toasted.error("Не удалось удалить устройство");
           }
         );
       }

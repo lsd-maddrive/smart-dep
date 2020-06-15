@@ -5,8 +5,11 @@ import 'vuetify/dist/vuetify.min.css'
 Vue.use(Vuetify)
 
 const opts = {
-  icons: {
-    iconfont: 'md',
+  // icons: {
+    // iconfont: 'mdi',
+  // },
+  theme: {
+    // dark: true,
   },
 }
 

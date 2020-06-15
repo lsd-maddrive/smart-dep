@@ -1,26 +1,24 @@
 <template>
-  <v-main>
-    <h1>
-      Помещение {{ place_name }}
-      <v-btn
-        class="ml-2"
-        icon
-        :to="{name: 'EditRoom', params: {id: placeId}, query: {returnUrl: this.$router.currentRoute}}"
-      >
-        <v-icon>mdi-puzzle-edit</v-icon>
-      </v-btn>
-    </h1>
-    <v-container fluid>
-      <v-row>
-        <v-col cols="12">
-          <units-panel></units-panel>
-        </v-col>
-        <v-col cols="12">
-          <env-state-panel></env-state-panel>
-        </v-col>
-      </v-row>
-    </v-container>
-  </v-main>
+  <v-container fluid>
+    <v-row>
+      <h1 class="text-center">
+        Помещение {{ place_name }}
+        <v-btn
+          class="ml-2"
+          icon
+          :to="{name: 'EditRoom', params: {id: placeId}, query: {returnUrl: this.$router.currentRoute}}"
+        >
+          <v-icon>mdi-puzzle-edit</v-icon>
+        </v-btn>
+      </h1>
+      <v-col cols="12">
+        <units-panel></units-panel>
+      </v-col>
+      <v-col cols="12">
+        <env-state-panel></env-state-panel>
+      </v-col>
+    </v-row>
+  </v-container>
 </template>
 
 <script>

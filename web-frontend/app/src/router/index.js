@@ -59,12 +59,12 @@ let router = new Router({
         requiresAuth: true
       }
     },
-    {
-      path: '/',
-      name: 'Title',
-      component: TitlePage,
-      meta: {}
-    },
+    // {
+    //   path: '/',
+    //   name: 'Title',
+    //   component: TitlePage,
+    //   meta: {}
+    // },
     {
       path: '/login',
       name: 'Login',

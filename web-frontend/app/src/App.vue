@@ -72,10 +72,10 @@
             <v-list-item-title>Option {{ n }}</v-list-item-title>
           </v-list-item>
         </v-list>
-      </v-menu> -->
+      </v-menu>-->
     </v-app-bar>
 
-    <v-navigation-drawer v-model="sidebarMenu" floating app color="primary" dark>
+    <!-- <v-navigation-drawer v-model="sidebarMenu" floating app color="primary" dark>
       <v-list-item>
         <v-list-item-content>
           <v-list-item-title class="title">Меню</v-list-item-title>
@@ -85,7 +85,7 @@
 
       <v-divider></v-divider>
 
-      <!-- <v-list dense nav>
+      <v-list dense nav>
         <v-list-item link>
           <v-list-item-icon>
             <v-icon>mdi-devices</v-icon>
@@ -96,14 +96,14 @@
             </v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-      </v-list> -->
-    </v-navigation-drawer>
+      </v-list>
+    </v-navigation-drawer>-->
 
-    <v-main>
+    <v-content>
       <v-container fluid>
         <router-view></router-view>
       </v-container>
-    </v-main>
+    </v-content>
 
     <v-footer app></v-footer>
   </v-app>
@@ -111,6 +111,7 @@
 
 <script>
 import axios from "axios";
+import { mapState } from "vuex";
 
 export default {
   name: "App",
@@ -158,12 +159,4 @@ export default {
 </script>
 
 <style>
-#app {
-  font-family: "Avenir", Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  /* margin-top: 60px; */
-}
 </style>

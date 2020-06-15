@@ -28,9 +28,9 @@ Vue.use(VuetifyToast, {
 	color: 'info', // default
 	icon: 'info',
 	iconColor: '', // default
-	classes: [
-		'body-2'
-	],
+	// classes: [
+	// 	'body-2'
+	// ],
 	timeout: 3000, // default
 	dismissable: true, // default
 	multiLine: false, // default

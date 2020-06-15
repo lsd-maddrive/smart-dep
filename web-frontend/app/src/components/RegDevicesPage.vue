@@ -41,8 +41,8 @@
                                 v-model="deviceEditItem.type_id"
                                 :rules="[v => !!v || 'Тип обязателен']"
                                 :items="deviceTypes"
-                                :item-text="typeDesc"
-                                :item-value="itemId"
+                                item-text="desc"
+                                item-value="id"
                                 label="Тип"
                               ></v-select>
                             </v-col>
@@ -51,8 +51,8 @@
                                 v-model="deviceEditItem.place_id"
                                 :rules="[v => !!v || 'Помещение обязательно']"
                                 :items="places"
-                                :item-text="placeNum"
-                                :item-value="itemId"
+                                item-text="num"
+                                item-value="id"
                                 label="Помещение"
                               >
                               </v-select>

@@ -14,7 +14,9 @@ export default new Vuex.Store({
     places: [],
     currentPlaceId: null,
     deviceStates: [],
-    deviceTypes: []
+    deviceTypes: [],
+    toasts: [],
+
   },
   modules: {
     environ,
@@ -206,6 +208,13 @@ export default new Vuex.Store({
             reject(err)
           });
       })
+    },
+
+    toast({
+      state,
+      commit
+    }, tinfo) {
+      commit('addToast', tinfo)
     }
   },
 
@@ -232,6 +241,19 @@ export default new Vuex.Store({
       } else {
         unit.state = deviceState.state
       }
+    },
+
+    addToast(state, tinfo) {
+      let def_toast = {
+        showing: true,
+        text: '',
+        timeout: 3000,
+        color: 'info'
+      }
+
+      var new_toast = Object.assign(def_toast, tinfo)
+
+      state.toasts = state.toasts.concat(new_toast);
     },
 
     /**
