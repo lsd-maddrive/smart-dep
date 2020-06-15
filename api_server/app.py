@@ -2,7 +2,6 @@ import logging
 import os
 
 from flask import Blueprint
-from flask_login import LoginManager
 from flask_restplus import Api
 from flask_cors import CORS
 
@@ -17,15 +16,6 @@ logger = logging.getLogger(__name__)
 
 app = create_app()
 db.init_app(app)
-login_manager = LoginManager(app)
-login_manager.init_app(app)
-
-
-@login_manager.user_loader
-def load_user(id):
-    logger.debug(f"Inside load_user func")
-    return load_user(id)
-
 
 socketio.init_app(app)
 

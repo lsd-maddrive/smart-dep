@@ -6,7 +6,6 @@ from pprint import pformat
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-from flask_login import UserMixin
 import jwt
 from pprint import pformat
 from sqlalchemy import MetaData, Column, Integer, String, DateTime
@@ -61,7 +60,7 @@ class States(Model):
         return f"State Type: {self.type}, Device ID: {self.device_id},\
 DateTime: {self.timestamp}, Place ID: {self.place_id}, State: {pformat(self.state)}"
     
-class Users(UserMixin, Model):
+class Users(Model):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -157,10 +156,3 @@ class BlacklistToken(Model):
 
     def __repr__(self):
         return f"<id: {self.id} token: {self.token}"
-
-
-# from api_server.app import login 
-# # # ???????????????????????????????    
-# @login.user_loader
-# def load_user(id, db_session=db.session):
-#     return db_session.query(Users).get(int(id))

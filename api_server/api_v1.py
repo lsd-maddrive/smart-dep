@@ -4,7 +4,6 @@ import logging
 import os
 
 from flask import request, current_app, flash, redirect, url_for, g
-from flask_login import current_user, login_user
 from flask_restplus import Resource, Namespace, fields, abort
 from kombu import Connection, Exchange, Producer
 from pprint import pformat
@@ -203,29 +202,29 @@ class Signup(Resource):
         return data
 
 
-@api.route('/login', methods=['GET', 'POST'])
+@api.route('/login', methods=['POST'])
 class Login(Resource):
-    def get(self):
-        username = request.json.get('username')
-        password = request.json.get('password')  
+    # def get(self):
+    #     username = request.json.get('username')
+    #     password = request.json.get('password')  
 
-        if username is None or password is None:
-            logger.critical(f"Username or password is missing")
-            # Raise a HTTPException for the given http_status_code
-            abort(400)
+    #     if username is None or password is None:
+    #         logger.critical(f"Username or password is missing")
+    #         # Raise a HTTPException for the given http_status_code
+    #         abort(400)
         
-        user = asdb.get_user_data(username)
+    #     user = asdb.get_user_data(username)
 
-        # check is user exists and password is valid 
-        if user is not None and user.check_password(password):
-            auth_header = request.headers.get('Authorization')
-            if auth_header: 
-                auth_token = auth_header.split(" ")[1]
-            else:
-                logger.critical(f"TOKEN NOT FOUND")
-                abort(400)
+    #     # check is user exists and password is valid 
+    #     if user is not None and user.check_password(password):
+    #         auth_header = request.headers.get('Authorization')
+    #         if auth_header: 
+    #             auth_token = auth_header.split(" ")[1]
+    #         else:
+    #             logger.critical(f"TOKEN NOT FOUND")
+    #             abort(400)
 
-            logger.debug(f"TOKEN: {auth_token}")
+    #         logger.debug(f"TOKEN: {auth_token}")
             # if auth_token:
                 
                 # resp = asdb.Users.decode_auth_token(auth_token)
@@ -251,15 +250,10 @@ class Login(Resource):
 
         user = asdb.get_user_data(username)
 
-        logger.debug(f"GET USER DATA - passed {user}")
-        logger.debug(f"DEBUG API {bool(user)}")
-
-        logger.debug(f"DEBUG password: {user.check_password(password)}")
-
         # check is user exists and password is valid 
         if user is not None and user.check_password(password):
-            logger.debug(f"Inside if branch")
             auth_token = user.encode_auth_token(user.id)
+
             if auth_token:
                 # TODO: fix data
                 data = {
@@ -270,6 +264,6 @@ class Login(Resource):
                 logger.debug(f"Login Post: {data}")
                 return data 
         else:
-            logger.critical(f"Login failed! User \"{username}\" doesn't existed")
+            logger.critical(f"Login failed! User \"{username}\" doesn't existed or password is invalid")
             # Raise a HTTPException for the given http_status_code
             abort(400)  

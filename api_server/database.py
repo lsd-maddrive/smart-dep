@@ -99,9 +99,9 @@ def create_user(username, password, db_session=db.session):
         logger.critical(f"Username or password is missing")
         return -1 
     user = Users(
-        username=username,
-        password=password
+        username=username
     )
+    user.set_password(password)
     logger.debug(f"User {user} - created")
     
     # user.set_password(password)

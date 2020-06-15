@@ -2,7 +2,6 @@ import ast
 import json
 import logging
 
-from flask_login import current_user, login_user
 import pytest
 import pytest_env
 
@@ -121,22 +120,22 @@ def test_login_post_non_existing_user(client):
     assert rv.status_code == 400  
 
 
-def test_login_get(client, timescaleDB):
-    test_json = {
-        'username': 'test_user',
-        'password': 'test_password'
-    }
+# def test_login_get(client, timescaleDB):
+#     test_json = {
+#         'username': 'test_user',
+#         'password': 'test_password'
+#     }
 
-    user = timescaleDB.query(Users).first()
-    user.token = user.encode_auth_token(user_id=user.id) 
+#     user = timescaleDB.query(Users).first()
+#     user.token = user.encode_auth_token(user_id=user.id) 
 
-    timescaleDB.flush()
+#     timescaleDB.flush()
 
-    logger.debug(f"TEST TOKEN: {user.token}\n{type((user.token))}")
+#     logger.debug(f"TEST TOKEN: {user.token}\n{type((user.token))}")
 
-    rv = client.get('http://localhost:5000/api/v1/login',
-                    headers={'Authorization': 'Bearer ' + user.token}, json=test_json
-    )
+#     rv = client.get('http://localhost:5000/api/v1/login',
+#                     headers={'Authorization': 'Bearer ' + user.token}, json=test_json
+#     )
 
-    assert True 
+#     assert True 
     

@@ -2,7 +2,6 @@ import os
 from datetime import datetime
 import logging
 
-from flask_login import LoginManager
 from flask_restplus import Api
 from pprint import pformat
 import pytest
@@ -101,34 +100,11 @@ def flask_app(test_db, timescaleDB):
     logger.debug(f'Test App DB: {app.config["SQLALCHEMY_DATABASE_URI"]}')
     db.init_app(app)
 
-    login_manager = LoginManager(app)
-    login_manager.init_app(app)
-
-    @login_manager.user_loader
-    def load_user(id):
-        logger.debug(f"Inside TEST load_user func")
-        return load_user(id)
-
     socketio.init_app(app)
     api = Api(app)
     api.add_namespace(ns)
 
     return app
-
-@pytest.fixture(scope='session')
-def login_manager(flask_app):
-    login_manager = LoginManager(flask_app)
-    login_manager.init_app(flask_app)
-
-    @login_manager.user_loader
-    def load_user(id):
-        logger.debug(f"Inside TEST load_user func")
-        return load_user(id)
-
-    return login_manager
-
-
-
 
 
 @pytest.fixture(scope='function')
