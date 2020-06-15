@@ -35,7 +35,7 @@ export default new Vuex.Store({
     },
     getDeviceById: (state, getters) => (id) => {
       return state.deviceStates.find(
-        dev => dev.id == id
+        dev => dev.device_id == id
       )
     }
   },
@@ -96,7 +96,6 @@ export default new Vuex.Store({
             if (place === undefined) {
               reject("Not found in list")
             } else {
-              console.log("Found: " + place.id)
               resolve(place)
             }
           }).catch((err) => {
@@ -191,7 +190,7 @@ export default new Vuex.Store({
 
       const deviceState = Object.assign({}, getters.getDeviceById(data.id));
       // Append PlaceID to know where to send
-      deviceState.place_id = state.currentPlaceId
+      deviceState.place_id = parseInt(state.currentPlaceId, 10)
       deviceState.cmd = {
         enable: data.enabled
       }
@@ -221,7 +220,6 @@ export default new Vuex.Store({
   mutations: {
     SOCKET_CONNECT(state) {
       state.isConnected = true;
-      console.log("Socket connected")
     },
 
     SOCKET_DISCONNECT(state) {
@@ -233,6 +231,12 @@ export default new Vuex.Store({
     },
 
     addDevice(state, deviceState) {
+      if (deviceState.type == "light") {
+        deviceState.icon_name = 'mdi-lightbulb-on'
+      } else if (deviceState.type == "power") {
+        deviceState.icon_name = 'mdi-lightning-bolt'
+      }
+
       state.deviceStates.push(deviceState)
     },
     setDeviceState(state, deviceState) {

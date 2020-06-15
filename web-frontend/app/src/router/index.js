@@ -52,7 +52,7 @@ let router = new Router({
       }
     },
     {
-      path: '/devices',
+      path: '/newdevices',
       name: 'RegDevices',
       component: RegDevicesPage,
       meta: {

@@ -22,14 +22,7 @@ export default {
     },
     icon() {
       const deviceState = this.$store.getters[`getDeviceById`](this.id);
-      if (deviceState) {
-        if (deviceState.type == "light") {
-          return "mdi-lightbulb-on";
-        } else if (deviceState.type == "power") {
-          return "mdi-lightning-bolt";
-        }
-      }
-      return "";
+      return deviceState ? deviceState.icon_name : "";
     },
     enabled: {
       get() {
@@ -53,7 +46,7 @@ export default {
   },
   methods: {},
   mounted() {
-    console.log(`Created  device ${this.id}`)
+    console.log(`Created  device ${this.id}`);
   }
 };
 </script>
