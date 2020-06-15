@@ -1,97 +1,94 @@
 <template>
-  <v-app id="inspire">
-    <h1>Новые устройства</h1>
-    <v-container fluid>
-      <v-row justify="center">
-        <v-col cols="12">
-          <v-data-table
-            :headers="headers"
-            :items="devices"
-            item-key="name"
-            :loading="loading.table"
-            loading-text="Загружаю устройства"
-            class="elevation-1"
-          >
-            <template v-slot:top>
-              <v-toolbar flat color="white">
-                <v-toolbar-title>Устройства</v-toolbar-title>
-                <v-divider class="mx-4" inset vertical></v-divider>
-                <v-spacer></v-spacer>
-                <v-dialog v-model="deviceEditDialogue" max-width="500px">
-                  <v-card>
-                    <v-card-title>
-                      <span class="headline">Обновление устройства</span>
-                    </v-card-title>
-                    <v-card-text>
-                      <v-container>
-                        <v-form ref="deviceForm">
-                          <v-row>
-                            <v-col cols="12" sm="6" md="6">
-                              <v-text-field
-                                :rules="[v => !!v || 'Наименование обязательно']"
-                                v-model="deviceEditItem.name"
-                                label="Наименование"
-                              ></v-text-field>
-                            </v-col>
-                            <v-col cols="12" sm="6" md="6" v-if="deviceEditItem.id">
-                              <v-text-field v-model="deviceEditItem.id" label="ID" readonly></v-text-field>
-                            </v-col>
-                            <v-col cols="12" sm="6" md="6">
-                              <v-select
-                                v-model="deviceEditItem.type_id"
-                                :rules="[v => !!v || 'Тип обязателен']"
-                                :items="deviceTypes"
-                                item-text="desc"
-                                item-value="id"
-                                label="Тип"
-                              ></v-select>
-                            </v-col>
-                            <v-col cols="12" sm="6" md="6">
-                              <v-select
-                                v-model="deviceEditItem.place_id"
-                                :rules="[v => !!v || 'Помещение обязательно']"
-                                :items="places"
-                                item-text="num"
-                                item-value="id"
-                                label="Помещение"
-                              >
-                              </v-select>
-                            </v-col>
-                          </v-row>
-                        </v-form>
-                      </v-container>
-                    </v-card-text>
+  <v-container fluid>
+    <h1 class="text-center">Новые устройства</h1>
+    <v-row justify="center">
+      <v-col cols="12">
+        <v-data-table
+          :headers="headers"
+          :items="devices"
+          item-key="name"
+          :loading="loading.table"
+          loading-text="Загружаю устройства"
+          class="elevation-1"
+        >
+          <template v-slot:top>
+            <v-toolbar flat color="white">
+              <v-toolbar-title>Устройства</v-toolbar-title>
+              <v-divider class="mx-4" inset vertical></v-divider>
+              <v-spacer></v-spacer>
+              <v-dialog v-model="deviceEditDialogue" max-width="500px">
+                <v-card>
+                  <v-card-title>
+                    <span class="headline">Обновление устройства</span>
+                  </v-card-title>
+                  <v-card-text>
+                    <v-container>
+                      <v-form ref="deviceForm">
+                        <v-row>
+                          <v-col cols="12" sm="6" md="6">
+                            <v-text-field
+                              :rules="[v => !!v || 'Наименование обязательно']"
+                              v-model="deviceEditItem.name"
+                              label="Наименование"
+                            ></v-text-field>
+                          </v-col>
+                          <v-col cols="12" sm="6" md="6" v-if="deviceEditItem.id">
+                            <v-text-field v-model="deviceEditItem.id" label="ID" readonly></v-text-field>
+                          </v-col>
+                          <v-col cols="12" sm="6" md="6">
+                            <v-select
+                              v-model="deviceEditItem.type_id"
+                              :rules="[v => !!v || 'Тип обязателен']"
+                              :items="deviceTypes"
+                              item-text="desc"
+                              item-value="id"
+                              label="Тип"
+                            ></v-select>
+                          </v-col>
+                          <v-col cols="12" sm="6" md="6">
+                            <v-select
+                              v-model="deviceEditItem.place_id"
+                              :rules="[v => !!v || 'Помещение обязательно']"
+                              :items="places"
+                              item-text="num"
+                              item-value="id"
+                              label="Помещение"
+                            ></v-select>
+                          </v-col>
+                        </v-row>
+                      </v-form>
+                    </v-container>
+                  </v-card-text>
 
-                    <v-card-actions>
-                      <v-spacer></v-spacer>
-                      <v-btn
-                        color="blue darken-1"
-                        text
-                        @click="closeEdit"
-                        :disabled="loading.deviceSave"
-                      >Отмена</v-btn>
-                      <v-btn
-                        color="blue darken-1"
-                        text
-                        @click="saveDevice"
-                        :loading="loading.deviceSave"
-                      >Сохранить</v-btn>
-                    </v-card-actions>
-                  </v-card>
-                </v-dialog>
-              </v-toolbar>
-            </template>
+                  <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn
+                      color="blue darken-1"
+                      text
+                      @click="closeEdit"
+                      :disabled="loading.deviceSave"
+                    >Отмена</v-btn>
+                    <v-btn
+                      color="blue darken-1"
+                      text
+                      @click="saveDevice"
+                      :loading="loading.deviceSave"
+                    >Сохранить</v-btn>
+                  </v-card-actions>
+                </v-card>
+              </v-dialog>
+            </v-toolbar>
+          </template>
 
-            <template v-slot:item.actions="{ item }">
-              <v-icon small class="mr-2" @click="pingDevice(item)">mdi-alarm-light</v-icon>
-              <v-icon small class="mr-2" @click="editDevice(item)">mdi-pencil</v-icon>
-              <v-icon small @click="deleteDevice(item)">mdi-delete</v-icon>
-            </template>
-          </v-data-table>
-        </v-col>
-      </v-row>
-    </v-container>
-  </v-app>
+          <template v-slot:item.actions="{ item }">
+            <v-icon small class="mr-2" @click="pingDevice(item)">mdi-alarm-light</v-icon>
+            <v-icon small class="mr-2" @click="editDevice(item)">mdi-pencil</v-icon>
+            <v-icon small @click="deleteDevice(item)">mdi-delete</v-icon>
+          </template>
+        </v-data-table>
+      </v-col>
+    </v-row>
+  </v-container>
 </template>
 
 <script>
@@ -188,9 +185,9 @@ export default {
       let device = this.deviceEditItem;
       this.loading.deviceSave = true;
 
-      let currentType = this.deviceTypes.find(x => x.id == device.type_id)
-      device.type = currentType.name
-      device.config = currentType.default_config
+      let currentType = this.deviceTypes.find(x => x.id == device.type_id);
+      device.type = currentType.name;
+      device.config = currentType.default_config;
 
       Services.updateDevice(device).then(
         () => {

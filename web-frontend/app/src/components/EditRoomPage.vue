@@ -1,154 +1,153 @@
 <template>
-  <v-app id="inspire">
-    <h1 v-if="editMode">Редактирование комнаты</h1>
-    <h1 v-else>Создание комнаты</h1>
-    <v-container fluid>
-      <v-row justify="center">
-        <v-col cols="12" sm="8" md="8">
-          <v-form ref="placeForm">
-            <v-text-field
-              label="Название"
-              v-model.trim="place.name"
-              :rules="nameRules"
-              name="login"
-              type="text"
-              required
-            ></v-text-field>
+  <v-container fluid>
+    <h1 class="text-center" v-if="editMode">Редактирование комнаты</h1>
+    <h1 class="text-center" v-else>Создание комнаты</h1>
+    <v-row justify="center">
+      <v-col cols="12" sm="8" md="8">
+        <v-form ref="placeForm">
+          <v-text-field
+            label="Название"
+            v-model.trim="place.name"
+            :rules="nameRules"
+            name="login"
+            type="text"
+            required
+          ></v-text-field>
 
-            <v-text-field
-              label="Номер комнаты"
-              v-model.trim="place.num"
-              :rules="numRules"
-              name="login"
-              type="text"
-              required
-            ></v-text-field>
+          <v-text-field
+            label="Номер комнаты"
+            v-model.trim="place.num"
+            :rules="numRules"
+            name="login"
+            type="text"
+            required
+          ></v-text-field>
 
-            <v-row>
-              <v-col cols="6" sm="6" md="6">
-                <v-switch v-model="place.attr_projector" class="mx-2" label="Проектор"></v-switch>
-              </v-col>
-              <v-col cols="6" sm="6" md="6">
-                <v-switch v-model="place.attr_board" class="mx-2" label="Доска"></v-switch>
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col cols="6" sm="6" md="6">
-                <v-text-field
-                  label="Вместимость"
-                  v-model="place.attr_people"
-                  :rules="[v => !!v || 'Количество обязательно']"
-                  type="number"
-                  required
-                ></v-text-field>
-              </v-col>
-              <v-col cols="6" sm="6" md="6">
-                <v-text-field
-                  label="Компьютеры"
-                  v-model="place.attr_computers"
-                  :rules="[v => !!v || 'Количество обязательно']"
-                  type="number"
-                  required
-                ></v-text-field>
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col cols="6" sm="6" md="6">
-                <v-select
-                  v-model="place.attr_os"
-                  :rules="[v => !!v || 'ОС обязательна']"
-                  :items="operating_systems"
-                  item-text="desc"
-                  item-value="id"
-                  chips
-                  attach
-                  multiple
-                  label="ОС"
-                ></v-select>
-              </v-col>
-              <v-col cols="6" sm="6" md="6">
-                <v-select
-                  v-model="place.attr_software"
-                  :rules="[v => !!v || 'ПО обязательно']"
-                  :items="software"
-                  item-text="desc"
-                  item-value="id"
-                  chips
-                  attach
-                  multiple
-                  label="ПО"
-                ></v-select>
-              </v-col>
-            </v-row>
+          <v-row>
+            <v-col cols="6" sm="6" md="6">
+              <v-switch v-model="place.attr_projector" class="mx-2" label="Проектор"></v-switch>
+            </v-col>
+            <v-col cols="6" sm="6" md="6">
+              <v-switch v-model="place.attr_board" class="mx-2" label="Доска"></v-switch>
+            </v-col>
+          </v-row>
+          <v-row>
+            <v-col cols="6" sm="6" md="6">
+              <v-text-field
+                label="Вместимость"
+                v-model="place.attr_people"
+                :rules="[v => !!v || 'Количество обязательно']"
+                type="number"
+                required
+              ></v-text-field>
+            </v-col>
+            <v-col cols="6" sm="6" md="6">
+              <v-text-field
+                label="Компьютеры"
+                v-model="place.attr_computers"
+                :rules="[v => !!v || 'Количество обязательно']"
+                type="number"
+                required
+              ></v-text-field>
+            </v-col>
+          </v-row>
+          <v-row>
+            <v-col cols="6" sm="6" md="6">
+              <v-select
+                v-model="place.attr_os"
+                :rules="[v => !!v || 'ОС обязательна']"
+                :items="operating_systems"
+                item-text="desc"
+                item-value="id"
+                chips
+                attach
+                multiple
+                label="ОС"
+              ></v-select>
+            </v-col>
+            <v-col cols="6" sm="6" md="6">
+              <v-select
+                v-model="place.attr_software"
+                :rules="[v => !!v || 'ПО обязательно']"
+                :items="software"
+                item-text="desc"
+                item-value="id"
+                chips
+                attach
+                multiple
+                label="ПО"
+              ></v-select>
+            </v-col>
+          </v-row>
 
-            <v-row justify="center">
+          <v-row justify="center">
+            <v-spacer></v-spacer>
+            <v-btn
+              v-if="!editMode"
+              color="blue darken-1"
+              @click="createSubmit"
+              :loading="loading.createUpdate"
+              text
+            >Создать</v-btn>
+            <v-btn
+              v-if="editMode"
+              color="blue darken-1"
+              @click="updateSubmit"
+              :loading="loading.createUpdate"
+              text
+            >Сохранить</v-btn>
+            <v-btn
+              v-if="editMode"
+              color="red darken-1"
+              @click="deleteSubmit"
+              :loading="loading.delete"
+              text
+            >Удалить</v-btn>
+            <v-btn color="gray darken-1" @click="cancelSubmit" text>Отмена</v-btn>
+          </v-row>
+        </v-form>
+      </v-col>
+    </v-row>
+
+    <v-row justify="center" v-if="editMode">
+      <v-col cols="12">
+        <v-data-table
+          :headers="headers"
+          :items="devices"
+          item-key="name"
+          :loading="loading.table"
+          loading-text="Загружаю устройства"
+          class="elevation-1"
+        >
+          <template v-slot:top>
+            <v-toolbar flat color="white">
+              <v-toolbar-title>Устройства</v-toolbar-title>
+              <v-divider class="mx-4" inset vertical></v-divider>
               <v-spacer></v-spacer>
-              <v-btn
-                v-if="!editMode"
-                color="blue darken-1"
-                @click="createSubmit"
-                :loading="loading.createUpdate"
-                text
-              >Создать</v-btn>
-              <v-btn
-                v-if="editMode"
-                color="blue darken-1"
-                @click="updateSubmit"
-                :loading="loading.createUpdate"
-                text
-              >Сохранить</v-btn>
-              <v-btn
-                v-if="editMode"
-                color="red darken-1"
-                @click="deleteSubmit"
-                :loading="loading.delete"
-                text
-              >Удалить</v-btn>
-              <v-btn color="gray darken-1" @click="cancelSubmit" text>Отмена</v-btn>
-            </v-row>
-          </v-form>
-        </v-col>
-      </v-row>
-
-      <v-row justify="center" v-if="editMode">
-        <v-col cols="12">
-          <v-data-table
-            :headers="headers"
-            :items="devices"
-            item-key="name"
-            :loading="loading.table"
-            loading-text="Загружаю устройства"
-            class="elevation-1"
-          >
-            <template v-slot:top>
-              <v-toolbar flat color="white">
-                <v-toolbar-title>Устройства</v-toolbar-title>
-                <v-divider class="mx-4" inset vertical></v-divider>
-                <v-spacer></v-spacer>
-                <v-dialog v-model="deviceEditDialogue" max-width="500px">
-                  <!-- <template v-slot:activator="{ on }">
+              <v-dialog v-model="deviceEditDialogue" max-width="500px">
+                <!-- <template v-slot:activator="{ on }">
                     <v-btn color="primary" dark class="mb-2" @click="addDevice" v-on="on">Добавить</v-btn>
-                  </template>-->
-                  <v-card>
-                    <v-card-title>
-                      <span class="headline">{{ deviceEditTitle }}</span>
-                    </v-card-title>
+                </template>-->
+                <v-card>
+                  <v-card-title>
+                    <span class="headline">{{ deviceEditTitle }}</span>
+                  </v-card-title>
 
-                    <v-card-text>
-                      <v-container>
-                        <v-form ref="deviceForm">
-                          <v-row>
-                            <v-col cols="12" sm="6" md="6">
-                              <v-text-field
-                                :rules="[v => !!v || 'Наименование обязательно']"
-                                v-model="deviceEditItem.name"
-                                label="Наименование"
-                              ></v-text-field>
-                            </v-col>
-                            <v-col cols="12" sm="6" md="6" v-if="deviceEditItem.id">
-                              <v-text-field v-model="deviceEditItem.id" label="ID" readonly></v-text-field>
-                            </v-col>
-                            <!-- <v-col cols="12" sm="6" md="6">
+                  <v-card-text>
+                    <v-container>
+                      <v-form ref="deviceForm">
+                        <v-row>
+                          <v-col cols="12" sm="6" md="6">
+                            <v-text-field
+                              :rules="[v => !!v || 'Наименование обязательно']"
+                              v-model="deviceEditItem.name"
+                              label="Наименование"
+                            ></v-text-field>
+                          </v-col>
+                          <v-col cols="12" sm="6" md="6" v-if="deviceEditItem.id">
+                            <v-text-field v-model="deviceEditItem.id" label="ID" readonly></v-text-field>
+                          </v-col>
+                          <!-- <v-col cols="12" sm="6" md="6">
                               <v-select
                                 v-model="deviceEditItem.type"
                                 :rules="[v => !!v || 'Тип обязателен']"
@@ -157,8 +156,8 @@
                                 :item-value="itemId"
                                 label="Тип"
                               ></v-select>
-                            </v-col>-->
-                            <!-- <v-col cols="12" sm="6" md="6">
+                          </v-col>-->
+                          <!-- <v-col cols="12" sm="6" md="6">
                               <v-select
                                 disabled
                                 v-model="deviceEditItem.place_id"
@@ -168,41 +167,40 @@
                                 :item-value="itemId"
                                 label="Помещение"
                               ></v-select>
-                            </v-col>-->
-                          </v-row>
-                        </v-form>
-                      </v-container>
-                    </v-card-text>
+                          </v-col>-->
+                        </v-row>
+                      </v-form>
+                    </v-container>
+                  </v-card-text>
 
-                    <v-card-actions>
-                      <v-spacer></v-spacer>
-                      <v-btn
-                        color="blue darken-1"
-                        text
-                        @click="close"
-                        :disabled="loading.deviceSave"
-                      >Отмена</v-btn>
-                      <v-btn
-                        color="blue darken-1"
-                        text
-                        @click="save"
-                        :loading="loading.deviceSave"
-                      >Сохранить</v-btn>
-                    </v-card-actions>
-                  </v-card>
-                </v-dialog>
-              </v-toolbar>
-            </template>
+                  <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn
+                      color="blue darken-1"
+                      text
+                      @click="close"
+                      :disabled="loading.deviceSave"
+                    >Отмена</v-btn>
+                    <v-btn
+                      color="blue darken-1"
+                      text
+                      @click="save"
+                      :loading="loading.deviceSave"
+                    >Сохранить</v-btn>
+                  </v-card-actions>
+                </v-card>
+              </v-dialog>
+            </v-toolbar>
+          </template>
 
-            <template v-slot:item.actions="{ item }">
-              <v-icon small class="mr-2" @click="editDevice(item)">mdi-pencil</v-icon>
-              <v-icon small @click="resetDevice(item)">mdi-undo</v-icon>
-            </template>
-          </v-data-table>
-        </v-col>
-      </v-row>
-    </v-container>
-  </v-app>
+          <template v-slot:item.actions="{ item }">
+            <v-icon small class="mr-2" @click="editDevice(item)">mdi-pencil</v-icon>
+            <v-icon small @click="resetDevice(item)">mdi-undo</v-icon>
+          </template>
+        </v-data-table>
+      </v-col>
+    </v-row>
+  </v-container>
 </template>
 
 <script>
