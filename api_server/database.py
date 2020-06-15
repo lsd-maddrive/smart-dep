@@ -72,8 +72,8 @@ def update_place(place_info, db_session=db.session):
 
     place.attr_os = place_info['attr_os']
     place.attr_software = place_info['attr_software']
-    place.attr_people = place_info['attr_computers']
-    place.attr_computers = place_info['attr_people']
+    place.attr_people = place_info['attr_people']
+    place.attr_computers = place_info['attr_computers']
     place.attr_blackboard = place_info['attr_board']
     place.attr_projector = place_info['attr_projector']
 
