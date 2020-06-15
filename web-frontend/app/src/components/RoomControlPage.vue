@@ -5,7 +5,7 @@
       <v-btn
         class="ml-2"
         icon
-        :to="{name: 'EditRoom', params: {id: placeId}, query: {returnUrl: this.$router.currentRoute}}"
+        :to="{name: 'EditRoom', params: {id: this.placeId}, query: {returnUrl: this.$router.currentRoute}}"
       >
         <v-icon>mdi-puzzle-edit</v-icon>
       </v-btn>

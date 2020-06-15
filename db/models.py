@@ -101,6 +101,7 @@ class Device(Model):
     icon_name = Column(String(50))
 
     place = relationship("Place", back_populates="devices")
+    last_state = relationship("State", order_by=State.timestamp.desc(), lazy='dynamic')
 
     def get_id(self):
         return str(self.id)

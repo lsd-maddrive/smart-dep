@@ -237,13 +237,17 @@ export default new Vuex.Store({
         deviceState.icon_name = 'mdi-lightning-bolt'
       }
 
+      deviceState.fb_diff_ms = Date.now() - (deviceState.ts*1000);
+      deviceState.last_ts = deviceState.ts;
       state.deviceStates.push(deviceState)
+      console.log(deviceState)
     },
     setDeviceState(state, deviceState) {
       let unit = state.deviceStates.find(dst => dst.device_id == deviceState.device_id)
       if (typeof unit === 'undefined') {
       } else {
-        unit.state = deviceState.state
+        unit.state = deviceState.state;
+        unit.last_ts = deviceState.ts;
       }
     },
 

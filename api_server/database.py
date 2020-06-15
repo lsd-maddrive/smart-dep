@@ -18,13 +18,10 @@ def get_last_states(start_ts, place_id, db_session=db.session):
     """
         Get last states from DB in defined period of time
         from check time till now for defined place and type
-
-
         Args:
             start_ts (timestamp):    the lower bound of time
             place_id (str):          number/name of place
             db_session (sqlalchemy.orm.session.Session): session object
-
         Returns:
             Query object that containts unique data for each
             device in defined period of time

@@ -245,6 +245,7 @@ export default {
           value: "id"
         },
         { text: "Наименование", value: "name" },
+        { text: "Последняя активность", value: "last_active_date" },
         { text: "Тип", value: "type" },
         { text: "Действия", value: "actions", sortable: false }
       ],
@@ -442,7 +443,10 @@ export default {
       Services.getPlaceDevices({ id: placeId }).then(
         resp => {
           this.loading.table = false;
-          this.devices = resp.data;
+          this.devices = resp.data.map(function(x) {
+            x.last_active_date = new Date(x.last_ts * 1000)
+            return x;
+          });
         },
         err => {
           this.loading.table = false;

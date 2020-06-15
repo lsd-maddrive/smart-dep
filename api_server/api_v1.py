@@ -131,31 +131,22 @@ _model_state = api.model('State', {
 
 @api.route('/device/states/<string:place_id>', endpoint='devices_states')
 @api.param('place_id', 'ID of place')
-class UnitsStates(Resource):
+class DevicesStates(Resource):
     @api.marshal_with(_model_state, as_list=True)
     def get(self, place_id):
-        try:
-            back_duration_s = int(request.args.get('duration_s', 5*60))
-        except:
-            back_duration_s = 5*60
-
         logger.debug(f'Requested device states for place: {place_id}')
-        start_ts = datetime.datetime.now() - datetime.timedelta(seconds=back_duration_s)
-
-        states = asdb.get_last_states(
-            start_ts, place_id
-        )
-        logger.debug(f"Received states: {states}")
-
+        devices = asdb.get_devices(place_id)
         result_states = []
-        for st in states:
+        for dev in devices:
+            last_st = dev.last_state.first()
+
             result_states.append(
                 {
-                    'device_id': st.get_did(),
-                    'name': st.device.name,
-                    'type': st.device.type,
-                    'state': st.state,
-                    'ts': st.timestamp.timestamp(),
+                    'device_id': dev.get_id(),
+                    'name': dev.name,
+                    'type': dev.type,
+                    'state': last_st.state if last_st else {},
+                    'ts': last_st.timestamp.timestamp() if last_st else dev.update_date.timestamp(),
                 }
             )
 
@@ -167,7 +158,7 @@ class UnitsStates(Resource):
 _model_device_new = api.model('Device_new', {
     'id': fields.String,
     'ip_addr': fields.String,
-    'reg_ts': fields.Raw,
+    'reg_ts': fields.Float,
 })
 
 
@@ -203,6 +194,7 @@ _model_device = api.model('Device', {
     'name': fields.String,
     'type': fields.String,
     'place_id': fields.Integer,
+    'last_ts': fields.Float,
     'config': fields.Raw,
 })
 
@@ -224,12 +216,15 @@ class Device(Resource):
 
         result_devices = []
         for dev in devices:
+            last_st = dev.last_state.first()
+
             result_devices.append({
                 'id': str(dev.id),
                 'name': dev.name,
                 'type': dev.type,
                 'place_id': dev.place_id,
                 'config': dev.unit_config,
+                'last_ts': last_st.timestamp.timestamp() if last_st else dev.enabled_date.timestamp(),
             })
 
         logger.debug(f"Request devices: {result_devices}")

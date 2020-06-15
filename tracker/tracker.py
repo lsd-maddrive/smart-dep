@@ -100,7 +100,7 @@ class Tracker(object):
     def callback(self, ch, method, properties, body):
         in_data = json.loads(body.decode('utf-8'))
         if 'ts' not in in_data:
-            in_data['ts'] = datetime.now()
+            in_data['ts'] = datetime.utcnow()
 
         new_row = self.get_record(in_data)
 
