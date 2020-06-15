@@ -99,8 +99,8 @@ class Tracker(object):
 
     def callback(self, ch, method, properties, body):
         in_data = json.loads(body.decode('utf-8'))
-        if 'timestamp' not in in_data:
-            in_data['timestamp'] = datetime.now()
+        if 'ts' not in in_data:
+            in_data['ts'] = datetime.now()
 
         new_row = self.get_record(in_data)
 
@@ -174,7 +174,7 @@ class StateTracker(Tracker):
 
     def get_record(self, in_data):
         new_state = State(
-            timestamp=in_data['timestamp'],
+            timestamp=in_data['ts'],
             state=in_data['state'],
             device_id=in_data['device_id'],
         )
@@ -200,7 +200,7 @@ class ConfigTracker(Tracker):
 
     def get_record(self, in_data):
         new_cgf = Config(
-            timestamp=in_data['timestamp'],
+            timestamp=in_data['ts'],
             config=in_data.get('data'),
             device_id=in_data['device_id'],
         )
@@ -226,9 +226,10 @@ class CommandTracker(Tracker):
 
     def get_record(self, in_data):
         new_cmd = Command(
-            timestamp=in_data['timestamp'],
+            timestamp=in_data['ts'],
             command=in_data['data'],
             device_id=in_data['device_id'],
+            source_id=in_data['source_id'],
         )
         return new_cmd
 

@@ -17,9 +17,12 @@ class Command(Model):
     timestamp = Column(DateTime)
     command = Column(JSONB)
     device_id = Column(ForeignKey("devices.id"))
+    source_id = Column(String(50))
+
+    device = relationship('Device')
 
     def __repr__(self):
-        return f"Command | Device ID: {self.device_id}, DateTime: {self.timestamp}, Cmd: {self.command}"
+        return f"Command | Device ID: {self.device_id}, DateTime: {self.timestamp}, Cmd: {self.command}, SID: {self.source_id}"
 
 
 class Config(Model):
@@ -29,6 +32,8 @@ class Config(Model):
     timestamp = Column(DateTime)
     config = Column(JSONB)
     device_id = Column(ForeignKey("devices.id"))
+
+    device = relationship('Device')
 
     def __repr__(self):
         return f"Params | Device ID: {self.device_id}, DateTime: {self.timestamp}, Cfg: {self.config}"
@@ -47,7 +52,7 @@ class State(Model):
         return str(self.device_id)
 
     def __repr__(self):
-        return f"State | Device ID: {self.device_id}, DateTime: {self.timestamp}, State: {self.state}, Device: {self.device}"
+        return f"State | Device ID: {self.device_id}, DateTime: {self.timestamp}, State: {self.state}"
 
 
 class Place(Model):

@@ -289,12 +289,14 @@ class DeviceCommand(Resource):
         type_ = data['type']
         device_id = data['device_id']
         cmd = data['cmd']
+        source_id = 'api'
 
         rabbit_send_command(
             device_id,
             place_id,
             type_,
-            cmd
+            cmd,
+            source_id
         )
 
 # RabbitMQ functions
@@ -310,7 +312,8 @@ def rabbit_ping_device(device_id):
                             routing_key=f'cfg.ping')
 
         message = json.dumps({
-            'device_id': device_id
+            'device_id': device_id,
+            'ts': time.time()
         })
         producer.publish(message)
 
@@ -325,12 +328,13 @@ def rabbit_reset_device(device_id):
                             routing_key=f'cfg.reset')
 
         message = json.dumps({
-            'device_id': device_id
+            'device_id': device_id,
+            'ts': time.time()
         })
         producer.publish(message)
 
 
-def rabbit_send_command(device_id, place_id, type_, cmd):
+def rabbit_send_command(device_id, place_id, type_, cmd, source_id):
     uri = current_app.config['RABBITMQ_URI']
     logger.debug(f"Connect to RabbitMQ {uri}")
 
@@ -343,7 +347,9 @@ def rabbit_send_command(device_id, place_id, type_, cmd):
 
         message = json.dumps({
             'device_id': device_id,
-            'data': cmd
+            'data': cmd,
+            'source_id': source_id,
+            'ts': time.time()
         })
 
         producer.publish(message)
