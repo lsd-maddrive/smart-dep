@@ -1,12 +1,13 @@
 import ast 
 import json
 import logging
+from time import sleep
 
 import pytest
 import pytest_env
 
-from api_server.database import db 
-from db.models import States, Users
+from api_server.database import db, save_token
+from db.models import States, Users, Tokens
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d/%H:%M:%S')
 logger = logging.getLogger(__name__)
@@ -76,7 +77,7 @@ def test_register_missing_data(client):
         'password': 'test_password'
     }
     rv_password = client.post('http://localhost:5000/api/v1/register', json=missing_password)
-    
+
     assert rv_username.status_code == 400
     assert rv_password.status_code == 400 
 
@@ -94,9 +95,11 @@ def test_register(client):
     }
     rv_new = client.post('http://localhost:5000/api/v1/register', json=test_user)
 
+
     assert rv_existing.status_code == 400
     assert rv_new.status_code == 200 
-
+    assert ast.literal_eval(rv_new.data.decode('utf-8'))['username'] == test_user['username']
+    assert ast.literal_eval(rv_new.data.decode('utf-8'))['role'] == 'guest'
 
 
 def test_login_post_existing_user(client):
@@ -108,6 +111,7 @@ def test_login_post_existing_user(client):
 
     assert rv.status_code == 200 
     assert ast.literal_eval(rv.data.decode('utf-8'))['username'] == test_json['username']
+    assert ast.literal_eval(rv.data.decode('utf-8'))['role'] == 'guest'
 
 
 def test_login_post_non_existing_user(client):
@@ -120,22 +124,74 @@ def test_login_post_non_existing_user(client):
     assert rv.status_code == 400  
 
 
-# def test_login_get(client, timescaleDB):
-#     test_json = {
-#         'username': 'test_user',
-#         'password': 'test_password'
-#     }
+def test_logout(client, timescaleDB):
 
-#     user = timescaleDB.query(Users).first()
-#     user.token = user.encode_auth_token(user_id=user.id) 
+    test_json = {
+        'username': 'new_user', 
+        'password': 'test_password'
+    }
 
-#     timescaleDB.flush()
+    rv = client.post('http://localhost:5000/api/v1/register',
+                    json=test_json)
 
-#     logger.debug(f"TEST TOKEN: {user.token}\n{type((user.token))}")
 
-#     rv = client.get('http://localhost:5000/api/v1/login',
-#                     headers={'Authorization': 'Bearer ' + user.token}, json=test_json
-#     )
+    user_id = timescaleDB.query(Users.id). \
+        filter(Users.username == test_json['username'])
 
-#     assert True 
+    token_result = timescaleDB.query(Tokens.token). \
+        filter(Tokens.parent_id == user_id).first()
+    token = [str(tkn) for tkn in token_result][0]
     
+    rv = client.post('http://localhost:5000/api/v1/logout',
+                    headers={'Authorization': 'Bearer ' + token}, 
+                    json=test_json)
+    
+    assert rv.status_code == 200  
+    assert ast.literal_eval(rv.data.decode('utf-8'))['status'] == 'success'
+    assert ast.literal_eval(rv.data.decode('utf-8'))['message'] == 'Successfully logged out.'
+    assert ast.literal_eval(rv.data.decode('utf-8'))['username'] == test_json['username']
+
+
+
+def test_logout_missing_data(client):
+    test_json = {
+        'username': 'test_user', 
+        'password': 'test_password'
+    }
+
+    token = ""
+    rv_empty_token = client.post('http://localhost:5000/api/v1/logout',
+                    headers={'Authorization': 'Bearer ' + token},
+                    json=test_json)
+
+    rv_no_token = client.post('http://localhost:5000/api/v1/logout',
+                    headers={'Authorization': 'Bearer '},
+                    json=test_json)
+    
+    assert rv_empty_token.status_code == 400 
+    assert rv_no_token.status_code == 400
+
+
+def test_expiring_token(client, timescaleDB):
+    test_json = {
+        'username': 'new_new_user', 
+        'password': 'test_password'
+    }
+
+    rv = client.post('http://localhost:5000/api/v1/register',
+                    json=test_json)
+
+    sleep(5)
+    user_id = timescaleDB.query(Users.id). \
+        filter(Users.username == test_json['username'])
+
+    token_result = timescaleDB.query(Tokens.token). \
+        filter(Tokens.parent_id == user_id).first()
+    token = [str(tkn) for tkn in token_result][0]
+
+    rv = client.post('http://localhost:5000/api/v1/logout',
+                    headers={'Authorization': 'Bearer ' + token}, 
+                    json=test_json)
+    
+    assert rv.status_code == 403 
+

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 
 logging.basicConfig(level=logging.DEBUG)
@@ -10,7 +10,7 @@ from sqlalchemy import desc
 from sqlalchemy import distinct
 from sqlalchemy.orm import Session
 
-from db.models import metadata, States, Users 
+from db.models import metadata, States, Users, Tokens#, BlacklistToken 
 
 db = SQLAlchemy(metadata=metadata)
 
@@ -83,7 +83,7 @@ def get_user_data(username, db_session=db.session):
         Get all data about specified user
 
         Args: 
-            username:   registered name of user 
+            username (string):   registered name of user 
             db_session (sqlalchemy.orm.session.Session): session object
         
         Returns: 
@@ -94,24 +94,64 @@ def get_user_data(username, db_session=db.session):
            filter(Users.username == username).first()
 
 
+def find_user(user_id, db_session=db.session):
+    return db_session.query(Users). \
+        filter(Users.id == user_id).first() 
+
+
 def create_user(username, password, db_session=db.session):
-    if username is None or password is None:
-        logger.critical(f"Username or password is missing")
-        return -1 
-    user = Users(
-        username=username
-    )
+    """
+        Add new user-row to DB (Users table)
+
+        Args: 
+            username:   name of user 
+            password:   obviosly, password (not hashed yet)
+            db_session (sqlalchemy.orm.session.Session): session object
+        
+        Returns: 
+            Query object that contains data for new specified user (one row)
+    """
+    user = Users(username=username)
     user.set_password(password)
-    logger.debug(f"User {user} - created")
     
-    # user.set_password(password)
-    logger.debug(f"User's password - set")
-
     db_session.add(user)
-    logger.debug(f"User - added")
     db_session.commit()
-    logger.debug(f"User - commited")
 
-    logger.debug(f"User \"{username}\" is added to DB")
+    logger.debug(f"User \"{user}\" is added to DB")
 
     return user 
+
+
+def save_token(user_id, db_session=db.session, exp_days=0, exp_sec=2):
+    """
+        Add new token-row to DB (Tokens table)
+
+        Args: 
+            user_id (int):   parent ID  
+            exp_delta(datetime.timedelta): time delta for expiring token 
+            db_session (sqlalchemy.orm.session.Session): session object
+        
+        Returns: 
+            encoded token (string)
+    """
+    new_token = Tokens(parent_id=user_id, days=exp_days, secs=exp_sec)
+    new_token.encode_auth_token()
+
+    db_session.add(new_token)
+    db_session.commit()
+
+    logger.debug(f"New token {new_token} is saved")
+
+    return new_token.token
+
+
+def delete_token(user_id, created_on, db_session=db.session):
+    db_session.query(Tokens). \
+        filter(Tokens.parent_id == user_id). \
+            filter(Tokens.created_on == datetime.utcfromtimestamp(created_on)).delete()
+    
+    db_session.commit()
+
+    logger.debug(f"Token for User ID: {user_id} created: {datetime.utcfromtimestamp(created_on)} was deleted")
+
+    

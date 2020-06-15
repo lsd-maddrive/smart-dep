@@ -60,10 +60,7 @@ def timescaleDB(request, test_db):
                 )
             )
     
-    test_user = Users(
-        username="test_user"
-        # password="test_password"
-    )
+    test_user = Users(username="test_user")
     test_user.set_password("test_password")
 
     db_data.append(test_user)
