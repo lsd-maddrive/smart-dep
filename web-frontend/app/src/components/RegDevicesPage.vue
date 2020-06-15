@@ -81,9 +81,22 @@
           </template>
 
           <template v-slot:item.actions="{ item }">
-            <v-icon small class="mr-2" @click="pingDevice(item)">mdi-alarm-light</v-icon>
+            <v-tooltip bottom>
+              <template v-slot:activator="{ on }">
+                <v-icon small v-on="on" class="mr-2" @click="pingDevice(item)">mdi-alarm-light</v-icon>
+              </template>
+              <span>Пинг</span>
+            </v-tooltip>
+
             <v-icon small class="mr-2" @click="editDevice(item)">mdi-pencil</v-icon>
-            <v-icon small @click="deleteDevice(item)">mdi-delete</v-icon>
+
+            <v-tooltip bottom>
+              <template v-slot:activator="{ on }">
+                <v-icon small v-on="on" @click="deleteDevice(item)">mdi-delete</v-icon>
+              </template>
+              <span>Удалить</span>
+            </v-tooltip>
+
           </template>
         </v-data-table>
       </v-col>

@@ -1,16 +1,16 @@
 <template>
   <v-container fluid>
+    <h1 class="text-center">
+      Помещение {{ placeName }}
+      <v-btn
+        class="ml-2"
+        icon
+        :to="{name: 'EditRoom', params: {id: placeId}, query: {returnUrl: this.$router.currentRoute}}"
+      >
+        <v-icon>mdi-puzzle-edit</v-icon>
+      </v-btn>
+    </h1>
     <v-row>
-      <h1 class="text-center">
-        Помещение {{ place_name }}
-        <v-btn
-          class="ml-2"
-          icon
-          :to="{name: 'EditRoom', params: {id: placeId}, query: {returnUrl: this.$router.currentRoute}}"
-        >
-          <v-icon>mdi-puzzle-edit</v-icon>
-        </v-btn>
-      </h1>
       <v-col cols="12">
         <units-panel></units-panel>
       </v-col>
@@ -33,7 +33,7 @@ export default {
     };
   },
   computed: {
-    place_name() {
+    placeName() {
       return this.placeObj ? this.placeObj.name : "";
     },
     placeId() {

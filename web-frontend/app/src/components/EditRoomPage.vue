@@ -195,7 +195,12 @@
 
           <template v-slot:item.actions="{ item }">
             <v-icon small class="mr-2" @click="editDevice(item)">mdi-pencil</v-icon>
-            <v-icon small @click="resetDevice(item)">mdi-undo</v-icon>
+            <v-tooltip bottom>
+              <template v-slot:activator="{ on }">
+                <v-icon v-on="on" small @click="resetDevice(item)">mdi-undo</v-icon>
+              </template>
+              <span>Сброс</span>
+            </v-tooltip>
           </template>
         </v-data-table>
       </v-col>
@@ -469,7 +474,6 @@ export default {
     if (placeId) {
       this.$store.dispatch("validatePlace", { placeId: placeId }).then(
         resp => {
-          console.log(resp);
           // Copy to have external data copy
           this.sourcePlace = Object.assign({}, resp);
           this.place = Object.assign({}, resp);
@@ -479,7 +483,6 @@ export default {
         },
         err => {
           this.$toasted.error("Комната " + this.placeId + " не найдена =(");
-          console.log("Room " + placeId + " not found: " + err);
           this.$router.push({ name: "Home" });
         }
       );
