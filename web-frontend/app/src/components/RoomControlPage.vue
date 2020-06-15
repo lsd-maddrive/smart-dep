@@ -49,7 +49,6 @@ export default {
       const placeId = this.$route.params.id;
       this.$store.dispatch("validatePlace", { placeId: placeId }).then(
         resp => {
-          console.log("Room " + placeId + " found!");
           this.placeObj = resp;
           this.$store.commit("enterPlace", placeId);
 
@@ -66,7 +65,6 @@ export default {
         },
         err => {
           this.$toasted.error("Комната " + placeId + " не найдена =(");
-          console.log("Room " + placeId + " not found: " + err);
           this.$router.push({ name: "Home" });
         }
       );

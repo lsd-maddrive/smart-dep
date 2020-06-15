@@ -97,8 +97,8 @@
 
       <v-tooltip v-if="isLoggedIn && socketsConnected" bottom>
         <template v-slot:activator="{ on }">
-          <v-btn icon >
-            <v-icon v-on="on">mdi-link</v-icon>
+          <v-btn icon v-on="on" >
+            <v-icon>mdi-link</v-icon>
           </v-btn>
         </template>
         <span>Сервер подключен</span>
