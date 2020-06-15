@@ -103,6 +103,23 @@ def update_device(device_info, db_session=db.session):
     db_session.commit()
 
 
+def reset_device(device_info, db_session=db.session):
+    # Moreover remove old data
+    db_session.query(State).filter(State.device_id == device_info['id']).delete()
+    db_session.query(Command).filter(Command.device_id == device_info['id']).delete()
+    db_session.query(Config).filter(Config.device_id == device_info['id']).delete()
+
+    db_session.flush()
+
+    device = db_session.query(Device).get(device_info['id'])
+    device.update_date = datetime.utcnow()
+    device.is_installed = False
+    device.type = None
+    device.place_id = None
+    device.config = None
+
+    db_session.commit()
+
 def delete_device(device_info, db_session=db.session):
     # Moreover remove old data
     db_session.query(State).filter(State.device_id == device_info['id']).delete()
@@ -112,14 +129,7 @@ def delete_device(device_info, db_session=db.session):
     db_session.flush()
 
     device = db_session.query(Device).get(device_info['id'])
-    if device.is_installed:
-        device.update_date = datetime.utcnow()
-        device.is_installed = False
-        device.type = None
-        device.place_id = None
-        device.config = None
-    else:
-        db_session.delete(device)
+    db_session.delete(device)
 
     db_session.commit()
 

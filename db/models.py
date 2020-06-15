@@ -84,6 +84,8 @@ class Device(Model):
     unique_id = Column(String(50), unique=True, nullable=True)
     name = Column(String(50))
     type = Column(String(20))
+    controller_type = Column(String(50))
+    code_version = Column(String(20))
     is_installed = Column(Boolean, default=False)
     config = Column(JSONB)
 

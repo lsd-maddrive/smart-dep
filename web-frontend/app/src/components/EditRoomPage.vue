@@ -196,7 +196,7 @@
 
             <template v-slot:item.actions="{ item }">
               <v-icon small class="mr-2" @click="editDevice(item)">mdi-pencil</v-icon>
-              <v-icon small @click="deleteDevice(item)">mdi-undo</v-icon>
+              <v-icon small @click="resetDevice(item)">mdi-undo</v-icon>
             </template>
           </v-data-table>
         </v-col>
@@ -375,7 +375,7 @@ export default {
       this.deviceEditDialogue = true;
     },
 
-    deleteDevice(item) {
+    resetDevice(item) {
       // const index = this.desserts.indexOf(item);
       let result = confirm(
         `Вы уверены, что хотите удалить устройство ${item.id}?`
@@ -383,7 +383,7 @@ export default {
       if (result) {
         // this.$toasted.info("Удаление устройства");
         const device = Object.assign({}, item);
-        Services.deleteDevice(device).then(
+        Services.resetDevice(device).then(
           resp => {
             this._updateDevices();
             // this.$toasted.success("Устройство успешно удалено!");

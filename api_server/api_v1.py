@@ -208,6 +208,7 @@ _model_device = api.model('Device', {
 
 _model_device_del = api.model('Device_del', {
     'id': fields.String,
+    'reset': fields.Boolean
 })
 
 
@@ -247,7 +248,10 @@ class Device(Resource):
         device_info = request.get_json()
         logger.debug(f"Request to delete device:\n{pformat(device_info)}")
 
-        asdb.delete_device(device_info)
+        if device_info['reset']:
+            asdb.reset_device(device_info)
+        else:
+            asdb.delete_device(device_info)
         rabbit_reset_device(device_info['id'])
 
 

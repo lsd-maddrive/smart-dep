@@ -119,6 +119,8 @@ _model_enabled_in = api.model('Enabled_in', {
     'unique_id': fields.String(description='Unique ID of device', required=False),
     'device_id': fields.String,
     'ip_addr': fields.String,
+    'code_version': fields.String,
+    'controller_type': fields.String
 })
 
 _model_enabled_out = api.model('Enabled_out', {

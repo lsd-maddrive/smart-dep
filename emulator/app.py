@@ -116,6 +116,9 @@ def main():
     hostname = socket.gethostname()
     logger.debug(f'Hostname: {hostname}')
 
+    code_version = 'emulator'
+    controller_type = 'emulator'
+
     unique_id = f'emulator-device-{hostname}'
     # unique_id = os.getenv('UNIQUE_ID')
     # if unique_id is None:
@@ -138,6 +141,8 @@ def main():
         'unique_id': unique_id,
         'device_id': device_id,
         'ip_addr': ip_addr,
+        'code_version': code_version,
+        'controller_type': controller_type
     })
     logger.debug(f'Received enable data: {en_data}')
 

@@ -75,6 +75,9 @@ def main(config):
     device_id = config.get('device_id')
     unit_code = None
 
+    code_version = ut.get_current_version()
+    controller_type = 'esp8266'
+
     if device_id is None:
         reg_data = register_device(config['micro_server'], {
             'unique_id': CLIENT_ID
@@ -91,13 +94,15 @@ def main(config):
         print('Device received device_id ({}) - restart'.format(device_id))
         return 1
     else:
-        # Register enable of device
+        # Enable device
         ifconfig = ut.connect_wifi(config)
         ip_addr = ifconfig[0]
         data = {
             'unique_id': CLIENT_ID,
             'device_id': device_id,
             'ip_addr': ip_addr,
+            'code_version': code_version,
+            'controller_type': controller_type
         }
         print('Send enabled state: {}'.format(data))
         en_data, reg_required = enable_device(config['micro_server'], data)

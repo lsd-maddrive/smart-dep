@@ -22,8 +22,9 @@ def set_device_enabled_info(unique_id, device_id, info, db_session=db.session):
     if device is None:
         return None
 
-    if 'ip_addr' in info:
-        device.ip_addr = info['ip_addr']
+    device.ip_addr = info['ip_addr']
+    device.code_version = info['code_version']
+    device.controller_type = info['controller_type']
     device.enabled_date = datetime.utcnow()
 
     db_session.commit()

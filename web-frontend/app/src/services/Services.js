@@ -31,7 +31,12 @@ const realServices = {
   updateDevice(device) {
     return Api().put('/device', device)
   },
+  resetDevice(device) {
+    device.reset = true;
+    return Api().delete('/device', { data: device })
+  },
   deleteDevice(device) {
+    device.reset = false;
     return Api().delete('/device', { data: device })
   },
 
