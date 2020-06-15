@@ -38,6 +38,7 @@ class Config(Model):
     def __repr__(self):
         return f"Params | Device ID: {self.device_id}, DateTime: {self.timestamp}, Cfg: {self.config}"
 
+
 class State(Model):
     __tablename__ = "states"
 
@@ -77,22 +78,27 @@ class Place(Model):
     def __repr__(self):
         return f"Place | ID: {self.id}, Name: {self.name}, Num: {self.num}"
 
+
 class Device(Model):
     __tablename__ = "devices"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    id = Column(UUID(as_uuid=True), primary_key=True,
+                default=uuid.uuid4, unique=True, nullable=False)
     place_id = Column(Integer, ForeignKey("places.id"))
     register_date = Column(DateTime, nullable=False)
     enabled_date = Column(DateTime)
     update_date = Column(DateTime)
     ip_addr = Column(String(20))
     unique_id = Column(String(50), unique=True, nullable=True)
-    name = Column(String(50))
     type = Column(String(20))
     controller_type = Column(String(50))
     code_version = Column(String(20))
     is_installed = Column(Boolean, default=False)
-    config = Column(JSONB)
+    unit_config = Column(JSONB)
+
+    # Custimization
+    name = Column(String(50))
+    icon_name = Column(String(50))
 
     place = relationship("Place", back_populates="devices")
 
@@ -100,4 +106,6 @@ class Device(Model):
         return str(self.id)
 
     def __repr__(self):
-        return f"Device | ID: {self.id}, UID: {self.unique_id}, PlaceID: {self.place_id}, RegDate: {self.register_date}, IP: {self.ip_addr}, Type: {self.type}, Installed: {self.is_installed}, Config: {self.config}"
+        return f"Device | ID: {self.id}, UID: {self.unique_id}, PlaceID: {self.place_id}, \
+            RegDate: {self.register_date}, IP: {self.ip_addr}, Type: {self.type}, \
+            Installed: {self.is_installed}, Config: {self.unit_config}"

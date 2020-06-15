@@ -98,16 +98,19 @@ def update_device(device_info, db_session=db.session):
     device.name = device_info['name']
     device.type = device_info['type']
     device.place_id = device_info['place_id']
-    device.config = device_info['config']
+    device.unit_config = device_info['config']
 
     db_session.commit()
 
 
 def reset_device(device_info, db_session=db.session):
     # Moreover remove old data
-    db_session.query(State).filter(State.device_id == device_info['id']).delete()
-    db_session.query(Command).filter(Command.device_id == device_info['id']).delete()
-    db_session.query(Config).filter(Config.device_id == device_info['id']).delete()
+    db_session.query(State) \
+        .filter(State.device_id == device_info['id']).delete()
+    db_session.query(Command) \
+        .filter(Command.device_id == device_info['id']).delete()
+    db_session.query(Config) \
+        .filter(Config.device_id == device_info['id']).delete()
 
     db_session.flush()
 
@@ -116,15 +119,19 @@ def reset_device(device_info, db_session=db.session):
     device.is_installed = False
     device.type = None
     device.place_id = None
-    device.config = None
+    device.unit_config = None
 
     db_session.commit()
 
+
 def delete_device(device_info, db_session=db.session):
     # Moreover remove old data
-    db_session.query(State).filter(State.device_id == device_info['id']).delete()
-    db_session.query(Command).filter(Command.device_id == device_info['id']).delete()
-    db_session.query(Config).filter(Config.device_id == device_info['id']).delete()
+    db_session.query(State) \
+        .filter(State.device_id == device_info['id']).delete()
+    db_session.query(Command) \
+        .filter(Command.device_id == device_info['id']).delete()
+    db_session.query(Config) \
+        .filter(Config.device_id == device_info['id']).delete()
 
     db_session.flush()
 

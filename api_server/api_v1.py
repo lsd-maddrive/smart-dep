@@ -229,7 +229,7 @@ class Device(Resource):
                 'name': dev.name,
                 'type': dev.type,
                 'place_id': dev.place_id,
-                'config': dev.config,
+                'config': dev.unit_config,
             })
 
         logger.debug(f"Request devices: {result_devices}")

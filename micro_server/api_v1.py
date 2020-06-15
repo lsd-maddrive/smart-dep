@@ -155,5 +155,5 @@ class DeviceEnabled(Resource):
         return {
             'type': device.type,
             'place_id': device.place_id,
-            'config': device.config
+            'config': device.unit_config
         }
