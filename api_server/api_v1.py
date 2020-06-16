@@ -3,12 +3,15 @@ import json
 import logging
 import os
 
-from flask import request, current_app
-from flask_restplus import Resource, Namespace, fields
+from flask import request, current_app, jsonify
+from flask_restplus import Resource, Namespace, fields, abort
 from kombu import Connection, Exchange, Producer
 from pprint import pformat
+from sqlalchemy.exc import IntegrityError
 
 import api_server.database as asdb 
+import api_server.auth as auth
+
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -170,3 +173,131 @@ class Places(Resource):
             logger.debug(f"PLACES LAST DATA:\n{pformat(places_dict_list)}")
             
             return places_dict_list
+
+# to turn on authotization, set flag turn_off to False 
+turn_off = False
+
+@api.route('/register', methods=['POST'])
+class Signup(Resource):
+    def post(self):
+        if not turn_off:
+            username = request.json.get('username')
+            password = request.json.get('password')
+
+            if username is None or password is None:
+                logger.critical(f"Username or password is missing")
+                # Raise a HTTPException for the given http_status_code
+                abort(400)
+            
+            try:
+                new_user = asdb.create_user(username, password)
+            except IntegrityError as err:
+                logger.critical(f"User '{username}' is already existed")
+                abort(400)
+
+            new_token = asdb.save_token(
+                new_user.id,
+                current_app.config['SECRET_KEY']
+            )
+
+            responseObject = {
+                'token': new_token.token,
+                'username': new_user.username, 
+                'role': new_user.role
+            }
+
+            return jsonify(responseObject)
+
+
+@api.route('/login', methods=['POST'])
+class Login(Resource):
+    def post(self):
+        if not turn_off:
+            username = request.json.get('username')
+            password = request.json.get('password')
+            
+            if username is None or password is None:
+                logger.critical(f"Username or password is missing")
+                # Raise a HTTPException for the given http_status_code
+                abort(400)
+
+            user = asdb.get_user_data(username)
+
+            # check is user exists and password is valid 
+            if user is not None and user.check_password(password):
+                new_token = asdb.save_token(user.id, current_app.config['SECRET_KEY'])
+
+                responseObject = {
+                    'token': new_token.token,
+                    'username': user.username, 
+                    'role': user.role
+                }
+                
+                return jsonify(responseObject) 
+            else:
+                logger.critical(f"Login failed! User \"{username}\" doesn't existed or password is invalid")
+                # Raise a HTTPException for the given http_status_code
+                abort(400)  
+
+
+def verify_request_header():
+    """
+        Check if request.header consists of field 'Authorization'
+        and token 
+
+        Returns: 
+            token (string)
+    """
+    auth_header = request.headers.get('Authorization')
+    if auth_header.lower().startswith('bearer'):
+        try:
+            auth_token = auth_header.split(" ")[1]
+            if len(auth_token) == 0:
+                raise IndexError
+            return auth_token
+        except IndexError as err:
+            logger.critical(f"TOKEN NOT FOUND IN REQUEST HEADER")
+            abort(400)
+    else:
+        logger.critical(f"HEADER 'Authorization' NOT FOUND")
+        abort(400)
+
+
+@api.route('/logout', methods=['POST'])
+class Logout(Resource):
+    def post(self):
+        """
+            This method is for checking functionality of token and headers
+            Maybe in the future it will be removed 
+            # TODO: think about automatic removing expired tokens from DB
+        """
+        if not turn_off:
+            username = request.json.get('username')
+            password = request.json.get('password')
+
+            if username is None or password is None:
+                logger.critical(f"Username or password is missing")
+                # Raise a HTTPException for the given http_status_code
+                abort(400)
+
+            auth_token = verify_request_header()
+
+            user_id, token_iat = auth.decode_token(
+                auth_token,
+                current_app.config['SECRET_KEY']
+            )
+
+            if isinstance(user_id, int):
+                asdb.delete_token(user_id, token_iat)
+                responseObject = {
+                    'status': 'success',
+                    'message': 'Successfully logged out.',
+                    'username': username, 
+                }
+
+                return jsonify(responseObject)
+            else:
+                logger.critical(f"{user_id}")
+                abort(403)
+                
+        
