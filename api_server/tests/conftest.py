@@ -13,7 +13,7 @@ from api_server.api_v1 import api as ns
 from api_server.api_func import create_app
 from api_server.database import db 
 from api_server.sockets import socketio
-from db.models import Model, States 
+from db.models import Model, States, User
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d/%H:%M:%S')
 logger = logging.getLogger(__name__)
@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 @pytest.fixture(scope='session')
 def test_db():
     return testing.postgresql.Postgresql()
+
 
 @pytest.fixture(scope='session')
 def timescaleDB(request, test_db):
@@ -47,10 +48,10 @@ def timescaleDB(request, test_db):
         'power'
     ]
 
-    states = []
+    db_data = []
 
     for i in range(len(devices)):
-        states.append(
+        db_data.append(
                 States(
                     timestamp=datetime.now(), 
                     state= {'enabled': False}, 
@@ -59,14 +60,20 @@ def timescaleDB(request, test_db):
                     type=types[i]
                 )
             )
+    
+    test_user = User(username="test_user")
+    test_user.set_password("test_password")
 
-    logger.debug(f"DB DATA STATES:\n{pformat(states)}")
+    db_data.append(test_user)
+
+    logger.debug(f"DB DATA STATES:\n{pformat(db_data)}")
 
     session.bulk_save_objects(
-        objects=states
+        objects=db_data
     )
 
     session.commit() 
+
     
     def resource_teardown():
         logger.debug("Database Resource teardown!")
@@ -75,6 +82,7 @@ def timescaleDB(request, test_db):
     request.addfinalizer(resource_teardown)
 
     return session
+
 
 @pytest.fixture(scope='session')
 def flask_app(test_db, timescaleDB):
@@ -86,6 +94,7 @@ def flask_app(test_db, timescaleDB):
     app.config['FLASK_DEBUG'] = False
     app.config['TESTING'] = True
     app.config['PRESERVE_CONTEXT_ON_EXCEPTION'] = False
+    app.config['SECRET_KEY'] = os.getenv('API_SECRET_KEY')
 
     logger.debug(f'Test App DB: {app.config["SQLALCHEMY_DATABASE_URI"]}')
     db.init_app(app)

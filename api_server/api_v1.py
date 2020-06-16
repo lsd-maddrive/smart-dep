@@ -2,14 +2,15 @@ import datetime
 import json
 import logging
 import os
-import time
 
-from flask import request, current_app
-from flask_restplus import Resource, Namespace, fields, reqparse
-from kombu import Connection, Exchange, Producer
+from flask import request, current_app, jsonify
+from flask_restplus import Resource, Namespace, fields, reqparse, abort
 from pprint import pformat
+from sqlalchemy.exc import IntegrityError
 
+import messages as msgs
 import database as asdb
+import auth
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -240,7 +241,9 @@ class Device(Resource):
         logger.debug(f"Request to update device:\n{pformat(device_info)}")
 
         asdb.update_device(device_info)
-        rabbit_reset_device(device_info['id'])
+        msgs.rabbit_reset_device(
+            current_app.config['RABBITMQ_URI'],
+            device_info['id'])
 
     @api.expect(_model_device_del, validate=True)
     def delete(self):
@@ -251,7 +254,9 @@ class Device(Resource):
             asdb.reset_device(device_info)
         else:
             asdb.delete_device(device_info)
-        rabbit_reset_device(device_info['id'])
+        msgs.rabbit_reset_device(
+            current_app.config['RABBITMQ_URI'],
+            device_info['id'])
 
 
 _model_ping = api.model('Device_ping', {
@@ -266,7 +271,9 @@ class DevicePing(Resource):
         device = request.get_json()
         logger.debug(f'Request to ping: {device}')
 
-        rabbit_ping_device(device['id'])
+        msgs.rabbit_ping_device(
+            current_app.config['RABBITMQ_URI'],
+            device['id'])
 
 
 _model_command = api.model('Device_command', {
@@ -290,7 +297,8 @@ class DeviceCommand(Resource):
         cmd = data['cmd']
         source_id = 'api'
 
-        rabbit_send_command(
+        msgs.rabbit_send_command(
+            current_app.config['RABBITMQ_URI'],
             device_id,
             place_id,
             type_,
@@ -298,58 +306,128 @@ class DeviceCommand(Resource):
             source_id
         )
 
-# RabbitMQ functions
+
+@api.route('/register', methods=['POST'])
+class Signup(Resource):
+    def post(self):
+        if not turn_off:
+            username = request.json.get('username')
+            password = request.json.get('password')
+
+            if username is None or password is None:
+                logger.critical(f"Username or password is missing")
+                # Raise a HTTPException for the given http_status_code
+                abort(400)
+
+            try:
+                new_user = asdb.create_user(username, password)
+            except IntegrityError as err:
+                logger.critical(f"User '{username}' is already existed")
+                abort(400)
+
+            new_token = asdb.save_token(
+                new_user.id,
+                current_app.config['SECRET_KEY']
+            )
+
+            responseObject = {
+                'token': new_token.token,
+                'username': new_user.username,
+                'role': new_user.role
+            }
+
+            return jsonify(responseObject)
 
 
-def rabbit_ping_device(device_id):
-    uri = current_app.config['RABBITMQ_URI']
-    logger.debug(f"Connect to RabbitMQ {uri}")
-    with Connection(uri) as conn:
-        exchange = Exchange('configurations', type='topic', durable=True)
-        producer = Producer(exchange=exchange,
-                            channel=conn.channel(),
-                            routing_key=f'cfg.ping')
+@api.route('/login', methods=['POST'])
+class Login(Resource):
+    def post(self):
+        if not turn_off:
+            username = request.json.get('username')
+            password = request.json.get('password')
 
-        message = json.dumps({
-            'device_id': device_id,
-            'ts': time.time()
-        })
-        producer.publish(message)
+            if username is None or password is None:
+                logger.critical(f"Username or password is missing")
+                # Raise a HTTPException for the given http_status_code
+                abort(400)
+
+            user = asdb.get_user_data(username)
+
+            # check is user exists and password is valid
+            if user is not None and user.check_password(password):
+                new_token = asdb.save_token(
+                    user.id, current_app.config['SECRET_KEY'])
+
+                responseObject = {
+                    'token': new_token.token,
+                    'username': user.username,
+                    'role': user.role
+                }
+
+                return jsonify(responseObject)
+            else:
+                logger.critical(
+                    f"Login failed! User \"{username}\" doesn't existed or password is invalid")
+                # Raise a HTTPException for the given http_status_code
+                abort(400)
 
 
-def rabbit_reset_device(device_id):
-    uri = current_app.config['RABBITMQ_URI']
-    logger.debug(f"Connect to RabbitMQ {uri}")
-    with Connection(uri) as conn:
-        exchange = Exchange('configurations', type='topic', durable=True)
-        producer = Producer(exchange=exchange,
-                            channel=conn.channel(),
-                            routing_key=f'cfg.reset')
+def verify_request_header():
+    """
+        Check if request.header consists of field 'Authorization'
+        and token
 
-        message = json.dumps({
-            'device_id': device_id,
-            'ts': time.time()
-        })
-        producer.publish(message)
+        Returns:
+            token (string)
+    """
+    auth_header = request.headers.get('Authorization')
+    if auth_header.lower().startswith('bearer'):
+        try:
+            auth_token = auth_header.split(" ")[1]
+            if len(auth_token) == 0:
+                raise IndexError
+            return auth_token
+        except IndexError as err:
+            logger.critical(f"TOKEN NOT FOUND IN REQUEST HEADER")
+            abort(400)
+    else:
+        logger.critical(f"HEADER 'Authorization' NOT FOUND")
+        abort(400)
 
 
-def rabbit_send_command(device_id, place_id, type_, cmd, source_id):
-    uri = current_app.config['RABBITMQ_URI']
-    logger.debug(f"Connect to RabbitMQ {uri}")
+@api.route('/logout', methods=['POST'])
+class Logout(Resource):
+    def post(self):
+        """
+            This method is for checking functionality of token and headers
+            Maybe in the future it will be removed
+            # TODO: think about automatic removing expired tokens from DB
+        """
+        if not turn_off:
+            username = request.json.get('username')
+            password = request.json.get('password')
 
-    with Connection(uri) as conn:
-        channel = conn.channel()
-        exchange = Exchange('commands', type='topic', durable=True)
-        producer = Producer(exchange=exchange,
-                            channel=channel,
-                            routing_key=f'cmd.{place_id}.{type_}')
+            if username is None or password is None:
+                logger.critical(f"Username or password is missing")
+                # Raise a HTTPException for the given http_status_code
+                abort(400)
 
-        message = json.dumps({
-            'device_id': device_id,
-            'data': cmd,
-            'source_id': source_id,
-            'ts': time.time()
-        })
+            auth_token = verify_request_header()
 
-        producer.publish(message)
-    return f'Message sent: {message}'
+            user_id, token_iat = auth.decode_token(
+                auth_token,
+                current_app.config['SECRET_KEY']
+            )
+
+            if isinstance(user_id, int):
+                asdb.delete_token(user_id, token_iat)
+                responseObject = {
+                    'status': 'success',
+                    'message': 'Successfully logged out.',
+                    'username': username,
+                }
+
+                return jsonify(responseObject)
+            else:
+                logger.critical(f"{user_id}")
+                abort(403)
