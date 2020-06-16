@@ -172,7 +172,8 @@ class Places(Resource):
             
             return places_dict_list
 
-turn_off = True 
+# to turn on authotization, set flag turn_off to False 
+turn_off = True
 
 @api.route('/register', methods=['POST'])
 class Signup(Resource):
@@ -195,7 +196,7 @@ class Signup(Resource):
             new_token = asdb.save_token(new_user.id)
 
             responseObject = {
-                'token': new_token,
+                'token': new_token.token,
                 'username': new_user.username, 
                 'role': new_user.role
             }
@@ -222,11 +223,10 @@ class Login(Resource):
                 new_token = asdb.save_token(user.id)
 
                 responseObject = {
-                    'token': new_token,
+                    'token': new_token.token,
                     'username': user.username, 
                     'role': user.role
                 }
-                logger.debug(f"Login Post: {responseObject}")
                 
                 return jsonify(responseObject) 
             else:
@@ -277,7 +277,7 @@ class Logout(Resource):
 
             auth_token = verify_request_header()
 
-            user_id, token_iat = asdb.Tokens.decode_auth_token(auth_token)
+            user_id, token_iat = asdb.decode_token(auth_token)
 
             if isinstance(user_id, int):
                 asdb.delete_token(user_id, token_iat)

@@ -7,7 +7,7 @@ import pytest
 import pytest_env
 
 from api_server.database import db, save_token
-from db.models import States, Users, Tokens
+from db.models import States, User, Token
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d/%H:%M:%S')
 logger = logging.getLogger(__name__)
@@ -135,11 +135,11 @@ def test_logout(client, timescaleDB):
                     json=test_json)
 
 
-    user_id = timescaleDB.query(Users.id). \
-        filter(Users.username == test_json['username'])
+    user_id = timescaleDB.query(User.id). \
+        filter(User.username == test_json['username'])
 
-    token_result = timescaleDB.query(Tokens.token). \
-        filter(Tokens.parent_id == user_id).first()
+    token_result = timescaleDB.query(Token.token). \
+        filter(Token.parent_id == user_id).first()
     token = [str(tkn) for tkn in token_result][0]
     
     rv = client.post('http://localhost:5000/api/v1/logout',
@@ -186,11 +186,11 @@ def test_expiring_token(client, timescaleDB):
                     json=test_json)
 
     sleep(5)
-    user_id = timescaleDB.query(Users.id). \
-        filter(Users.username == test_json['username'])
+    user_id = timescaleDB.query(User.id). \
+        filter(User.username == test_json['username'])
 
-    token_result = timescaleDB.query(Tokens.token). \
-        filter(Tokens.parent_id == user_id).first()
+    token_result = timescaleDB.query(Token.token). \
+        filter(Token.parent_id == user_id).first()
     token = [str(tkn) for tkn in token_result][0]
 
     rv = client.post('http://localhost:5000/api/v1/logout',

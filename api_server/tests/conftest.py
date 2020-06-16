@@ -13,7 +13,7 @@ from api_server.api_v1 import api as ns
 from api_server.api_func import create_app
 from api_server.database import db 
 from api_server.sockets import socketio
-from db.models import Model, States, Users
+from db.models import Model, States, User
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d/%H:%M:%S')
 logger = logging.getLogger(__name__)
@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 @pytest.fixture(scope='session')
 def test_db():
     return testing.postgresql.Postgresql()
+
 
 @pytest.fixture(scope='session')
 def timescaleDB(request, test_db):
@@ -60,7 +61,7 @@ def timescaleDB(request, test_db):
                 )
             )
     
-    test_user = Users(username="test_user")
+    test_user = User(username="test_user")
     test_user.set_password("test_password")
 
     db_data.append(test_user)
@@ -73,7 +74,6 @@ def timescaleDB(request, test_db):
 
     session.commit() 
 
-    session.query(Users)
     
     def resource_teardown():
         logger.debug("Database Resource teardown!")
@@ -82,6 +82,7 @@ def timescaleDB(request, test_db):
     request.addfinalizer(resource_teardown)
 
     return session
+
 
 @pytest.fixture(scope='session')
 def flask_app(test_db, timescaleDB):

@@ -4,7 +4,7 @@ import logging
 import pytest
 
 import api_server.database as asdb
-from db.models import States, Users
+from db.models import States, User, Token
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d/%H:%M:%S')
 logger = logging.getLogger(__name__)
@@ -81,8 +81,69 @@ def test_create_user(timescaleDB):
         db_session=timescaleDB
     )
 
-    num_of_users = timescaleDB.query(Users).count()
+    num_of_users = timescaleDB.query(User).count()
 
     assert num_of_users == 2, "New user wasn't added to DB"
-    assert new_user.username == 'new_test_user'
-    assert new_user.id == 2
+    assert new_user.username == 'new_test_user', "Username is wrong"
+    assert new_user.id == 2, "USER ID is wrong"
+
+
+def test_save_token(timescaleDB):
+    test_token = asdb.save_token(
+        user_id=1, 
+        db_session=timescaleDB
+    )
+
+    check_token = [str(tkn) for tkn in timescaleDB.query(Token.token).first()][0]
+    
+    assert test_token.token == check_token, "Token is invalid" 
+
+
+def test_delete_token(timescaleDB):
+    if timescaleDB.query(Token).count() == 0:
+        new_token = asdb.save_token(
+            user_id=1, 
+            db_session=timescaleDB
+        )
+
+        check_token = new_token.token 
+        parent_id = new_token.parent_id
+        created_on = new_token.created_on
+    else:
+        test_token = timescaleDB.query(Token).first()
+        
+        check_token = test_token.token 
+        parent_id = test_token.parent_id  
+        created_on = test_token.created_on
+
+    asdb.delete_token(
+        user_id=parent_id, 
+        created_on=created_on,
+        db_session=timescaleDB
+    )
+
+    check = timescaleDB.query(Token). \
+        filter(Token.token == check_token).first()
+
+    assert check == None, "Token wasn't deleted from DB" 
+
+
+def test_decode_token(timescaleDB):
+    if timescaleDB.query(Token).count() == 0:
+        new_token = asdb.save_token(
+            user_id=1, 
+            db_session=timescaleDB
+        )
+    else:
+        new_token = timescaleDB.query(Token).first()
+
+    user_id, time = asdb.decode_token(new_token.token)
+
+    # clear Token table to avoid conflicts in other tests
+    asdb.delete_token(
+        user_id=new_token.parent_id, 
+        created_on=new_token.created_on,
+        db_session=timescaleDB
+    )
+
+    assert user_id == 1, "User ID is wrong" 
