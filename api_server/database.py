@@ -1,5 +1,4 @@
 from db.models import metadata, User, Token, State, Command, Config, Place, Device
-import api_server.auth as auth
 from datetime import datetime
 from sqlalchemy.orm import Session
 from sqlalchemy import distinct
@@ -9,6 +8,9 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, timedelta
 import logging
 import os
+
+from werkzeug.security import generate_password_hash
+import auth
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -186,7 +188,7 @@ def create_user(username, password, db_session=db.session):
             Query object that contains data for new specified user (one row)
     """
     user = User(username=username)
-    user.set_password(password)
+    user.password_hash = generate_password_hash(password)
 
     db_session.add(user)
     db_session.commit()
@@ -239,4 +241,3 @@ def delete_token(user_id, created_on, db_session=db.session):
     # TODO: fix time from utc to local time (?) only for info representation
     logger.debug(
         f"Token for User ID: {user_id} created: {created_on} was deleted")
-

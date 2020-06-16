@@ -1,7 +1,6 @@
 from pprint import pformat
-from werkzeug.security import generate_password_hash, check_password_hash
 import uuid
-from sqlalchemy.dialects.postgresql import JSONB, UUID, ARRAY
+from sqlalchemy.dialects.postgresql import JSONB, UUID, ARRAY, BYTEA
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import MetaData, Column, Integer, String, DateTime, Boolean, ForeignKey
@@ -140,12 +139,6 @@ class User(Model):
         self.created_on = datetime.now()
         self.role = role
         self.avatar_photo = avatar_photo
-
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
 
     def __repr__(self):
         return f"User ID: {self.id}, Username: {self.username}, \

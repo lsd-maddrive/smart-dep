@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 def init_broker(uri):
-    with Connection() as conn:
+    with Connection(uri) as conn:
         channel = conn.channel()
         device_exchange = Exchange('amq.topic', type='topic', durable=True)
 
@@ -30,8 +30,8 @@ def init_broker(uri):
 
 
 def ping_device(uri, device_id):
-    uri = current_app.config['RABBITMQ_URI']
     logger.debug(f"Connect to RabbitMQ {uri}")
+
     with Connection(uri) as conn:
         exchange = Exchange('configurations', type='topic', durable=True)
         producer = Producer(exchange=exchange,
@@ -47,6 +47,7 @@ def ping_device(uri, device_id):
 
 def reset_device(uri, device_id):
     logger.debug(f"Connect to RabbitMQ {uri}")
+
     with Connection(uri) as conn:
         exchange = Exchange('configurations', type='topic', durable=True)
         producer = Producer(exchange=exchange,
