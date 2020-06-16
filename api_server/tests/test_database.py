@@ -88,9 +88,10 @@ def test_create_user(timescaleDB):
     assert new_user.id == 2, "USER ID is wrong"
 
 
-def test_save_token(timescaleDB):
+def test_save_token(timescaleDB, flask_app):
     test_token = asdb.save_token(
         user_id=1, 
+        secret=flask_app.config['SECRET_KEY'],
         db_session=timescaleDB
     )
 
@@ -99,10 +100,11 @@ def test_save_token(timescaleDB):
     assert test_token.token == check_token, "Token is invalid" 
 
 
-def test_delete_token(timescaleDB):
+def test_delete_token(timescaleDB, flask_app):
     if timescaleDB.query(Token).count() == 0:
         new_token = asdb.save_token(
             user_id=1, 
+            secret=flask_app.config['SECRET_KEY'],
             db_session=timescaleDB
         )
 
@@ -128,22 +130,3 @@ def test_delete_token(timescaleDB):
     assert check == None, "Token wasn't deleted from DB" 
 
 
-def test_decode_token(timescaleDB):
-    if timescaleDB.query(Token).count() == 0:
-        new_token = asdb.save_token(
-            user_id=1, 
-            db_session=timescaleDB
-        )
-    else:
-        new_token = timescaleDB.query(Token).first()
-
-    user_id, time = asdb.decode_token(new_token.token)
-
-    # clear Token table to avoid conflicts in other tests
-    asdb.delete_token(
-        user_id=new_token.parent_id, 
-        created_on=new_token.created_on,
-        db_session=timescaleDB
-    )
-
-    assert user_id == 1, "User ID is wrong" 

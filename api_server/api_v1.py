@@ -7,8 +7,10 @@ from flask import request, current_app, jsonify
 from flask_restplus import Resource, Namespace, fields, abort
 from kombu import Connection, Exchange, Producer
 from pprint import pformat
+from sqlalchemy.exc import IntegrityError
 
 import api_server.database as asdb 
+import api_server.auth as auth
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -173,7 +175,7 @@ class Places(Resource):
             return places_dict_list
 
 # to turn on authotization, set flag turn_off to False 
-turn_off = True
+turn_off = False
 
 @api.route('/register', methods=['POST'])
 class Signup(Resource):
@@ -187,13 +189,16 @@ class Signup(Resource):
                 # Raise a HTTPException for the given http_status_code
                 abort(400)
             
-            if asdb.get_user_data(username) is not None: 
-                logger.critical(f"User \"{username}\" is already existed")
-                # Raise a HTTPException for the given http_status_code
+            try:
+                new_user = asdb.create_user(username, password)
+            except IntegrityError as err:
+                logger.critical(f"User '{username}' is already existed")
                 abort(400)
-            
-            new_user = asdb.create_user(username, password)
-            new_token = asdb.save_token(new_user.id)
+
+            new_token = asdb.save_token(
+                new_user.id,
+                current_app.config['SECRET_KEY']
+            )
 
             responseObject = {
                 'token': new_token.token,
@@ -220,7 +225,7 @@ class Login(Resource):
 
             # check is user exists and password is valid 
             if user is not None and user.check_password(password):
-                new_token = asdb.save_token(user.id)
+                new_token = asdb.save_token(user.id, current_app.config['SECRET_KEY'])
 
                 responseObject = {
                     'token': new_token.token,
@@ -244,7 +249,7 @@ def verify_request_header():
             token (string)
     """
     auth_header = request.headers.get('Authorization')
-    if auth_header:
+    if auth_header.lower().startswith('bearer'):
         try:
             auth_token = auth_header.split(" ")[1]
             if len(auth_token) == 0:
@@ -277,7 +282,10 @@ class Logout(Resource):
 
             auth_token = verify_request_header()
 
-            user_id, token_iat = asdb.decode_token(auth_token)
+            user_id, token_iat = auth.decode_token(
+                auth_token,
+                current_app.config['SECRET_KEY']
+            )
 
             if isinstance(user_id, int):
                 asdb.delete_token(user_id, token_iat)

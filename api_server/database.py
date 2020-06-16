@@ -11,6 +11,7 @@ from sqlalchemy import desc
 from sqlalchemy import distinct
 from sqlalchemy.orm import Session
 
+import api_server.auth as auth
 from db.models import metadata, States, User, Token
 
 db = SQLAlchemy(metadata=metadata)
@@ -116,7 +117,7 @@ def create_user(username, password, db_session=db.session):
 
 
 # TODO: maybe ser life time of token in another place (??)
-def save_token(user_id, db_session=db.session, exp_days=7, exp_sec=0):
+def save_token(user_id, secret, db_session=db.session, exp_days=7, exp_sec=0):
     """
         Add new token-row to DB (Tokens table)
 
@@ -130,10 +131,11 @@ def save_token(user_id, db_session=db.session, exp_days=7, exp_sec=0):
     """
     new_token = Token(parent_id=user_id, days=exp_days, secs=exp_sec)
 
-    new_token.token = encode_token(
+    new_token.token = auth.encode_token(
         user_id=new_token.parent_id,
         created_time=new_token.created_on, 
-        expired_time=new_token.expired_on
+        expired_time=new_token.expired_on,
+        secret=secret
     )
 
     db_session.add(new_token)
@@ -154,63 +156,7 @@ def delete_token(user_id, created_on, db_session=db.session):
                 delete()
     
     db_session.commit()
-    # TODO: fix time from utc to local time 
+    # TODO: fix time from utc to local time (?) only for info representation
     logger.debug(f"Token for User ID: {user_id} created: {created_on} was deleted")
 
 
-def decode_token(token):
-    """
-        Decodes the auth token
-        Args: 
-            auth_token: encoded token (payload)
-        Returns:
-            user ID (integer)
-            time of creation token (int) = number of seconds
-    """
-    try:
-        payload = jwt.decode(token, os.getenv('API_SECRET_KEY'), algorithms=['HS256'])
-        return payload['user'], payload['iat']
-    except jwt.ExpiredSignatureError:
-        return 'Signature expired. Please log in again.', ''
-    except jwt.InvalidTokenError:
-        return 'Invalid token. Please log in again.', ''
-
-    
-def encode_token(user_id, created_time, expired_time):
-        """
-            Generates the Auth Token
-            Args:
-                user_id(integer): parent ID 
-            Returns: 
-                token (string)
-        """
-        try:
-            header = {
-                'typ': 'JWT', 
-                'alg': 'HS256'
-            }
-
-            payload = {
-                # the subject of the token 
-                'sub': "auth", 
-                # expiration date of the token
-                'exp': expired_time,
-                # the time the token is generated
-                'iat': created_time,
-                # user who receive the token 
-                'user': user_id,
-            }
-
-            token = jwt.encode(
-                payload,
-                os.getenv('API_SECRET_KEY'),
-                algorithm=header['alg']
-            )
-            # convert from bytes to string 
-            return token.decode('utf-8')
-       
-        except Exception as err:
-            logger.error(f"Encode Token Payload Error {err}")
-            return err
-
-    
