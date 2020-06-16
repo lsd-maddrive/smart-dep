@@ -93,6 +93,7 @@ def update_device(device_info, db_session=db.session):
     device.update_date = datetime.utcnow()
 
     device.name = device_info['name']
+    device.icon_name = device_info['icon_name']
     device.type = device_info['type']
     device.place_id = device_info['place_id']
     device.unit_config = device_info['config']

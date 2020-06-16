@@ -101,6 +101,9 @@ class Tracker(object):
         in_data = json.loads(body.decode('utf-8'))
         if 'ts' not in in_data:
             in_data['ts'] = datetime.utcnow()
+        # Convert timestamp to datetime
+        else:
+            in_data['ts'] = datetime.fromtimestamp(in_data['ts'])
 
         new_row = self.get_record(in_data)
 

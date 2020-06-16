@@ -43,6 +43,7 @@
                               item-text="desc"
                               item-value="id"
                               label="Тип"
+                              required
                             ></v-select>
                           </v-col>
                           <v-col cols="12" sm="6" md="6">
@@ -53,7 +54,21 @@
                               item-text="num"
                               item-value="id"
                               label="Помещение"
+                              required
                             ></v-select>
+                          </v-col>
+                          <v-col cols="12" sm="6" md="6">
+                            <v-combobox
+                              v-model="deviceEditItem.icon_name"
+                              :prepend-inner-icon="deviceEditItem.icon_name"
+                              :items="icons"
+                              :rules="[v => !!!v || /^mdi-/.test(v) || 'Невалидная иконка' ]"
+                              label="Иконка"
+                            >
+                              <template slot="item" slot-scope="data">
+                                <span><v-icon >{{ data.item }}</v-icon> {{ data.item }}</span>
+                              </template>
+                            </v-combobox>
                           </v-col>
                         </v-row>
                       </v-form>
@@ -96,7 +111,6 @@
               </template>
               <span>Удалить</span>
             </v-tooltip>
-
           </template>
         </v-data-table>
       </v-col>
@@ -135,7 +149,8 @@ export default {
       ],
       devices: [],
       places: [],
-      deviceTypes: []
+      deviceTypes: [],
+      icons: Services.getIcons()
     };
   },
   computed: {
@@ -190,6 +205,7 @@ export default {
     },
 
     saveDevice() {
+      console.log(this.deviceEditItem)
       let validationResult = this.$refs.deviceForm.validate();
       if (!validationResult) {
         return;

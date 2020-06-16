@@ -147,6 +147,19 @@
                           <v-col cols="12" sm="6" md="6" v-if="deviceEditItem.id">
                             <v-text-field v-model="deviceEditItem.id" label="ID" readonly></v-text-field>
                           </v-col>
+                          <v-col cols="12" sm="6" md="6">
+                            <v-combobox
+                              v-model="deviceEditItem.icon_name"
+                              :prepend-inner-icon="deviceEditItem.icon_name"
+                              :items="icons"
+                              :rules="[v => !!!v || /^mdi-/.test(v) || 'Невалидная иконка' ]"
+                              label="Иконка"
+                            >
+                              <template slot="item" slot-scope="data">
+                                <span><v-icon >{{ data.item }}</v-icon> {{ data.item }}</span>
+                              </template>
+                            </v-combobox>
+                          </v-col>
                           <!-- <v-col cols="12" sm="6" md="6">
                               <v-select
                                 v-model="deviceEditItem.type"
@@ -279,7 +292,8 @@ export default {
           desc: "LabView",
           id: "labview"
         }
-      ]
+      ],
+      icons: Services.getIcons()
     };
   },
   computed: {

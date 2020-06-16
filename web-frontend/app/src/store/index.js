@@ -232,9 +232,9 @@ export default new Vuex.Store({
 
     addDevice(state, deviceState) {
       if (deviceState.type == "light") {
-        deviceState.icon_name = 'mdi-lightbulb-on'
+        deviceState.type_icon = 'mdi-lightbulb-on'
       } else if (deviceState.type == "power") {
-        deviceState.icon_name = 'mdi-lightning-bolt'
+        deviceState.type_icon = 'mdi-lightning-bolt'
       }
 
       deviceState.fb_diff_ms = Date.now() - (deviceState.ts*1000);

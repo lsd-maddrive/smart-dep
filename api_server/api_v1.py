@@ -124,6 +124,7 @@ _model_state = api.model('State', {
     'device_id': fields.String,
     'type': fields.String,
     'name': fields.String,
+    'icon_name': fields.String,
     'ts': fields.Float,
     'state': fields.Raw,
 })
@@ -144,6 +145,7 @@ class DevicesStates(Resource):
                 {
                     'device_id': dev.get_id(),
                     'name': dev.name,
+                    'icon_name': dev.icon_name,
                     'type': dev.type,
                     'state': last_st.state if last_st else {},
                     'ts': last_st.timestamp.timestamp() if last_st else dev.update_date.timestamp(),
@@ -192,6 +194,7 @@ _model_device_get_args.add_argument(
 _model_device = api.model('Device', {
     'id': fields.String,
     'name': fields.String,
+    'icon_name': fields.String,
     'type': fields.String,
     'place_id': fields.Integer,
     'last_ts': fields.Float,
@@ -221,6 +224,7 @@ class Device(Resource):
             result_devices.append({
                 'id': str(dev.id),
                 'name': dev.name,
+                'icon_name': dev.icon_name,
                 'type': dev.type,
                 'place_id': dev.place_id,
                 'config': dev.unit_config,

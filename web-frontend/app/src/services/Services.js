@@ -62,6 +62,16 @@ const realServices = {
   isDebug() {
     return process.env.NODE_ENV !== 'production'
   },
+
+  getIcons() {
+    return [
+      'mdi-home',
+      'mdi-presentation-play',
+      'mdi-desk',
+      'mdi-printer',
+      'mdi-desktop-tower-monitor'
+    ]
+  }
 }
 
 const isFake = process.env.FAKE_SERVICES ? process.env.FAKE_SERVICES : false && process.env.NODE_ENV !== 'production';
