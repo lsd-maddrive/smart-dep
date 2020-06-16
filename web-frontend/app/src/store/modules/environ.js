@@ -2,91 +2,74 @@ import Services from "@/services/Services";
 
 // initial state
 const state = {
-  data: [],
-  dataLimit: 20
+  data: new Map(),
+  times: [],
+  dataLimit: 20,
+  deviceId: null
 }
 
 // getters
 const getters = {
   tempVal(state, getters, rootState) {
-    let item = state.data[state.data.length - 1]
-    if (item === undefined)
+    let ts = state.times[state.times.length - 1]
+    if (ts === undefined)
       return 0
-    return item.temp
+    return state.data.get(ts).temp
   },
   humidVal(state, getters, rootState) {
-    let item = state.data[state.data.length - 1]
-    if (item === undefined)
+    let ts = state.times[state.times.length - 1]
+    if (ts === undefined)
       return 0
-    return item.humid
+    return state.data.get(ts).humid
   },
   lightVal(state, getters, rootState) {
-    let item = state.data[state.data.length - 1]
-    if (item === undefined)
+    let ts = state.times[state.times.length - 1]
+    if (ts === undefined)
       return 0
-    return item.light
+    return state.data.get(ts).light
   },
   times: (state, getters, rootState) => {
     // Looks like it requires in [ms]
-    return state.data.map(pnt => pnt.ts * 1000)
+    return state.times.map(t => t * 1000)
   },
   temps: (state) => {
-    return state.data.map(pnt => pnt.temp)
+    return state.times.map(t => state.data.get(t).temp)
   },
   humids: (state) => {
-    return state.data.map(pnt => pnt.humid)
+    return state.times.map(t => state.data.get(t).humid)
   }
 }
 
 // actions
 const actions = {
-  syncData({
-    state,
-    commit,
-    rootState
-  }, data) {
-    commit('clear')
-    const placeId = data.placeId
-
-    return new Promise((resolve, reject) => {
-      Services.getEnvironmentStates({
-        place_id: placeId,
-        count: state.dataLimit
-      }).then(
-        response => {
-          for (let data of response.data) {
-            commit('setExtState', data)
-          }
-          resolve()
-        },
-        error => {
-          console.log("Failed to request environment data: " + error)
-          reject(error)
-        }
-      )
-    })
-  },
 }
 
 // mutations
 const mutations = {
   clear: (state) => {
-    state.data = [];
+    state.data.clear();
   },
 
   setExtState: (state, payload) => {
-    // console.log('New env data:')
-    // console.log(payload)
-    // console.log(state.data)
-    state.data.push({
-      temp: payload.state.temperature,
-      humid: payload.state.humidity,
-      light: payload.state.lightness,
-      ts: payload.ts
-    });
+    if (payload.device_id != state.deviceId) {
+      state.data.clear();
+      state.times = [];
+      state.deviceId = payload.device_id;
+    }
 
-    if (state.data.length > state.dataLimit) {
-      state.data.shift()
+    let ts = payload.ts;
+    if (!state.data.has(ts)) {
+      state.data.set(payload.ts, {
+        temp: payload.state.temperature,
+        humid: payload.state.humidity,
+        light: payload.state.lightness,
+      })
+      state.times.push(ts);
+    }
+
+    if (state.times.length > state.dataLimit) {
+      let rm_ts = state.times.shift();
+      state.data.delete(rm_ts);
     }
   }
 }

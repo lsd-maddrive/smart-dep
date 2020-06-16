@@ -1,4 +1,13 @@
 version: "3"
+
+volumes:
+    # db-data:
+    # driver: local
+    grafana-data:
+        driver: local
+    loki-data:
+        driver: local
+
 services:
     timescaledb:
         image: timescale/timescaledb:latest-pg11
@@ -61,14 +70,42 @@ services:
         build:
             context: .
             dockerfile: api_server/Dockerfile
-        env_file: 
+        env_file:
             - "config/.env.${SMART_ENV:-dev}"
-        environment: 
-            - DMINUTES=5 
+        environment:
+            - DMINUTES=5
+            # - RECREATE_TABLES=True
+            - PREPARE_RABBITMQ=True
         restart: always
         # For swagger access
         ports:
             - "5000:8080"
+        depends_on:
+            - timescaledb
+            - rabbitmq
+        command:
+            [
+                "gunicorn",
+                "-k=geventwebsocket.gunicorn.workers.GeventWebSocketWorker",
+                "--workers=1",
+                "-b=0.0.0.0:8080",
+                "app:app",
+            ]
+        logging:
+            driver: "json-file"
+            options:
+                max-file: "5"
+                max-size: "20m"
+
+    microserver:
+        build:
+            context: .
+            dockerfile: micro_server/Dockerfile
+        env_file:
+            - "config/.env.${SMART_ENV:-dev}"
+        restart: always
+        ports:
+            - "5001:8080"
         depends_on:
             - timescaledb
         logging:
@@ -76,16 +113,16 @@ services:
             options:
                 max-file: "5"
                 max-size: "20m"
+        command:
+            ["gunicorn", "--workers=1", "-b=0.0.0.0:8080", "wsgi:create_app()"]
 
     emulator:
         build:
             context: emulator
         restart: always
-        hostname: emulator
-        volumes:
-            - ./emulator/config.yml:/emulator/config.yml:ro
         depends_on:
             - rabbitmq
+            - microserver
         logging:
             driver: "json-file"
             options:
@@ -136,20 +173,20 @@ services:
             options:
                 max-file: "5"
                 max-size: "20m"
-    
+
     state_tracker:
         build:
             context: .
             dockerfile: tracker/Dockerfile
-        env_file: 
+        env_file:
             - "config/.env.${SMART_ENV:-dev}"
-        environment: 
+        environment:
             - TYPE=state
             - BUFFER_LIMIT=1000
             - TIMEOUT_S=1.0
         restart: always
         hostname: state_tracker
-        depends_on: 
+        depends_on:
             - rabbitmq
             - timescaledb
         logging:
@@ -157,20 +194,20 @@ services:
             options:
                 max-file: "5"
                 max-size: "20m"
-    
+
     command_tracker:
         build:
             context: .
             dockerfile: tracker/Dockerfile
-        env_file: 
+        env_file:
             - "config/.env.${SMART_ENV:-dev}"
-        environment: 
-            - TYPE=command 
+        environment:
+            - TYPE=command
             - BUFFER_LIMIT=1000
             - TIMEOUT_S=1.0
         restart: always
         hostname: command_tracker
-        depends_on: 
+        depends_on:
             - rabbitmq
             - timescaledb
         logging:
@@ -178,20 +215,20 @@ services:
             options:
                 max-file: "5"
                 max-size: "20m"
-    
+
     config_tracker:
         build:
             context: .
             dockerfile: tracker/Dockerfile
-        env_file: 
+        env_file:
             - "config/.env.${SMART_ENV:-dev}"
-        environment: 
-            - TYPE=config 
+        environment:
+            - TYPE=config
             - BUFFER_LIMIT=1000
             - TIMEOUT_S=1.0
         restart: always
         hostname: config_tracker
-        depends_on: 
+        depends_on:
             - rabbitmq
             - timescaledb
         logging:
@@ -216,11 +253,3 @@ services:
             options:
                 max-file: "5"
                 max-size: "20m"
-
-volumes:
-    # db-data:
-        # driver: local
-    grafana-data:
-        driver: local
-    loki-data:
-        driver: local

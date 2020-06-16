@@ -1,26 +1,24 @@
 <template>
-  <v-app id="inspire">
-    <h1>
-      Комната {{ place_name }}
+  <v-container fluid>
+    <h1 class="text-center">
+      Помещение {{ placeName }}
       <v-btn
         class="ml-2"
         icon
-        :to="{name: 'EditRoom', params: {id: placeId}, query: {returnUrl: this.$router.currentRoute}}"
+        :to="{name: 'EditRoom', params: {id: this.placeId}, query: {returnUrl: this.$router.currentRoute}}"
       >
         <v-icon>mdi-puzzle-edit</v-icon>
       </v-btn>
     </h1>
-    <v-container fluid>
-      <v-row>
-        <v-col cols="12">
-          <units-panel></units-panel>
-        </v-col>
-        <v-col cols="12">
-          <env-state-panel></env-state-panel>
-        </v-col>
-      </v-row>
-    </v-container>
-  </v-app>
+    <v-row>
+      <v-col cols="12">
+        <units-panel></units-panel>
+      </v-col>
+      <v-col cols="12">
+        <env-state-panel></env-state-panel>
+      </v-col>
+    </v-row>
+  </v-container>
 </template>
 
 <script>
@@ -35,7 +33,7 @@ export default {
     };
   },
   computed: {
-    place_name() {
+    placeName() {
       return this.placeObj ? this.placeObj.name : "";
     },
     placeId() {
@@ -51,7 +49,6 @@ export default {
       const placeId = this.$route.params.id;
       this.$store.dispatch("validatePlace", { placeId: placeId }).then(
         resp => {
-          console.log("Room " + placeId + " found!");
           this.placeObj = resp;
           this.$store.commit("enterPlace", placeId);
 
@@ -64,19 +61,10 @@ export default {
             }
           );
 
-          this.$store.dispatch("environ/syncData", { placeId: placeId }).then(
-            resp => {},
-            err => {
-              console.log(err);
-              this.$toasted.error("Не удалось обновить состояние окружения =(");
-            }
-          );
-
           this.$store.dispatch("startSocketLink");
         },
         err => {
           this.$toasted.error("Комната " + placeId + " не найдена =(");
-          console.log("Room " + placeId + " not found: " + err);
           this.$router.push({ name: "Home" });
         }
       );
@@ -90,6 +78,7 @@ export default {
   beforeDestroy() {
     // Remove devices
     this.$store.commit("clearDeviceStates");
+    this.$store.dispatch("stopSocketLink");
     console.log("beforeDestroy()");
   },
   // We should use this as $route has parameters after creation

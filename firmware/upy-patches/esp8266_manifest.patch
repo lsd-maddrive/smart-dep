@@ -1,0 +1,6 @@
+--- micropython/ports/esp8266/boards/GENERIC/manifest.py.old	2020-06-10 00:03:36.124331200 +0300
++++ micropython/ports/esp8266/boards/GENERIC/manifest.py    2020-06-10 00:03:32.260282662 +0300
+@@ -1,2 +1,2 @@
+-include("$(PORT_DIR)/boards/manifest.py")
++include("$(PORT_DIR)/boards/manifest_release.py")
+ include("$(MPY_DIR)/extmod/uasyncio/manifest.py")

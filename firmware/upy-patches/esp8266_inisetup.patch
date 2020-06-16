@@ -1,0 +1,23 @@
+--- micropython/ports/esp8266/modules/inisetup.py.old  2020-06-09 22:20:03.290000000 +0300
++++ micropython/ports/esp8266/modules/inisetup.py 2020-06-09 23:15:56.841158947 +0300
+@@ -44,7 +44,8 @@
+ def setup():
+     check_bootsec()
+     print("Performing initial setup")
+-    wifi()
++    # Disable WiFi hotspot by default
++    # wifi()
+     uos.VfsLfs2.mkfs(bdev)
+     vfs = uos.VfsLfs2(bdev)
+     uos.mount(vfs, "/")
+@@ -57,8 +58,8 @@
+ import uos, machine
+ #uos.dupterm(None, 1) # disable REPL on UART(0)
+ import gc
+-#import webrepl
+-#webrepl.start()
++import webrepl
++webrepl.start(password="9238")
+ gc.collect()
+ """
+         )

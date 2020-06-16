@@ -12,7 +12,7 @@ from flask_socketio import SocketIO, join_room, leave_room
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-import api_server.database as asdb
+import database as asdb
 
 
 socketio = SocketIO(cors_allowed_origins="*")
@@ -24,11 +24,12 @@ time_delta = timedelta(minutes=int(os.getenv('DMINUTES', '5')))
 
 
 class PlaceStateSender(Thread):
-    def __init__(self, id_, period_s, db_url):
+    def __init__(self, id_, period_s, place_id, db_url):
         self.id_ = id_
+        self.place_id = place_id
         self.period_s = period_s
         self.enabled = True
-        self.db_url = db_url 
+        self.db_url = db_url
         super(PlaceStateSender, self).__init__()
 
     def stop(self):
@@ -41,35 +42,34 @@ class PlaceStateSender(Thread):
 
         while self.enabled:
             time_start = time.time()
+            start_ts = datetime.now() - time_delta
 
-            current_timestamp = datetime.now()
-            check_time = current_timestamp - time_delta 
-            
-            devices = asdb.get_devices_states(check_time, session)
-            data = [] 
-            for device in devices: 
+            states = asdb.get_last_states(start_ts, self.place_id, session)
+            data = []
+            for st in states:
                 data.append(
                     {
-                        'device_id': device.device_id, 
-                        'type': device.type, 
-                        'state': device.state, 
+                        'device_id': st.get_did(),
+                        'type': st.device.type,
+                        'state': st.state,
+                        'ts': st.timestamp.timestamp(),
+                        # time of emitting 'state' event - fot pytest
+                        'emit_time': datetime.now().timestamp()
                     }
                 )
-            # time of emitting 'state' event - fot pytest
-            data.append({'time': datetime.now()})
             logger.debug(f'Send:\n{pformat(data)}\nto {self.id_}')
             
             socketio.emit('state', data, room=self.id_)
 
             passed_time = time.time() - time_start
             sleep_time = self.period_s - passed_time
-            
+
             if sleep_time < 0:
                 logger.warning(
                     f'Time processing requires more time delay, current processing time: {passed_time} [s]')
             else:
                 time.sleep(sleep_time)
-        
+
         session.close()
 
 
@@ -86,7 +86,7 @@ class PlaceStateSenderManager(object):
         join_room(id_)
 
         if id_ not in self.threads:
-            self.threads[id_] = PlaceStateSender(id_, period, db_url)
+            self.threads[id_] = PlaceStateSender(id_, period, place_id, db_url)
             self.threads_started[id_] = False
             self.counters[id_] = 1
         else:
@@ -96,7 +96,7 @@ class PlaceStateSenderManager(object):
             self.threads[id_].start()
             self.threads_started[id_] = True
         elif not self.threads[id_].is_alive():
-            log.warning(f'Thread for {id_} not alive!')
+            logger.warning(f'Thread for {id_} not alive!')
 
     def stop_place(self, sid):
         id_ = self.sid_2_place.get(sid)
@@ -122,11 +122,23 @@ def _socket_handle_start_states(config):
     session_id = request.sid
     logger.debug(f"SESSION ID {session_id}")
     logger.debug(f'Received config: {config} from {session_id}')
-    place_id = config['place_id']
+    place_id = config['placeId']
     period_s = config['period']
-    current_db_url = current_app.config["SQLALCHEMY_DATABASE_URI"] 
+    current_db_url = current_app.config["SQLALCHEMY_DATABASE_URI"]
 
     place_manager.start_place(place_id, period_s, session_id, current_db_url)
+
+
+@socketio.on('stop_states')
+def _socket_handle_start_states(config):
+    session_id = request.sid
+    logger.debug(f"SESSION ID {session_id}")
+    logger.debug(f'Received config: {config} from {session_id}')
+    place_id = config['placeId']
+    period_s = config['period']
+    current_db_url = current_app.config["SQLALCHEMY_DATABASE_URI"]
+
+    place_manager.stop_place(session_id)
 
 
 @socketio.on('disconnect')

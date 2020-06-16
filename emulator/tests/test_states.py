@@ -3,15 +3,6 @@ import json
 from pprint import pformat
 import config
 
-conn = Connection(config.RABBITMQ_URI)
-channel = conn.channel()
-main_exchange = Exchange('states', type='topic', durable=True)
-main_exchange.declare(channel=channel)
-device_exchange = Exchange('amq.topic', type='topic', durable=True)
-main_exchange.bind_to(device_exchange, routing_key='state.*.*', channel=channel)
-
-queue = Queue('all_states', main_exchange, routing_key='#', durable=False)
-
 
 def pretty(obj):
     return pformat(obj, indent=4)
@@ -25,6 +16,16 @@ def handle_message(body, message):
 
 
 with Connection(config.RABBITMQ_URI) as connection:
+    channel = connection.channel()
+    main_exchange = Exchange('states', type='topic', durable=True)
+    main_exchange.declare(channel=channel)
+    device_exchange = Exchange('amq.topic', type='topic', durable=True)
+    main_exchange.bind_to(
+        device_exchange,
+        routing_key='state.*.*',
+        channel=channel)
+
+    queue = Queue('all_states', main_exchange, routing_key='#', durable=False)
 
     #: Create consumer using our callback and queue.
     #: Second argument can also be a list to consume from
@@ -37,5 +38,4 @@ with Connection(config.RABBITMQ_URI) as connection:
         #: on the connection.
         for _ in eventloop(connection):
             pass
-
 

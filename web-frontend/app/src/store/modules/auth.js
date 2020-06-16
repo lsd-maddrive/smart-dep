@@ -3,7 +3,8 @@ import axios from "axios"
 
 // initial state
 const state = {
-  token: localStorage.getItem('user-token') || '',
+  // TODO -- remove!
+  token: localStorage.getItem('user-token') || '1234',
   status: {},
 }
 
