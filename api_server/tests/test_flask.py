@@ -172,7 +172,11 @@ def test_logout_missing_data(client):
     assert rv_no_token.status_code == 400
 
 
+@pytest.mark.skip(reason="strong dependence on token's life time ")
 def test_expiring_token(client, timescaleDB):
+    """
+        Test is not complite, strong dependence on life time of token
+    """
     test_json = {
         'username': 'new_new_user', 
         'password': 'test_password'
