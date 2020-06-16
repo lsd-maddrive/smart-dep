@@ -241,7 +241,7 @@ class Device(Resource):
         logger.debug(f"Request to update device:\n{pformat(device_info)}")
 
         asdb.update_device(device_info)
-        msgs.rabbit_reset_device(
+        msgs.reset_device(
             current_app.config['RABBITMQ_URI'],
             device_info['id'])
 
@@ -254,7 +254,7 @@ class Device(Resource):
             asdb.reset_device(device_info)
         else:
             asdb.delete_device(device_info)
-        msgs.rabbit_reset_device(
+        msgs.reset_device(
             current_app.config['RABBITMQ_URI'],
             device_info['id'])
 
@@ -271,7 +271,7 @@ class DevicePing(Resource):
         device = request.get_json()
         logger.debug(f'Request to ping: {device}')
 
-        msgs.rabbit_ping_device(
+        msgs.ping_device(
             current_app.config['RABBITMQ_URI'],
             device['id'])
 
@@ -297,7 +297,7 @@ class DeviceCommand(Resource):
         cmd = data['cmd']
         source_id = 'api'
 
-        msgs.rabbit_send_command(
+        msgs.send_command(
             current_app.config['RABBITMQ_URI'],
             device_id,
             place_id,
