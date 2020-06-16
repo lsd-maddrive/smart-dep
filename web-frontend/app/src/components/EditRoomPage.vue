@@ -59,7 +59,7 @@
                 :items="operating_systems"
                 item-text="desc"
                 item-value="id"
-                chips
+                small-chips
                 attach
                 multiple
                 label="ОС"
@@ -72,14 +72,18 @@
                 :items="software"
                 item-text="desc"
                 item-value="id"
-                chips
+                small-chips
                 attach
                 multiple
                 label="ПО"
               ></v-select>
             </v-col>
           </v-row>
-
+          <!-- <v-row justify="center">
+            <v-col cols="6" sm="6" md="6">
+            <v-file-input accept="image/*" label="Изображение"></v-file-input>
+            </v-col>
+          </v-row> -->
           <v-row justify="center">
             <v-spacer></v-spacer>
             <v-btn

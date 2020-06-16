@@ -8,7 +8,7 @@
       dark
       :clipped="$vuetify.breakpoint.lgAndUp"
     >
-      <v-list dense>
+      <v-list>
         <!-- <template > -->
         <!-- <v-row v-if="item.heading" :key="item.heading" align="center">
             <v-col cols="6">
