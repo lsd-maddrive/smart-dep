@@ -10,9 +10,10 @@ from sqlalchemy import desc
 from sqlalchemy import distinct
 from sqlalchemy.orm import Session
 
-from db.models import metadata, States, Users, Tokens#, BlacklistToken 
+from db.models import metadata, States, Users, Tokens
 
 db = SQLAlchemy(metadata=metadata)
+
 
 def get_last_states(check_time, place_id, type_, db_session=db.session):
     """
@@ -72,11 +73,6 @@ def get_devices_states(check_time, db_session=db.session):
            order_by(States.device_id, States.timestamp.desc()). \
            distinct(States.device_id)
 
-# from api_server.app import login 
-# ???????????????????????????????    
-# @login.user_loader
-def load_user(id, db_session=db.session):
-    return db_session.query(Users).get(int(id))
 
 def get_user_data(username, db_session=db.session):
     """
@@ -92,11 +88,6 @@ def get_user_data(username, db_session=db.session):
     # BE CAREFULE, return sqlalchemy....result!!! 
     return db_session.query(Users). \
            filter(Users.username == username).first()
-
-
-def find_user(user_id, db_session=db.session):
-    return db_session.query(Users). \
-        filter(Users.id == user_id).first() 
 
 
 def create_user(username, password, db_session=db.session):
@@ -121,8 +112,8 @@ def create_user(username, password, db_session=db.session):
 
     return user 
 
-
-def save_token(user_id, db_session=db.session, exp_days=0, exp_sec=2):
+# TODO: maybe ser life time of token in another place (??)
+def save_token(user_id, db_session=db.session, exp_days=7, exp_sec=0):
     """
         Add new token-row to DB (Tokens table)
 

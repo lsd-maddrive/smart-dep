@@ -172,66 +172,77 @@ class Places(Resource):
             
             return places_dict_list
 
+turn_off = True 
 
 @api.route('/register', methods=['POST'])
 class Signup(Resource):
     def post(self):
-        username = request.json.get('username')
-        password = request.json.get('password')
+        if not turn_off:
+            username = request.json.get('username')
+            password = request.json.get('password')
 
-        if username is None or password is None:
-            logger.critical(f"Username or password is missing")
-            # Raise a HTTPException for the given http_status_code
-            abort(400)
-        
-        if asdb.get_user_data(username) is not None: 
-            logger.critical(f"User \"{username}\" is already existed")
-            # Raise a HTTPException for the given http_status_code
-            abort(400)
-        
-        new_user = asdb.create_user(username, password)
-        new_token = asdb.save_token(new_user.id)
+            if username is None or password is None:
+                logger.critical(f"Username or password is missing")
+                # Raise a HTTPException for the given http_status_code
+                abort(400)
+            
+            if asdb.get_user_data(username) is not None: 
+                logger.critical(f"User \"{username}\" is already existed")
+                # Raise a HTTPException for the given http_status_code
+                abort(400)
+            
+            new_user = asdb.create_user(username, password)
+            new_token = asdb.save_token(new_user.id)
 
-        responseObject = {
-            'token': new_token,
-            'username': new_user.username, 
-            'role': new_user.role
-        }
+            responseObject = {
+                'token': new_token,
+                'username': new_user.username, 
+                'role': new_user.role
+            }
 
-        return jsonify(responseObject)
+            return jsonify(responseObject)
 
 
 @api.route('/login', methods=['POST'])
 class Login(Resource):
     def post(self):
-        username = request.json.get('username')
-        password = request.json.get('password')
-        
-        if username is None or password is None:
-            logger.critical(f"Username or password is missing")
-            # Raise a HTTPException for the given http_status_code
-            abort(400)
-
-        user = asdb.get_user_data(username)
-
-        # check is user exists and password is valid 
-        if user is not None and user.check_password(password):
-            new_token = asdb.save_token(user.id)
-
-            responseObject = {
-                'token': new_token,
-                'username': user.username, 
-                'role': user.role
-            }
-            logger.debug(f"Login Post: {responseObject}")
+        if not turn_off:
+            username = request.json.get('username')
+            password = request.json.get('password')
             
-            return jsonify(responseObject) 
-        else:
-            logger.critical(f"Login failed! User \"{username}\" doesn't existed or password is invalid")
-            # Raise a HTTPException for the given http_status_code
-            abort(400)  
+            if username is None or password is None:
+                logger.critical(f"Username or password is missing")
+                # Raise a HTTPException for the given http_status_code
+                abort(400)
+
+            user = asdb.get_user_data(username)
+
+            # check is user exists and password is valid 
+            if user is not None and user.check_password(password):
+                new_token = asdb.save_token(user.id)
+
+                responseObject = {
+                    'token': new_token,
+                    'username': user.username, 
+                    'role': user.role
+                }
+                logger.debug(f"Login Post: {responseObject}")
+                
+                return jsonify(responseObject) 
+            else:
+                logger.critical(f"Login failed! User \"{username}\" doesn't existed or password is invalid")
+                # Raise a HTTPException for the given http_status_code
+                abort(400)  
+
 
 def verify_request_header():
+    """
+        Check if request.header consists of field 'Authorization'
+        and token 
+
+        Returns: 
+            token (string)
+    """
     auth_header = request.headers.get('Authorization')
     if auth_header:
         try:
@@ -246,6 +257,7 @@ def verify_request_header():
         logger.critical(f"HEADER 'Authorization' NOT FOUND")
         abort(400)
 
+
 @api.route('/logout', methods=['POST'])
 class Logout(Resource):
     def post(self):
@@ -254,29 +266,30 @@ class Logout(Resource):
             Maybe in the future it will be removed 
             # TODO: think about automatic removing expired tokens from DB
         """
-        username = request.json.get('username')
-        password = request.json.get('password')
+        if not turn_off:
+            username = request.json.get('username')
+            password = request.json.get('password')
 
-        if username is None or password is None:
-            logger.critical(f"Username or password is missing")
-            # Raise a HTTPException for the given http_status_code
-            abort(400)
+            if username is None or password is None:
+                logger.critical(f"Username or password is missing")
+                # Raise a HTTPException for the given http_status_code
+                abort(400)
 
-        auth_token = verify_request_header()
+            auth_token = verify_request_header()
 
-        user_id, token_iat = asdb.Tokens.decode_auth_token(auth_token)
+            user_id, token_iat = asdb.Tokens.decode_auth_token(auth_token)
 
-        if isinstance(user_id, int):
-            asdb.delete_token(user_id, token_iat)
-            responseObject = {
-                'status': 'success',
-                'message': 'Successfully logged out.',
-                'username': username, 
-            }
+            if isinstance(user_id, int):
+                asdb.delete_token(user_id, token_iat)
+                responseObject = {
+                    'status': 'success',
+                    'message': 'Successfully logged out.',
+                    'username': username, 
+                }
 
-            return jsonify(responseObject)
-        else:
-            logger.critical(f"{user_id}")
-            abort(403)
+                return jsonify(responseObject)
+            else:
+                logger.critical(f"{user_id}")
+                abort(403)
                 
         

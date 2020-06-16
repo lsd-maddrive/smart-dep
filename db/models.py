@@ -159,6 +159,7 @@ class Tokens(Model):
                 auth_token: encoded token (payload)
             Returns:
                 user ID (integer)
+                time of creation token (int) = number of seconds
         """
         try:
             payload = jwt.decode(auth_token, os.getenv('API_SECRET_KEY'), algorithms=['HS256'])

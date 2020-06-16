@@ -13,8 +13,13 @@ def create_app(test_config=False):
         app.config['FLASK_DEBUG'] = os.getenv('API_SERVER_DEBUG', True)
         app.config['TESTING'] = os.getenv('API_SERVER_TESTING', False)
         
-        # TODO: default value of SECRET KEY or handle 
-        app.config['SECRET_KEY'] = os.getenv('API_SECRET_KEY')
+        secret = os.getenv('API_SECRET_KEY')
+        if secret is None: 
+            logger.critical(f"API SECRET KEY IS NOT FOUND")
+            sys.exit(1)
+            # TODO: check if sys.exit and return are the same
+            return 1
+        app.config['SECRET_KEY'] = secret
 
         db_uri = os.getenv('DB_URI')
         if db_uri is None: 
