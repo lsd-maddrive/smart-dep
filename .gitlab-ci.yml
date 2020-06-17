@@ -54,36 +54,35 @@ before_script:
   # - git config --global user.email "darth@empire.com"
   # - git config --global user.name "Darth Vader"
 
-build-containers:
-  image: docker:19.03.11
-  stage: build
-  services:
-    - docker:19.03.11-dind
-  before_script:
-    # Install docker-compose
-    - docker info
-    # - apk update
-    # - apk upgrade
-    - apk add --update py-pip python3-dev build-base libffi-dev openssl-dev
-    - pip install docker-compose
+# build-containers:
+#   image: docker:19.03.11
+#   stage: build
+#   services:
+#     - docker:19.03.11-dind
+#   before_script:
+#     # Install docker-compose
+#     - docker info
+#     - apk add --update py-pip python3-dev build-base libffi-dev openssl-dev
+#     - pip install docker-compose
 
-  script:
-    - docker-compose build
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - cat ~/.docker/config.json
-    - docker-compose push
+#   script:
+#     - docker-compose build
+#     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+#     - cat ~/.docker/config.json
+#     - docker-compose push
 
   # after_script:
     # - docker logout "$CI_REGISTRY"
 
-# deploy_tigra:
-#   script:
-#     # Download if not exists
-#     - ssh -l "$SSH_USER" "$SSH_HOST" -p "$SSH_PORT" "cd deploy && cd smart-dep && git pull || git clone https://github.com/lsd-maddrive/smart-dep.git -b develop"
-#     # Deploy new versio of services
-#     - ssh -l "$SSH_USER" "$SSH_HOST" -p "$SSH_PORT" "cd deploy/smart-dep && make dc-stop && make dc-build && SMART_ENV=prod make dc-daemon"
-#     # Apply migrations
-#     - ssh -l "$SSH_USER" "$SSH_HOST" -p "$SSH_PORT" "cd deploy/smart-dep && sleep 3 && make migrate"
-#   only:
-#     - develop
+deploy_tigra:
+  stage: deploy
+  script:
+    # Download if not exists
+    - ssh -l $SSH_USER $SSH_HOST -p $SSH_PORT "cd deploy && cd smart-dep && git pull || git clone https://github.com/lsd-maddrive/smart-dep.git -b develop"
+    # Deploy new versio of services
+    - ssh -l $SSH_USER $SSH_HOST -p $SSH_PORT "cd deploy/smart-dep && docker-compose -p smartdep stop && SMART_ENV=dev docker-compose -p smartdep up --build -d"
+    # Apply migrations
+    - ssh -l $SSH_USER $SSH_HOST -p $SSH_PORT "cd deploy/smart-dep && sleep 3 && make mgr-upgrade"
+  only:
+    - develop
 
