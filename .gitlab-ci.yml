@@ -69,7 +69,11 @@ build-containers:
 
   script:
     - docker-compose build
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY" && docker-compose push
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+    - ls -la ~
+    - ls -la ~/.docker
+    - cat ~/.docker/config.json
+    - docker-compose push
 
   after_script:
     - docker logout "$CI_REGISTRY"
