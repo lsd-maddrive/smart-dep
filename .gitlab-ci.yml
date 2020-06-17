@@ -63,9 +63,9 @@ build-containers:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     # Install docker-compose
     - docker info
-    - apk update
-    - apk upgrade
-    - apk add python python-dev py-pip build-base
+    # - apk update
+    # - apk upgrade
+    - apk add --update py-pip # build-base
     - pip install docker-compose
 
 
