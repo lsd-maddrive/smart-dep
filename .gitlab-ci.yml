@@ -80,7 +80,7 @@ deploy_tigra:
     # Download if not exists
     - ssh -l $SSH_USER $SSH_HOST -p $SSH_PORT "cd deploy && cd smart-dep && git pull || git clone https://github.com/lsd-maddrive/smart-dep.git -b develop"
     # Deploy new versio of services
-    - ssh -l $SSH_USER $SSH_HOST -p $SSH_PORT "cd deploy/smart-dep && docker-compose -p smartdep stop && SMART_ENV=dev docker-compose -p smartdep up --build -d"
+    - ssh -l $SSH_USER $SSH_HOST -p $SSH_PORT "cd deploy/smart-dep && docker-compose -p smartdep stop && SMART_ENV=dev docker-compose -p smartdep up --build -d --scale emulator=5"
     # Apply migrations
     - ssh -l $SSH_USER $SSH_HOST -p $SSH_PORT "cd deploy/smart-dep && sleep 3 && make mgr-upgrade"
   # only:
