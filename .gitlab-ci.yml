@@ -65,7 +65,7 @@ build-containers:
     - docker info
     # - apk update
     # - apk upgrade
-    - apk add --update py-pip python3-dev build-base
+    - apk add --update py-pip python3-dev build-base libffi-dev
     - pip install docker-compose
 
 
