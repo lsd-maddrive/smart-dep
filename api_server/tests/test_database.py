@@ -1,28 +1,28 @@
 from datetime import datetime, timedelta
 import logging
+from pprint import pformat
 
 import pytest
 
 import api_server.database as asdb
-from db.models import States, User, Token
+from db.models import State, Device, User, Token
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d/%H:%M:%S')
 logger = logging.getLogger(__name__)
 
 
 def test_get_last_states(timescaleDB):
-    _ = timescaleDB.query(States). \
-                    filter(States.type == 'light'). \
-                    order_by(States.device_id)
+    _ = timescaleDB.query(State). \
+        order_by(State.device_id, State.timestamp.desc()). \
+            all()
     # to store expected rows 
     right_states = []
     for right_state in _:
         right_states.append(right_state)
 
     test_query = asdb.get_last_states(
-        check_time=datetime.now() - timedelta(minutes=5),
-        place_id='8201', 
-        type_='light', 
+        start_ts=datetime.now() - timedelta(minutes=5),
+        place_id=1, 
         db_session=timescaleDB
     )
     db_last_states = []
@@ -30,6 +30,7 @@ def test_get_last_states(timescaleDB):
         db_last_states.append(test_state)
 
     assert right_states == db_last_states 
+
 
 
 def test_get_last_places(timescaleDB):
@@ -47,9 +48,9 @@ def test_get_last_places(timescaleDB):
 
 def test_get_devices_states(timescaleDB):
     # the query is not stable if DB will be changed
-    _ = timescaleDB.query(States). \
-        order_by(States.device_id). \
-        distinct(States.device_id)
+    _ = timescaleDB.query(State). \
+        order_by(State.device_id). \
+        distinct(State.device_id)
     
     right_devices = []
     for right_device in _:

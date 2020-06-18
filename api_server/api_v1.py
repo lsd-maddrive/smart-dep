@@ -89,6 +89,13 @@ _model_device_types = api.model('Device_types', {
 })
 
 
+@api.route('/place/<strign:id>/image', endpoint='place_image', methods=['POST'])
+@api.param('id')
+class PlaceImage(Resource):
+    pass 
+
+
+
 @api.route('/device/types', endpoint='device_types')
 class DeviceTypes(Resource):
     @api.expect(_model_device_types, as_list=True)

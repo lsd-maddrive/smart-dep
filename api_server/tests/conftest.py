@@ -1,6 +1,9 @@
-import os
 from datetime import datetime
 import logging
+import os
+import sys 
+sys.path.append("../")
+import uuid
 
 from flask_restplus import Api
 from pprint import pformat
@@ -13,7 +16,7 @@ from api_server.api_v1 import api as ns
 from api_server.api_func import create_app
 from api_server.database import db 
 from api_server.sockets import socketio
-from db.models import Model, States, User
+from db.models import Model, State, Device, Place, User
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d/%H:%M:%S')
 logger = logging.getLogger(__name__)
@@ -37,9 +40,9 @@ def timescaleDB(request, test_db):
     logger.debug('session - done')
     
     devices = [
-        '11:11:11:11:11:11', 
-        '01:01:01:01:01:01', 
-        'FF:FF:FF:FF:FF:FF'
+        uuid.uuid4(), 
+        uuid.uuid4(), 
+        uuid.uuid4()
     ]
 
     types = [
@@ -48,23 +51,36 @@ def timescaleDB(request, test_db):
         'power'
     ]
 
-    db_data = []
+    db_data = [Place(id=1)]
+    for i in range(3):
+        db_data.append(
+            Device(
+                id=devices[i],
+                place_id=db_data[0].id,
+                register_date=datetime.now()
+            )
+)       
+
 
     for i in range(len(devices)):
         db_data.append(
-                States(
+                State(
                     timestamp=datetime.now(), 
                     state= {'enabled': False}, 
-                    device_id=devices[i], 
-                    place_id='8201', 
-                    type=types[i]
+                    device_id=db_data[i+1].id, 
                 )
             )
+        # db_data.append(
+        #         Device(
+        #             id=devices[i]
+        #         )
+        # )
     
-    test_user = User(username="test_user")
-    test_user.set_password("test_password")
 
-    db_data.append(test_user)
+    # test_user = User(username="test_user")
+    # test_user.set_password("test_password")
+
+    # db_data.append(test_user)
 
     logger.debug(f"DB DATA STATES:\n{pformat(db_data)}")
 

@@ -1,16 +1,17 @@
-from db.models import metadata, User, Token, State, Command, Config, Place, Device
-from datetime import datetime
-from sqlalchemy.orm import Session
-from sqlalchemy import distinct
-from sqlalchemy import desc
-import jwt
-from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, timedelta
 import logging
 import os
 
+from flask_sqlalchemy import SQLAlchemy
+import jwt
+from sqlalchemy.orm import Session
+from sqlalchemy import distinct
+from sqlalchemy import desc
 from werkzeug.security import generate_password_hash
+
 import auth
+from db.models import metadata, User, Token, State, Command, Config, Place, Device
+
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
