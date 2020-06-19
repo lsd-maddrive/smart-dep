@@ -53,6 +53,9 @@ class Places(Resource):
                 'attr_people': place.attr_people,
                 'attr_board': place.attr_blackboard,
                 'attr_projector': place.attr_projector,
+                # @Lena TODO - add check of existence of image
+                # Sample value: /place/{place.id}/image
+                'imageURL': None
             })
 
         logger.debug(f"Request places: {result_places}")
@@ -91,9 +94,9 @@ _model_device_types = api.model('Device_types', {
 
 
 file_upload = reqparse.RequestParser()
-file_upload.add_argument('image',  
-                        type=FileStorage, 
-                        location='files', 
+file_upload.add_argument('image',
+                        type=FileStorage,
+                        location='files',
                         required=True
                         )
 
@@ -104,10 +107,10 @@ class PlaceImage(Resource):
     def post(self, id):
         args = file_upload.parse_args()
         logger.debug(f"Image uploaded: {args['image']}")
-    
+
     def get(self, id):
-        pass 
-       
+        pass
+
 
 
 @api.route('/device/types', endpoint='device_types')

@@ -16,11 +16,21 @@ const realServices = {
     return Api().delete('/place', { data: place })
   },
 
+  sendPlaceImage(place, form) {
+    return Api().post(`/place/${place.id}/image`, form, { headers: { 'Content-Type': 'multipart/form-data' } })
+  },
+  getPlaceImage(place) {
+    return Api().get(`/place/${place.id}/image`)
+  },
+  getApiPrefix(place) {
+    return `${process.env.API_URL}/api/v1`
+  },
+
   getDeviceTypes() {
     return Api().get('/device/types')
   },
   getPlaceDevices(place) {
-    return Api().get('/device?place_id=' + place.id)
+    return Api().get(`/device?place_id=${place.id}`)
   },
   getNewDevices() {
     return Api().get('/device/new')
@@ -42,7 +52,7 @@ const realServices = {
 
   getDevicesLastStates(place) {
     // Seconds
-    return Api().get('/device/states/' + place.id, { params: { duration_s: 5 * 60 } })
+    return Api().get(`/device/states/${place.id}`, { params: { duration_s: 5 * 60 } })
   },
 
   login(user) {
