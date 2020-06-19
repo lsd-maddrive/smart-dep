@@ -255,6 +255,13 @@ def save_place_image(id, img, db_session=db.session):
     logger.debug(f"Image for Place ID {id} is saved successfully.")
     
 
-def is_place_existed(id, db_session=db.session):
+def get_place_data(id, db_session=db.session):
     return db_session.query(Place). \
         filter(Place.id == id).first() 
+
+
+def if_place_image_is_uploaded(id, db_session=db.session):
+    if db_session.query(Place.image).filter(Place.id == id).first() is not None:
+        return id 
+    else: 
+        return None 

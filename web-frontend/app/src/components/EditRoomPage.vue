@@ -79,11 +79,19 @@
               ></v-select>
             </v-col>
           </v-row>
-          <!-- <v-row justify="center">
+          <v-row v-if="editMode" justify="center">
             <v-col cols="6" sm="6" md="6">
-            <v-file-input accept="image/*" label="Изображение"></v-file-input>
+              <v-file-input
+                accept="image/*"
+                label="Изображение"
+                show-size
+                dense
+                prepend-icon="mdi-file-image-outline"
+                :rules="[value => !value || value.size < 2000000 || 'Avatar size should be less than 2 MB!']"
+                v-model="placeImage"
+              ></v-file-input>
             </v-col>
-          </v-row> -->
+          </v-row>
           <v-row justify="center">
             <v-spacer></v-spacer>
             <v-btn
@@ -160,7 +168,10 @@
                               label="Иконка"
                             >
                               <template slot="item" slot-scope="data">
-                                <span><v-icon >{{ data.item }}</v-icon> {{ data.item }}</span>
+                                <span>
+                                  <v-icon>{{ data.item }}</v-icon>
+                                  {{ data.item }}
+                                </span>
                               </template>
                             </v-combobox>
                           </v-col>
@@ -242,6 +253,7 @@ export default {
         attr_board: true,
         attr_projector: false
       },
+      placeImage: null,
       loading: {
         createUpdate: false,
         delete: false,
@@ -351,8 +363,24 @@ export default {
       this.loading.createUpdate = true;
       Services.updatePlace(this.place).then(
         () => {
-          this.$toasted.success("Помещение успешно обновлено!");
-          this.$router.push({ name: "Home" });
+          if (this.placeImage) {
+            var formData = new FormData();
+            formData.append("image", this.placeImage);
+
+            Services.sendPlaceImage(this.place, formData).then(
+              resp => {
+                this.$toasted.success("Помещение успешно обновлено!");
+                this.$router.push({ name: "Home" });
+              },
+              err => {
+                this.$toasted.error("Загрузка изображения не удалась");
+                this.loading.createUpdate = false;
+              }
+            );
+          } else {
+            this.$toasted.success("Помещение успешно обновлено!");
+            this.$router.push({ name: "Home" });
+          }
         },
         error => {
           this.$toasted.error("Создание помещения не удалось");
@@ -462,7 +490,7 @@ export default {
         resp => {
           this.loading.table = false;
           this.devices = resp.data.map(function(x) {
-            x.last_active_date = new Date(x.last_ts * 1000)
+            x.last_active_date = new Date(x.last_ts * 1000);
             return x;
           });
         },

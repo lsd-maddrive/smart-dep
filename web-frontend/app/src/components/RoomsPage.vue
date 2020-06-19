@@ -4,13 +4,11 @@
     <v-row align="center">
       <v-col cols="12" sm="6" md="4" v-for="place in places" :key="place.id">
         <v-card class="elevation-12">
-          <v-img
-            class="white--text align-end"
-            height="200px"
-            src="https://cdn.vuetifyjs.com/images/cards/docks.jpg"
-          >
+          <v-img v-if="place.imageURL" class="white--text align-end" height="200px" :src="place.image">
             <v-card-title>{{ place.name }} [{{ place.num }}]</v-card-title>
           </v-img>
+
+          <v-card-title v-else>{{ place.name }} [{{ place.num }}]</v-card-title>
 
           <v-card-text class="text--primary">
             <v-chip label color="pink" dark v-if="place.attr_projector" class="mb-2">
@@ -35,13 +33,10 @@
               <span class="ml-2" v-else>{{place.attr_people}}</span>
             </v-chip>
           </v-card-text>
+          <v-divider></v-divider>
 
           <v-card-actions>
-            <v-btn
-              color="primary"
-              text
-              :to="{name: 'RoomControl', params: {id: place.id}}"
-            >Управление</v-btn>
+            <v-btn text :to="{name: 'RoomControl', params: {id: place.id}}">Управление</v-btn>
 
             <v-spacer></v-spacer>
 
@@ -71,14 +66,13 @@ import Services from "@/services/Services";
 export default {
   name: "RoomsSelector",
   data() {
-    return {};
+    return {
+      places: []
+    };
   },
   computed: {
     iconsTextVisible() {
       return this.$vuetify.breakpoint.mdAndUp;
-    },
-    places() {
-      return this.$store.state.places || [];
     }
   },
   methods: {},
@@ -86,9 +80,15 @@ export default {
   created() {
     this.$store
       .dispatch("syncPlaces")
-      .then(resp => {})
+      .then(resp => {
+        this.places = resp;
+        this.places.forEach(place => {
+          place.image = `${Services.getApiPrefix(place)}/${place.imageURL}`;
+        });
+      })
       .catch(err => {
         this.$toasted.error("Не удалось обновить комнаты =(");
+        console.log(err);
       });
   }
 };
