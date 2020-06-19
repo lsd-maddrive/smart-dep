@@ -7,7 +7,7 @@ from flask import request, current_app, jsonify
 from flask_restplus import Resource, Namespace, fields, reqparse, abort
 from pprint import pformat
 from sqlalchemy.exc import IntegrityError
-
+from werkzeug.datastructures import FileStorage
 from werkzeug.security import check_password_hash
 
 import messages as msgs
@@ -89,11 +89,25 @@ _model_device_types = api.model('Device_types', {
 })
 
 
-@api.route('/place/<strign:id>/image', endpoint='place_image', methods=['POST'])
-@api.param('id')
-class PlaceImage(Resource):
-    pass 
 
+file_upload = reqparse.RequestParser()
+file_upload.add_argument('image',  
+                        type=FileStorage, 
+                        location='files', 
+                        required=True
+                        )
+
+@api.route('/place/<string:id>/image', endpoint='place_image', methods=['POST'])
+@api.param('id', 'ID of place')
+class PlaceImage(Resource):
+    @api.expect(file_upload)
+    def post(self, id):
+        args = file_upload.parse_args()
+        logger.debug(f"Image uploaded: {args['image']}")
+    
+    def get(self, id):
+        pass 
+       
 
 
 @api.route('/device/types', endpoint='device_types')
