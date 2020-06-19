@@ -20,6 +20,7 @@ db.init_app(app)
 
 if os.getenv('RECREATE_TABLES', False):
     with app.app_context():
+        logger.debug(f"RECREATE TABLES")
         db.drop_all()
         db.create_all()
 

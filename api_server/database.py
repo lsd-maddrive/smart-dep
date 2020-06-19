@@ -89,8 +89,6 @@ def delete_place(place_info, db_session=db.session):
     db_session.delete(place)
     db_session.commit()
 
-# Devices
-
 
 def update_device(device_info, db_session=db.session):
     device = db_session.query(Device).get(device_info['id'])
@@ -242,3 +240,21 @@ def delete_token(user_id, created_on, db_session=db.session):
     # TODO: fix time from utc to local time (?) only for info representation
     logger.debug(
         f"Token for User ID: {user_id} created: {created_on} was deleted")
+
+
+def save_place_image(id, img, db_session=db.session):
+    place = db_session.query(Place). \
+        filter(Place.id == id).first()
+    
+    place.image = img 
+    
+    # update row 
+    db_session.flush()
+    db_session.commit()
+
+    logger.debug(f"Image for Place ID {id} is saved successfully.")
+    
+
+def is_place_existed(id, db_session=db.session):
+    return db_session.query(Place). \
+        filter(Place.id == id).first() 

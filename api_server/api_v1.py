@@ -91,11 +91,14 @@ _model_device_types = api.model('Device_types', {
 
 
 file_upload = reqparse.RequestParser()
+
 file_upload.add_argument('image',  
                         type=FileStorage, 
                         location='files', 
                         required=True
                         )
+
+excepted_image_types = ['image/jpeg', 'image/png', 'image/bmp']
 
 @api.route('/place/<string:id>/image', endpoint='place_image', methods=['POST'])
 @api.param('id', 'ID of place')
@@ -103,10 +106,29 @@ class PlaceImage(Resource):
     @api.expect(file_upload)
     def post(self, id):
         args = file_upload.parse_args()
+        # r = request.files['image']
+
+        # check if file is image (?)
+        if args['image'].mimetype not in excepted_image_types:
+            logger.critical(f"File type is not supported")
+            abort(404)
+        
+        uploaded_img = args['image']
         logger.debug(f"Image uploaded: {args['image']}")
+        
+        # check if place with id - is existed 
+        if asdb.get_place_data(id) is None: 
+            logger.critical(f"Place with ID: {id} doesn't exist")
+            abort(404)
+        
+        # save to DB 
+        asdb.save_place_image(id, uploaded_img)        
+
     
     def get(self, id):
-        pass 
+        place = asdb.get_place_data(id)
+
+        return place.image 
        
 
 
