@@ -54,8 +54,8 @@ def create_place(place_info, db_session=db.session):
         # TODO - use .get() with defaults
         attr_os=place_info['attr_os'],
         attr_software=place_info['attr_software'],
-        attr_people=place_info['attr_computers'],
-        attr_computers=place_info['attr_people'],
+        attr_people=place_info['attr_people'],
+        attr_computers=place_info['attr_computers'],
         attr_blackboard=place_info['attr_board'],
         attr_projector=place_info['attr_projector']
     )
@@ -249,7 +249,6 @@ def save_place_image(id, img, db_session=db.session):
     place.image = img 
     
     # update row 
-    db_session.flush()
     db_session.commit()
 
     logger.debug(f"Image for Place ID {id} is saved successfully.")
@@ -262,6 +261,6 @@ def get_place_data(id, db_session=db.session):
 
 def if_place_image_is_uploaded(id, db_session=db.session):
     if db_session.query(Place.image).filter(Place.id == id).first() is not None:
-        return id 
+        return f'place/{id}/image' 
     else: 
         return None 

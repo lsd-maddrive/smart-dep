@@ -3,7 +3,7 @@ import json
 import logging
 import os
 
-from flask import request, current_app, jsonify
+from flask import request, current_app, jsonify, send_file
 from flask_restplus import Resource, Namespace, fields, reqparse, abort
 from pprint import pformat
 from sqlalchemy.exc import IntegrityError
@@ -92,6 +92,7 @@ _model_device_types = api.model('Device_types', {
 })
 
 
+from io import BytesIO
 
 file_upload = reqparse.RequestParser()
 file_upload.add_argument('image',
@@ -100,9 +101,9 @@ file_upload.add_argument('image',
                         required=True
                         )
 
-excepted_image_types = ['image/jpeg', 'image/png', 'image/bmp']
+# excepted_image_types = ['image/jpeg', 'image/png', 'image/bmp']
 
-@api.route('/place/<string:id>/image', endpoint='place_image', methods=['POST'])
+@api.route('/place/<string:id>/image', endpoint='place_image', methods=['GET', 'POST'])
 @api.param('id', 'ID of place')
 class PlaceImage(Resource):
     @api.expect(file_upload)
@@ -111,13 +112,14 @@ class PlaceImage(Resource):
         # r = request.files['image']
 
         # check if file is image (?)
-        if args['image'].mimetype not in excepted_image_types:
-            logger.critical(f"File type is not supported")
-            abort(404)
+        # if args['image'].mimetype not in excepted_image_types:
+        #     logger.critical(f"File type is not supported")
+        #     abort(404)
         
-        uploaded_img = args['image']
-        logger.debug(f"Image uploaded: {args['image']}")
-        
+        uploaded_img = args['image'].read()
+        # logger.debug(f"IMAGE TYPE: {type(uploaded_img)}")
+        # logger.debug(f"Image uploaded: {args['image']}")
+
         # check if place with id - is existed 
         if asdb.get_place_data(id) is None: 
             logger.critical(f"Place with ID: {id} doesn't exist")
@@ -129,8 +131,12 @@ class PlaceImage(Resource):
     
     def get(self, id):
         place = asdb.get_place_data(id)
-
-        return place.image 
+        logger.debug(f"GET place image: {place}\t{type(place)}\t{type(place.image)}")
+        
+        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        # AttributeError in send_file
+        # no .read() for bytes 
+        return send_file(place.image, mimetype='image/jpeg')
 
 
 @api.route('/device/types', endpoint='device_types')
