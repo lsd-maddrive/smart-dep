@@ -19,10 +19,10 @@ logger = logging.getLogger(__name__)
 app = create_app()
 db.init_app(app)
 
-if os.getenv('RECREATE_TABLES', False):
-    with app.app_context():
-        db.drop_all()
-        db.create_all()
+# if os.getenv('RECREATE_TABLES', False):
+with app.app_context():
+    db.drop_all()
+    db.create_all()
 
 if os.getenv('PREPARE_RABBITMQ', False):
     msgs.init_broker(app.config['RABBITMQ_URI'])
