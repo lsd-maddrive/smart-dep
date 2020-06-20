@@ -7,15 +7,15 @@ import pytest
 import pytest_env
 
 from api_server.database import db, save_token
-from db.models import States, User, Token
+from db.models import State, User, Token
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d/%H:%M:%S')
 logger = logging.getLogger(__name__)
 
 def test_powers_request(timescaleDB, client):
-    _ = timescaleDB.query(States.device_id, States.state, States.type). \
-                    filter(States.type == 'power'). \
-                    order_by(States.device_id)
+    _ = timescaleDB.query(State.device_id, State.state, State.type). \
+                    filter(State.type == 'power'). \
+                    order_by(State.device_id)
     # to store expected rows 
     right_states = []
     for right_state in _:
@@ -33,9 +33,9 @@ def test_powers_request(timescaleDB, client):
 
 
 def test_lights_request(timescaleDB, client):
-    _ = timescaleDB.query(States.device_id, States.state, States.type). \
-                    filter(States.type == 'light'). \
-                    order_by(States.device_id)
+    _ = timescaleDB.query(State.device_id, State.state, State.type). \
+                    filter(State.type == 'light'). \
+                    order_by(State.device_id)
     # to store expected rows 
     right_states = []
     for right_state in _:
