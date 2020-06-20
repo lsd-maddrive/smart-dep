@@ -38,8 +38,6 @@ def get_last_states(start_ts, place_id, db_session=db.session):
         .order_by(State.device_id, State.timestamp.desc()) \
         .distinct(State.device_id).all()
 
-# Places
-
 
 def get_places(db_session=db.session):
     return db_session.query(Place).all()
@@ -255,12 +253,16 @@ def save_place_image(id, img, db_session=db.session):
     
 
 def get_place_data(id, db_session=db.session):
+    """
+        Get all data of specified place 
+
+        Args:
+            id (int):   place id 
+            db_session (sqlalchemy.orm.session.Session): session object
+
+        Returns:
+            place [1 row]
+
+    """
     return db_session.query(Place). \
         filter(Place.id == id).first() 
-
-
-def if_place_image_is_uploaded(id, db_session=db.session):
-    if db_session.query(Place.image).filter(Place.id == id).first() is not None:
-        return f'place/{id}/image' 
-    else: 
-        return None 

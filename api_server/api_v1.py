@@ -1,4 +1,5 @@
 import datetime
+from io import BytesIO
 import json
 import logging
 import os
@@ -53,9 +54,7 @@ class Places(Resource):
                 'attr_people': place.attr_people,
                 'attr_board': place.attr_blackboard,
                 'attr_projector': place.attr_projector,
-                # @Lena TODO - add check of existence of image
-                # Sample value: /place/{place.id}/image
-                'imageURL': None if place.image == None else f"place/{place.id}/image"#asdb.if_place_image_is_uploaded(place.id)
+                'imageURL': None if place.image == None else f"place/{place.id}/image"
             })
 
         logger.debug(f"Request places: {result_places}")
@@ -92,16 +91,12 @@ _model_device_types = api.model('Device_types', {
 })
 
 
-from io import BytesIO
-
 file_upload = reqparse.RequestParser()
 file_upload.add_argument('image',
                         type=FileStorage,
                         location='files',
                         required=True
                         )
-
-excepted_image_types = ['image/jpeg', 'image/png', 'image/bmp']
 
 @api.route('/place/<string:id>/image', endpoint='place_image', methods=['GET', 'POST'])
 @api.param('id', 'ID of place')
@@ -111,14 +106,7 @@ class PlaceImage(Resource):
         args = file_upload.parse_args()
         # args = request.files['image']
 
-        # check if file is image (?)
-        if args['image'].mimetype not in excepted_image_types:
-            logger.critical(f"File type is not supported")
-            abort(400)
-
         uploaded_img = args['image'].read()
-        # logger.debug(f"IMAGE TYPE: {type(uploaded_img)}")
-        # logger.debug(f"Image uploaded: {args['image']}")
 
         # check if place with id - is existed
         if asdb.get_place_data(id) is None:
