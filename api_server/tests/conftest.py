@@ -39,30 +39,31 @@ def timescaleDB(request, test_db):
     session = Session()
     logger.debug('session - done')
     
-    devices = [
-        uuid.uuid4(), 
-        uuid.uuid4(), 
-        uuid.uuid4()
-    ]
-
     types = [
         'light', 
         'env', 
         'power'
     ]
 
-    db_data = [Place(id=1)]
+
+    db_data = [
+        Place(
+            name='KEMZ', 
+            num='8201'
+    )]
+    
+    # fixed place_id is OK, because other way will never happened
     for i in range(3):
         db_data.append(
             Device(
-                id=devices[i],
-                place_id=db_data[0].id,
+                id=uuid.uuid4(),
+                place_id=1,
                 register_date=datetime.now()
             )
-)       
+    )
 
 
-    for i in range(len(devices)):
+    for i in range(3):
         db_data.append(
                 State(
                     timestamp=datetime.now(), 
@@ -70,11 +71,6 @@ def timescaleDB(request, test_db):
                     device_id=db_data[i+1].id, 
                 )
             )
-        # db_data.append(
-        #         Device(
-        #             id=devices[i]
-        #         )
-        # )
     
 
     # test_user = User(username="test_user")

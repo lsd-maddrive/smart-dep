@@ -5,7 +5,7 @@ from pprint import pformat
 import pytest
 
 import api_server.database as asdb
-from db.models import State, Device, User, Token
+from db.models import State, Device, Place, User, Token
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d/%H:%M:%S')
 logger = logging.getLogger(__name__)
@@ -32,6 +32,39 @@ def test_get_last_states(timescaleDB):
     assert right_states == db_last_states 
 
 
+def test_get_places(timescaleDB):
+    places = asdb.get_places(timescaleDB)[0]
+
+    assert places.id == 1, "Place ID is invalid"
+    assert places.name == 'KEMZ', "Place name is invalid"
+    assert places.num == '8201', "Place number is invalid" 
+
+
+def test_create_place(timescaleDB):
+    test_place_info = {
+        'name': 'ELESI', 
+        'num': '8203-1',
+        'attr_os': ['Windows'],
+        'attr_software': ['Matlab'],
+        'attr_people': 20,
+        'attr_computers': 8,
+        'attr_board': False,
+        'attr_projector': True
+    }
+
+    new_place = asdb.create_place(test_place_info, timescaleDB)
+
+    places_num = timescaleDB.query(Place).count()
+
+    assert new_place.name == test_place_info['name']
+    assert new_place.num == test_place_info['num']
+    assert new_place.attr_os == test_place_info['attr_os'] 
+    assert new_place.attr_software == test_place_info['attr_software']
+    assert new_place.attr_people == test_place_info['attr_people']
+    assert new_place.attr_computers == test_place_info['attr_computers']
+    assert new_place.attr_blackboard == test_place_info['attr_board']
+    assert new_place.attr_projector == test_place_info['attr_projector']
+    assert places_num == 2 
 
 def test_get_last_places(timescaleDB):
     test_query = asdb.get_last_places(

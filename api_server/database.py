@@ -23,7 +23,8 @@ db = SQLAlchemy(metadata=metadata)
 def get_last_states(start_ts, place_id, db_session=db.session):
     """
         Get last states from DB in defined period of time
-        from check time till now for defined place and type
+        from check time till now for defined place
+
         Args:
             start_ts (timestamp):    the lower bound of time
             place_id (str):          number/name of place
@@ -40,6 +41,9 @@ def get_last_states(start_ts, place_id, db_session=db.session):
 
 
 def get_places(db_session=db.session):
+    """
+        Get all places from DB 
+    """
     return db_session.query(Place).all()
 
 
