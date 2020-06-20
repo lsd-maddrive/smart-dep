@@ -55,7 +55,7 @@ class Places(Resource):
                 'attr_projector': place.attr_projector,
                 # @Lena TODO - add check of existence of image
                 # Sample value: /place/{place.id}/image
-                'imageURL': asdb.if_place_image_is_uploaded(place.id)
+                'imageURL': None if place.image == None else f"place/{place.id}/image"#asdb.if_place_image_is_uploaded(place.id)
             })
 
         logger.debug(f"Request places: {result_places}")
@@ -101,7 +101,7 @@ file_upload.add_argument('image',
                         required=True
                         )
 
-# excepted_image_types = ['image/jpeg', 'image/png', 'image/bmp']
+excepted_image_types = ['image/jpeg', 'image/png', 'image/bmp']
 
 @api.route('/place/<string:id>/image', endpoint='place_image', methods=['GET', 'POST'])
 @api.param('id', 'ID of place')
@@ -109,12 +109,12 @@ class PlaceImage(Resource):
     @api.expect(file_upload)
     def post(self, id):
         args = file_upload.parse_args()
-        # r = request.files['image']
+        # args = request.files['image']
 
         # check if file is image (?)
-        # if args['image'].mimetype not in excepted_image_types:
-        #     logger.critical(f"File type is not supported")
-        #     abort(404)
+        if args['image'].mimetype not in excepted_image_types:
+            logger.critical(f"File type is not supported")
+            abort(404)
         
         uploaded_img = args['image'].read()
         # logger.debug(f"IMAGE TYPE: {type(uploaded_img)}")
@@ -131,12 +131,8 @@ class PlaceImage(Resource):
     
     def get(self, id):
         place = asdb.get_place_data(id)
-        logger.debug(f"GET place image: {place}\t{type(place)}\t{type(place.image)}")
         
-        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        # AttributeError in send_file
-        # no .read() for bytes 
-        return send_file(place.image, mimetype='image/jpeg')
+        return send_file(BytesIO(place.image), mimetype='image/png')
 
 
 @api.route('/device/types', endpoint='device_types')
