@@ -5,10 +5,9 @@
       <v-col cols="12" sm="6" md="4" v-for="place in places" :key="place.id">
         <v-card class="elevation-12">
           <v-img v-if="place.imageURL" class="white--text align-end" height="200px" :src="place.image">
-            <v-card-title>{{ place.name }} [{{ place.num }}]</v-card-title>
           </v-img>
 
-          <v-card-title v-else>{{ place.name }} [{{ place.num }}]</v-card-title>
+          <v-card-title>{{ place.name }} [{{ place.num }}]</v-card-title>
 
           <v-card-text class="text--primary">
             <v-chip label color="pink" dark v-if="place.attr_projector" class="mb-2">
@@ -82,6 +81,7 @@ export default {
       .dispatch("syncPlaces")
       .then(resp => {
         this.places = resp;
+        console.log(resp)
         this.places.forEach(place => {
           place.image = `${Services.getApiPrefix(place)}/${place.imageURL}`;
         });

@@ -82,12 +82,12 @@
           <v-row v-if="editMode" justify="center">
             <v-col cols="6" sm="6" md="6">
               <v-file-input
-                accept="image/*"
+                accept="image/png,image/jpeg"
                 label="Изображение"
                 show-size
                 dense
                 prepend-icon="mdi-file-image-outline"
-                :rules="[value => !value || value.size < 2000000 || 'Avatar size should be less than 2 MB!']"
+                :rules="[value => !value || value.size < 2000000 || 'Image size should be less than 2 MB!']"
                 v-model="placeImage"
               ></v-file-input>
             </v-col>
