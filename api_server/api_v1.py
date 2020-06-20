@@ -114,24 +114,24 @@ class PlaceImage(Resource):
         # check if file is image (?)
         if args['image'].mimetype not in excepted_image_types:
             logger.critical(f"File type is not supported")
-            abort(404)
-        
+            abort(400)
+
         uploaded_img = args['image'].read()
         # logger.debug(f"IMAGE TYPE: {type(uploaded_img)}")
         # logger.debug(f"Image uploaded: {args['image']}")
 
-        # check if place with id - is existed 
-        if asdb.get_place_data(id) is None: 
+        # check if place with id - is existed
+        if asdb.get_place_data(id) is None:
             logger.critical(f"Place with ID: {id} doesn't exist")
             abort(404)
-        
-        # save to DB 
-        asdb.save_place_image(id, uploaded_img)        
 
-    
+        # save to DB
+        asdb.save_place_image(id, uploaded_img)
+
+
     def get(self, id):
         place = asdb.get_place_data(id)
-        
+
         return send_file(BytesIO(place.image), mimetype='image/png')
 
 
