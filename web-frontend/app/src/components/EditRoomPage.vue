@@ -82,12 +82,12 @@
           <v-row v-if="editMode" justify="center">
             <v-col cols="6" sm="6" md="6">
               <v-file-input
-                accept="image/png,image/jpeg"
+                accept="image/*"
                 label="Изображение"
                 show-size
                 dense
                 prepend-icon="mdi-file-image-outline"
-                :rules="[value => !value || value.size < 2000000 || 'Image size should be less than 2 MB!']"
+                :rules="imageRules"
                 v-model="placeImage"
               ></v-file-input>
             </v-col>
@@ -254,6 +254,15 @@ export default {
         attr_projector: false
       },
       placeImage: null,
+      imageRules: [
+        value =>
+          !value ||
+          value.size < 2000000 ||
+          "Изображение должно быть не более 2 МБ",
+        value =>
+         !value ||
+         value.type.startsWith('image/') || "Невалидный тип"
+      ],
       loading: {
         createUpdate: false,
         delete: false,
@@ -362,7 +371,7 @@ export default {
 
       this.loading.createUpdate = true;
       Services.updatePlace(this.place).then(
-        () => {
+        resp => {
           if (this.placeImage) {
             var formData = new FormData();
             formData.append("image", this.placeImage);

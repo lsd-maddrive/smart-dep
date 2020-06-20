@@ -81,7 +81,6 @@ export default {
       .dispatch("syncPlaces")
       .then(resp => {
         this.places = resp;
-        console.log(resp)
         this.places.forEach(place => {
           place.image = `${Services.getApiPrefix(place)}/${place.imageURL}`;
         });
