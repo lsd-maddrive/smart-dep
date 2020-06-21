@@ -41,9 +41,6 @@ def get_last_states(start_ts, place_id, db_session=db.session):
 
 
 def get_places(db_session=db.session):
-    """
-        Get all places from DB 
-    """
     return db_session.query(Place).all()
 
 

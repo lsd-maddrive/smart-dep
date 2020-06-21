@@ -58,7 +58,8 @@ def timescaleDB(request, test_db):
             Device(
                 id=uuid.uuid4(),
                 place_id=1,
-                register_date=datetime.now()
+                register_date=datetime.now(), 
+                is_installed=True
             )
     )
 

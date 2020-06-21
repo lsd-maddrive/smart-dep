@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 import logging
 from pprint import pformat
+import uuid
 
 import pytest
 
@@ -66,39 +67,122 @@ def test_create_place(timescaleDB):
     assert new_place.attr_projector == test_place_info['attr_projector']
     assert places_num == 2 
 
-def test_get_last_places(timescaleDB):
-    test_query = asdb.get_last_places(
-        check_time=datetime.now() - timedelta(minutes=5),
-        db_session=timescaleDB
-    )
-    db_last_places = []
-    for test_place in test_query:
-        db_last_places.append(test_place.place_id)
 
-    # array for future modifications 
-    assert db_last_places == ['8201']
+def test_update_place(timescaleDB):
+    test_place_info = {
+        'id': 1,
+        'name': 'KEMZ', 
+        'num': '8201',
+        'attr_os': ['Windows'],
+        'attr_software': ['Matlab'],
+        'attr_people': 20,
+        'attr_computers': 8,
+        'attr_board': True,
+        'attr_projector': True
+    }
+
+    asdb.update_place(test_place_info, timescaleDB)
+    place = timescaleDB.query(Place).get(test_place_info['id'])
+
+    assert place.name == test_place_info['name'] 
+    assert place.num == test_place_info['num']
 
 
-def test_get_devices_states(timescaleDB):
-    # the query is not stable if DB will be changed
-    _ = timescaleDB.query(State). \
-        order_by(State.device_id). \
-        distinct(State.device_id)
+def test_delete_place(timescaleDB):
+    test_place_info = {
+        'name': 'Test', 
+        'num': '111',
+        'attr_os': ['Windows'],
+        'attr_software': ['Matlab'],
+        'attr_people': 20,
+        'attr_computers': 8,
+        'attr_board': False,
+        'attr_projector': True
+    }
+
+    new_place = asdb.create_place(test_place_info, timescaleDB)
+    test_place_info['id'] = new_place.id 
+
+    asdb.delete_place(test_place_info, timescaleDB)
+    test_place = timescaleDB.query(Place).get(new_place.id)
+
+    assert test_place == None  
+
+
+def test_update_device(timescaleDB):
+    test_device_info = {
+        'id': timescaleDB.query(Device.id).first(),
+        'name': 'Test Device', 
+        'icon_name': 'Test Icon', 
+        'type': 'env', 
+        'place_id': 1, 
+        'config': {}
+    }
+
+    asdb.update_device(test_device_info, timescaleDB)
+
+    test_device = timescaleDB.query(Device).get(test_device_info['id'])
+
+    assert test_device.place_id == test_device_info['place_id']
+    assert test_device.type == test_device_info['type']
+    assert test_device.name == test_device_info['name']
+
+
+def test_reset_device(timescaleDB):
+    device_info = {
+        'id': uuid.uuid4(),
+        'place_id': 1, 
+        'is_installed': True, 
+        'name': 'New Test Device',
+        'icon_name': 'New Test Icon'
+    }
     
-    right_devices = []
-    for right_device in _:
-        right_devices.append(right_device)
+    new_device = Device(
+                        id=device_info['id'],
+                        place_id=device_info['place_id'],
+                        register_date=datetime.now(), 
+                        is_installed=device_info['is_installed'], 
+                        name=device_info['name'],
+                        icon_name=device_info['icon_name']
+            )
+    timescaleDB.add(new_device)
+    timescaleDB.commit()
 
-    test_query = asdb.get_devices_states(
-        check_time=datetime.now() - timedelta(minutes=5),
-        db_session=timescaleDB
-    )
+    asdb.reset_device(device_info, timescaleDB)
+    reseted_device = timescaleDB.query(Device).get(device_info['id'])
+    # TODO delete new device to not trash temp DB 
+    assert reseted_device.place_id == None 
+    assert reseted_device.is_installed == False  
 
-    db_last_devices = []
-    for test in test_query:
-        db_last_devices.append(test)
+
+def test_delete_device(timescaleDB):
+    device_info = {
+            'id': uuid.uuid4(),
+            'place_id': 1, 
+            'is_installed': True, 
+            'name': 'Device 4 Delete',
+        }
+        
+    new_device = Device(
+                        id=device_info['id'],
+                        place_id=device_info['place_id'],
+                        register_date=datetime.now(), 
+                        is_installed=device_info['is_installed'], 
+                        name=device_info['name'],
+            )
+
+    timescaleDB.add(new_device)
+    timescaleDB.commit()
+
+    asdb.delete_device(device_info, timescaleDB)
+    check_device = timescaleDB.query(Device).get(device_info['id'])
     
-    assert db_last_devices == right_devices
+    assert check_device == None  
+
+def test_get_devices(timescaleDB):
+    assert len(asdb.get_devices(1, timescaleDB)) == 3 
+
+
 
 
 def test_get_user_data(timescaleDB):
