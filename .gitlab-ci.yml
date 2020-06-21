@@ -82,6 +82,7 @@ deploy_tigra:
     # - ssh -l $SSH_USER $SSH_HOST -p $SSH_PORT "cd deploy/smart-dep && docker-compose -p smartdep stop && SMART_ENV=dev docker-compose -p smartdep up --build -d --scale emulator=5"
     # Apply migrations
     # - ssh -l $SSH_USER $SSH_HOST -p $SSH_PORT "cd deploy/smart-dep && sleep 3 && make mgr-upgrade"
-  # only:
-    # - develop
+  only:
+    - develop
+    - feature/ci
 
