@@ -9,6 +9,7 @@
     - deploy_folder: ansible_tests
     - migrate_cont_name: smartdep_migration
     - containers_network: network_smartdep
+    - smartdep_version: latest
     - cont_log_opts:
         max-file: "5"
         max-size: "20m"
@@ -24,7 +25,6 @@
 
     - name: Cleaning database
       block:
-
         - name: "Stop database container"
           docker_container:
             name: "{{ db_cont_name }}"
@@ -131,5 +131,29 @@
         log_options: "{{ cont_log_opts }}"
 
       register: migrate_cont_out
+
+    - name: Copy DB folder
+      synchronize:
+        src: ../config/
+        dest: "{{deploy_folder}}/config/"
+        delete: yes
+
+    - name: Send .env to deploy
+      template:
+        src: env.j2
+        dest: "{{ deploy_folder }}/config/.env"
+
+    - name: Send docker-compose to deploy
+      template:
+        src: docker-compose.yml.j2
+        dest: "{{ deploy_folder }}/docker-compose.yml"
+
+    - name: Run main containers
+      docker_compose:
+        project_src: "{{deploy_folder}}"
+        project_name: "{{project_name}}"
+        build: no
+        pull: yes
+      register: main_cont_out
     # - debug:
     # var: db_cont_out
