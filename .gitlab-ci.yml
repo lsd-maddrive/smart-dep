@@ -1,4 +1,4 @@
-image: ubuntu
+image: williamyeh/ansible:ubuntu18.04
 
 before_script:
   ##
@@ -68,7 +68,6 @@ build-containers:
   script:
     - docker-compose build
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - cat ~/.docker/config.json
     - docker-compose push
 
   # after_script:
@@ -78,7 +77,7 @@ deploy_tigra:
   stage: deploy
   script:
     # Download if not exists
-    - ssh -l $SSH_USER $SSH_HOST -p $SSH_PORT "cd deploy && cd smart-dep && git pull || git clone https://github.com/lsd-maddrive/smart-dep.git -b develop"
+    - cd ansible && echo $ANSIBLE_PASSWORD > vault-pass.txt && ansible-playbook -i hosts site.yml --vault-password-file vault-pass.txt
     # Deploy new versio of services
     # - ssh -l $SSH_USER $SSH_HOST -p $SSH_PORT "cd deploy/smart-dep && docker-compose -p smartdep stop && SMART_ENV=dev docker-compose -p smartdep up --build -d --scale emulator=5"
     # Apply migrations

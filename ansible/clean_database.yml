@@ -1,0 +1,17 @@
+---
+- name: Deploy Smartdep
+  hosts: stage
+
+  tasks:
+    - include_vars:
+        dir: roles/deploy/vars
+
+    - name: "Stop database container"
+      docker_container:
+        name: "{{ db_cont_name }}"
+        state: absent
+
+    - name: "Remove a Volume"
+      docker_volume:
+        name: "{{ db_cont_volume }}"
+        state: absent
