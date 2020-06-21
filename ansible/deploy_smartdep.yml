@@ -1,0 +1,135 @@
+---
+- name: Deploy Smartdep
+  hosts: stage
+  vars_files:
+    - vars.yml
+
+  vars:
+    - project_name: smartdep
+    - deploy_folder: ansible_tests
+    - migrate_cont_name: smartdep_migration
+    - containers_network: network_smartdep
+    - cont_log_opts:
+        max-file: "5"
+        max-size: "20m"
+
+  tasks:
+    - name: Install Docker Module for Python
+      pip:
+        name: docker
+
+    - name: Install Docker-Compose Module for Python
+      pip:
+        name: docker-compose
+
+    - name: Cleaning database
+      block:
+
+        - name: "Stop database container"
+          docker_container:
+            name: "{{ db_cont_name }}"
+            state: absent
+
+        - name: "Create a Volume"
+          docker_volume:
+            name: "{{ db_cont_volume }}"
+            state: absent
+
+    - name: Create deploy directory
+      file:
+        path: "{{ deploy_folder }}"
+        state: directory
+        mode: "0755"
+        # mode: "u=rw,g=wx,o=rwx"
+      register: folder_create_reg
+
+    - name: "Create a network"
+      docker_network:
+        name: "{{ containers_network }}"
+
+    - name: "Create a Volume"
+      docker_volume:
+        name: "{{ db_cont_volume }}"
+
+    - name: "Launch database container"
+      docker_container:
+        name: "{{ db_cont_name }}"
+        image: timescale/timescaledb:latest-pg11
+        volumes:
+          - "{{ db_cont_volume }}:/var/lib/postgresql/data"
+        restart_policy: always
+        network_mode: "{{ containers_network }}"
+        env:
+          POSTGRES_DB: "smart_dep"
+          POSTGRES_USER: "{{db_user}}"
+          POSTGRES_PASSWORD: "{{db_password}}"
+        ports:
+          - 5432:5432
+        log_driver: json-file
+        log_options: "{{ cont_log_opts }}"
+
+      register: db_cont_out
+
+    - name: Wait for DB to accept connections
+      wait_for:
+        host: "localhost"
+        port: 5432
+        state: started
+        connect_timeout: 1
+        timeout: 30
+      register: db_running
+      until: db_running is success
+      retries: 10
+
+    - name: Copy DB folder
+      synchronize:
+        src: ../db/
+        dest: "{{deploy_folder}}/db/"
+        delete: yes
+        rsync_opts:
+          - "--exclude=__pycache__"
+
+    # - name: Install packages
+    #   pip:
+    #     # Fix for venv to be created
+    #     chdir: ""
+    #     requirements: "{{deploy_folder}}/db/requirements.txt"
+    #     virtualenv: "{{deploy_folder}}/venv"
+    #     virtualenv_python: python3.7
+
+    # - name: Perform migration
+    #   shell:
+    #     chdir: "{{deploy_folder}}"
+    #     cmd: >
+    #       source venv/bin/activate && cd db && python migration_manager.py db upgrade
+    #   environment:
+    #     DB_URI: "postgresql+psycopg2://{{db_user}}:{{db_password}}@localhost:5432/smart_dep"
+    #   args:
+    #     executable: /bin/bash
+
+    - name: Create migration container
+      docker_image:
+        name: "{{migrate_cont_name}}"
+        source: build
+        build:
+          pull: no
+          path: "{{ deploy_folder }}"
+          dockerfile: "db/Dockerfile"
+
+    - name: "Apply database upgrade"
+      docker_container:
+        name: "{{migrate_cont_name}}"
+        image: "{{migrate_cont_name}}"
+        detach: no
+        command: python3 migration_manager.py db upgrade
+        volumes:
+          - "./{{deploy_folder}}/db/migrations:/app/migrations"
+        network_mode: "{{ containers_network }}"
+        env:
+          DB_URI: "postgresql+psycopg2://{{db_user}}:{{db_password}}@{{db_cont_name}}:5432/smart_dep"
+        log_driver: json-file
+        log_options: "{{ cont_log_opts }}"
+
+      register: migrate_cont_out
+    # - debug:
+    # var: db_cont_out
