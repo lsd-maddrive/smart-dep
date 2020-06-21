@@ -132,10 +132,16 @@
 
       register: migrate_cont_out
 
-    - name: Copy DB folder
+    - name: Copy config folder
       synchronize:
         src: ../config/
         dest: "{{deploy_folder}}/config/"
+        delete: yes
+
+    - name: Copy fluentd folder
+      synchronize:
+        src: ../fluentd/
+        dest: "{{deploy_folder}}/fluentd/"
         delete: yes
 
     - name: Send .env to deploy
@@ -152,7 +158,7 @@
       docker_compose:
         project_src: "{{deploy_folder}}"
         project_name: "{{project_name}}"
-        build: no
+        build: yes  # Required for fluentd
         pull: yes
       register: main_cont_out
     # - debug:

@@ -221,6 +221,7 @@ services:
         build:
             context: .
             dockerfile: ./fluentd/Dockerfile
+        image: acs-registry.duckdns.org/fluentd:${VERSION:-latest}
         restart: always
         ports:
             - 24224:24224
