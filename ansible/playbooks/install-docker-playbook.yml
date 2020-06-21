@@ -1,6 +1,7 @@
 ---
 - name: Install Docker
-  hosts: stage
+  hosts: 127.0.0.1
+  connection: local
   become: true
 
   vars:
