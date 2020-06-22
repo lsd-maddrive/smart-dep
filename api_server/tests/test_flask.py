@@ -249,7 +249,7 @@ def test_device_get(client, timescaleDB):
     assert data[0]['place_id'] == 1 
 
 # !!!!!!!!!!!!!!!!!!!!!!!!!!! FIX IT LENA!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-@pytest.mark.skip(reason="F*ch Up with db, I guess, need to meditate")
+# @pytest.mark.skip(reason="F*ck Up with db, I guess, need to meditate")
 def test_device_put(client, timescaleDB):
     test_device = timescaleDB.query(Device). \
         order_by(Device.register_date.desc()).first()
@@ -261,7 +261,7 @@ def test_device_put(client, timescaleDB):
         'id': test_device.id,
         'name': 'New device',
         'icon_name': 'New Icon',
-        'type': 'power', 
+        'type': 'env', 
         'place_id': test_device.place_id, 
         'last_ts': 0.0, 
         'config': dict()
@@ -271,7 +271,6 @@ def test_device_put(client, timescaleDB):
         'http://localhost:5000/api/v1/device',
         json=inp_json
     )
-
     updated_device = timescaleDB.query(Device).get(test_device.id)
 
     logger.debug(f"COMPARE IDs\n{updated_device.id}\n{test_device.id}")
@@ -283,6 +282,8 @@ def test_device_put(client, timescaleDB):
     logger.debug(f"ICON: {updated_device.icon_name}")
     # updated_device.icon_name = None 
     # timescaleDB.commit()
+
+    logger.debug(f"ALL Devices\n{pformat(timescaleDB.query(Device).all())}")
 
     
 

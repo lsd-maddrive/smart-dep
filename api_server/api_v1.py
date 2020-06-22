@@ -288,6 +288,8 @@ class Device(Resource):
         logger.debug(f"Request to update device:\n{pformat(device_info)}")
 
         asdb.update_device(device_info)
+
+        logger.debug(f"API aLL Devices: {asdb.db.session.query(asdb.Device).all()}")
         
         if not current_app.config['TESTING']:
             msgs.reset_device(

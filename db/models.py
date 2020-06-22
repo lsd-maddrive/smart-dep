@@ -116,7 +116,7 @@ class Device(Model):
     def __repr__(self):
         return f"Device | ID: {self.id}, UID: {self.unique_id}, PlaceID: {self.place_id}, \
             RegDate: {self.register_date}, IP: {self.ip_addr}, Type: {self.type}, \
-            Installed: {self.is_installed}, Config: {self.unit_config}"
+            Installed: {self.is_installed}, Config: {self.unit_config}, Name: {self.name}"
 
 
 class User(Model):
