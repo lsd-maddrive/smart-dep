@@ -14,6 +14,9 @@ import pytest
 import pytest_env
 from werkzeug.datastructures import FileStorage
 
+
+import database as asdb
+# from api_server.database import db 
 from db.models import State, Place, Device, User, Token
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d/%H:%M:%S')
@@ -236,7 +239,7 @@ def test_device_get(client, timescaleDB):
 
     rv = client.get(
         'http://localhost:5000/api/v1/device',
-        json=inp_json, query_string={'place_id': 1}
+        json=inp_json
     )
 
     data = json.loads(rv.data)
@@ -244,6 +247,54 @@ def test_device_get(client, timescaleDB):
     assert rv.status_code == 200 
     assert len(data) == 3 
     assert data[0]['place_id'] == 1 
+
+# !!!!!!!!!!!!!!!!!!!!!!!!!!! FIX IT LENA!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+@pytest.mark.skip(reason="F*ch Up with db, I guess, need to meditate")
+def test_device_put(client, timescaleDB):
+    test_device = timescaleDB.query(Device). \
+        order_by(Device.register_date.desc()).first()
+
+    logger.debug(f"TEST DEVICE {pformat(test_device)}")
+    logger.debug(f"{test_device.name}")
+
+    inp_json = {
+        'id': test_device.id,
+        'name': 'New device',
+        'icon_name': 'New Icon',
+        'type': 'power', 
+        'place_id': test_device.place_id, 
+        'last_ts': 0.0, 
+        'config': dict()
+    }
+
+    rv = client.put(
+        'http://localhost:5000/api/v1/device',
+        json=inp_json
+    )
+
+    updated_device = timescaleDB.query(Device).get(test_device.id)
+
+    logger.debug(f"COMPARE IDs\n{updated_device.id}\n{test_device.id}")
+    
+    # check_device = copy.deepcopy(updated_device)
+    
+    logger.debug(f"UPDATED DEVICE {pformat(updated_device)}")
+    # logger.debug(f"NAME {updated_device.name} | {check_device.name}")
+    logger.debug(f"ICON: {updated_device.icon_name}")
+    # updated_device.icon_name = None 
+    # timescaleDB.commit()
+
+    
+
+    assert rv.status_code == 200 
+    assert updated_device.name == inp_json['name']
+    # assert check_device.id == inp_json['id']
+    # assert check_device.name == inp_json['name']
+    # assert check_device.icon_name == inp_json['icon_name']
+    # assert check_device.type == inp_json['type']
+    # assert check_device.place_id == inp_json['place_id']
+    # assert check_device.config == inp_json['config']
+
 
 
 def test_register_missing_data(client):

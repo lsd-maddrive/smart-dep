@@ -105,7 +105,6 @@ file_upload.add_argument('image',
                         required=True
                         )
 
-# Test is not written [pytest] 
 @api.route('/place/<string:id>/image', endpoint='place_image', methods=['GET', 'POST'])
 @api.param('id', 'ID of place')
 class PlaceImage(Resource):
@@ -289,7 +288,8 @@ class Device(Resource):
         logger.debug(f"Request to update device:\n{pformat(device_info)}")
 
         asdb.update_device(device_info)
-        if not app.config['TESTING']:
+        
+        if not current_app.config['TESTING']:
             msgs.reset_device(
                 current_app.config['RABBITMQ_URI'],
                 device_info['id'])

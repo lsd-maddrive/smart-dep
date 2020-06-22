@@ -1,3 +1,4 @@
+import copy 
 from datetime import datetime, timedelta
 import logging
 from pprint import pformat
@@ -127,7 +128,13 @@ def test_update_device(timescaleDB):
 
     asdb.update_device(test_device_info, timescaleDB)
 
-    test_device = timescaleDB.query(Device).get(test_device_info['id'])
+    device = timescaleDB.query(Device).get(test_device_info['id'])
+    test_device = copy.deepcopy(device)
+
+    device.name = None 
+    device.icon_name = None 
+    timescaleDB.commit()
+
 
     assert test_device.place_id == test_device_info['place_id'], "Place ID for device wasn't updated"
     assert test_device.type == test_device_info['type'], "Type of device wasn't updated"
