@@ -12,7 +12,7 @@ def test_decode_token(timescaleDB, flask_app):
     if timescaleDB.query(Token).count() == 0:
         new_token = asdb.save_token(
             user_id=1, 
-            secret=flask_app.config['LOGIN_ENABLED'],
+            secret=flask_app.config['SECRET_KEY'],
             db_session=timescaleDB
         )
     else:
@@ -20,7 +20,7 @@ def test_decode_token(timescaleDB, flask_app):
 
     user_id, time = auth.decode_token(
         token=new_token.token,
-        secret=flask_app.config['LOGIN_ENABLED']
+        secret=flask_app.config['SECRET_KEY']
     )
 
     # clear Token table to avoid conflicts in other tests

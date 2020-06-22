@@ -249,7 +249,7 @@ def test_create_user(timescaleDB):
 def test_save_token(timescaleDB, flask_app):
     test_token = asdb.save_token(
         user_id=1, 
-        secret=flask_app.config['LOGIN_ENABLED'],
+        secret=flask_app.config['SECRET_KEY'],
         db_session=timescaleDB
     )
 
@@ -262,7 +262,7 @@ def test_delete_token(timescaleDB, flask_app):
     if timescaleDB.query(Token).count() == 0:
         new_token = asdb.save_token(
             user_id=1, 
-            secret=flask_app.config['LOGIN_ENABLED'],
+            secret=flask_app.config['SECRET_KEY'],
             db_session=timescaleDB
         )
 

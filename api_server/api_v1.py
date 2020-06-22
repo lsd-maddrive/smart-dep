@@ -381,7 +381,7 @@ class Signup(Resource):
 
         new_token = asdb.save_token(
             new_user.id,
-            current_app.config['LOGIN_ENABLED']
+            current_app.config['SECRET_KEY']
         )
 
         responseObject = {
@@ -420,7 +420,7 @@ class Login(Resource):
             # Raise a HTTPException for the given http_status_code
             abort(400)
 
-        new_token = asdb.save_token(user.id, current_app.config['LOGIN_ENABLED'])
+        new_token = asdb.save_token(user.id, current_app.config['SECRET_KEY'])
 
         responseObject = {
             'token': new_token.token,
@@ -439,7 +439,7 @@ def verify_request_header():
         Returns:
             token (string)
     """
-    if not current_app.config['LOGIN_ENABLED']:
+    if not current_app.config['SECRET_KEY']:
         return
 
     auth_header = request.headers.get('Authorization')
@@ -474,7 +474,7 @@ class Logout(Resource):
 
         user_id, token_iat = auth.decode_token(
             auth_token,
-            current_app.config['LOGIN_ENABLED']
+            current_app.config['SECRET_KEY']
         )
 
         if isinstance(user_id, int):
