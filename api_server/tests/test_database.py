@@ -6,7 +6,6 @@ import uuid
 import pytest
 from werkzeug.security import generate_password_hash, check_password_hash
 
-
 import api_server.database as asdb
 from db.models import State, Device, Place, User, Token
 
@@ -32,7 +31,7 @@ def test_get_last_states(timescaleDB):
     for test_state in test_query:
         db_last_states.append(test_state)
 
-    assert right_states == db_last_states 
+    assert right_states == db_last_states, "Last states are wrong" 
 
 
 def test_get_places(timescaleDB):
@@ -62,14 +61,14 @@ def test_create_place(timescaleDB):
     # remove new place to keep temp DB clear 
     timescaleDB.delete(new_place)
 
-    assert new_place.name == test_place_info['name']
-    assert new_place.num == test_place_info['num']
-    assert new_place.attr_os == test_place_info['attr_os'] 
-    assert new_place.attr_software == test_place_info['attr_software']
-    assert new_place.attr_people == test_place_info['attr_people']
-    assert new_place.attr_computers == test_place_info['attr_computers']
-    assert new_place.attr_blackboard == test_place_info['attr_board']
-    assert new_place.attr_projector == test_place_info['attr_projector']
+    assert new_place.name == test_place_info['name'], "Name of new place is wrong"
+    assert new_place.num == test_place_info['num'], "Number of new place is wrong"
+    assert new_place.attr_os == test_place_info['attr_os'], "OS for new place is wrong" 
+    assert new_place.attr_software == test_place_info['attr_software'], "Software for new place is wrong"
+    assert new_place.attr_people == test_place_info['attr_people'], "Number of people for new place is wrong"
+    assert new_place.attr_computers == test_place_info['attr_computers'], "Number of computers for new place is wrong"
+    assert new_place.attr_blackboard == test_place_info['attr_board'], "Status of blackboard existance is wrong"
+    assert new_place.attr_projector == test_place_info['attr_projector'], "Status of projector existance is wrong"
     assert places_num == 2 
 
 
@@ -89,8 +88,8 @@ def test_update_place(timescaleDB):
     asdb.update_place(test_place_info, timescaleDB)
     place = timescaleDB.query(Place).get(test_place_info['id'])
 
-    assert place.name == test_place_info['name'] 
-    assert place.num == test_place_info['num']
+    assert place.name == test_place_info['name'], "Place Name wasn't updated"
+    assert place.num == test_place_info['num'], "Place Number wasn't updated"
 
 
 def test_delete_place(timescaleDB):
@@ -111,7 +110,7 @@ def test_delete_place(timescaleDB):
     asdb.delete_place(test_place_info, timescaleDB)
     test_place = timescaleDB.query(Place).get(new_place.id)
 
-    assert test_place == None  
+    assert test_place == None, "Place wasn't removed" 
 
 
 def test_update_device(timescaleDB):
@@ -128,9 +127,9 @@ def test_update_device(timescaleDB):
 
     test_device = timescaleDB.query(Device).get(test_device_info['id'])
 
-    assert test_device.place_id == test_device_info['place_id']
-    assert test_device.type == test_device_info['type']
-    assert test_device.name == test_device_info['name']
+    assert test_device.place_id == test_device_info['place_id'], "Place ID for device wasn't updated"
+    assert test_device.type == test_device_info['type'], "Type of device wasn't updated"
+    assert test_device.name == test_device_info['name'], "Name of device wasn't updated"
 
 
 def test_reset_device(timescaleDB):
@@ -159,8 +158,8 @@ def test_reset_device(timescaleDB):
     # remove new device for test to keep temp DB clear 
     timescaleDB.delete(new_device)
 
-    assert reseted_device.place_id == None 
-    assert reseted_device.is_installed == False  
+    assert reseted_device.place_id == None, "Place ID for devices wasn't reseted" 
+    assert reseted_device.is_installed == False, "Device is installed, expected NOT"  
 
 
 def test_delete_device(timescaleDB):
@@ -185,11 +184,11 @@ def test_delete_device(timescaleDB):
     asdb.delete_device(device_info, timescaleDB)
     check_device = timescaleDB.query(Device).get(device_info['id'])
     
-    assert check_device == None  
+    assert check_device == None, "Device wasn't removed"  
 
 
 def test_get_devices(timescaleDB):
-    assert len(asdb.get_devices(1, timescaleDB)) == 3 
+    assert len(asdb.get_devices(1, timescaleDB)) == 3, "Number of devices is wrong, expected 3" 
 
 
 def test_get_new_devices(timescaleDB):
@@ -213,11 +212,13 @@ def test_get_new_devices(timescaleDB):
 
     devices = asdb.get_new_devices(timescaleDB)
 
+    # remove new device for test to keep temp DB clear 
+    timescaleDB.delete(devices[0])
 
-    assert len(devices) == 1 
-    assert devices[0].place_id == device_info['place_id']
-    assert devices[0].is_installed == device_info['is_installed']
-    assert devices[0].name == device_info['name']   
+    assert len(devices) == 1, "Number of new devices is wrong" 
+    assert devices[0].place_id == device_info['place_id'], "Place ID is invalid"
+    assert devices[0].is_installed == device_info['is_installed'], "Device is installed, expected NOT"
+    assert devices[0].name == device_info['name'], "Device Name is wrong"   
 
 
 def test_get_user_data(timescaleDB):
