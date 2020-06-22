@@ -1,11 +1,11 @@
-image: ubuntu
+image: kail4ek/ansible-ubuntu:18.04
 
 before_script:
   ##
   ## Install ssh-agent if not already installed, it is required by Docker.
   ## (change apt-get to yum if you use an RPM-based image)
   ##
-  - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client git -y )'
+  - "which ssh-agent || ( apt-get update -y && apt-get install openssh-client git -y )"
 
   ##
   ## Run ssh-agent (inside the build environment)
@@ -40,7 +40,6 @@ before_script:
   ##
   #- echo "$SSH_SERVER_HOSTKEYS" > ~/.ssh/known_hosts'
   #- chmod 644 ~/.ssh/known_hosts
-
   ##
   ## You can optionally disable host key checking. Be aware that by adding that
   ## you are suspectible to man-in-the-middle attacks.
@@ -48,7 +47,6 @@ before_script:
   ## you will overwrite your user's SSH config.
   ##
   #- '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
-
   ##
   ## Optionally, if you will be using any Git commands, set the user name and
   ## email.
@@ -56,14 +54,31 @@ before_script:
   # - git config --global user.email "darth@empire.com"
   # - git config --global user.name "Darth Vader"
 
-deploy_tigra:
+# stages:
+#   # - test
+#   - build
+#   - deploy
+#   # - stage
+
+build-containers:
+  # My preinstalled docker with compose =)
+  image: kail4ek/docker-compose:19.03.11
+  stage: build
+  services:
+    - docker:19.03.11-dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    # Download if not exists
-    - ssh -l "$SSH_USER" "$SSH_HOST" -p "$SSH_PORT" "cd deploy && cd smart-dep && git pull || git clone https://github.com/lsd-maddrive/smart-dep.git -b develop"
-    # Deploy new versio of services
-    - ssh -l "$SSH_USER" "$SSH_HOST" -p "$SSH_PORT" "cd deploy/smart-dep && make dc-stop && make dc-build && SMART_ENV=prod make dc-daemon"
-    # Apply migrations
-    - ssh -l "$SSH_USER" "$SSH_HOST" -p "$SSH_PORT" "cd deploy/smart-dep && sleep 3 && make migrate"
+    - docker-compose build
+    - docker-compose push
+  # after_script:
+    # - docker logout "$CI_REGISTRY"
+
+deploy_tigra:
+  stage: deploy
+  script:
+    - cd ansible && echo $ANSIBLE_PASSWORD > vault-pass.txt && ansible-playbook -i hosts site.yml --vault-password-file vault-pass.txt
   only:
     - develop
+    - feature/ci
 

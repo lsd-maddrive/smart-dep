@@ -1,8 +1,8 @@
 version: "3"
 
 volumes:
-    # db-data:
-    # driver: local
+    db-data:
+        driver: local
     grafana-data:
         driver: local
     loki-data:
@@ -18,12 +18,30 @@ services:
             POSTGRES_PASSWORD: "admin"
         volumes:
             # Set implicit place for using disk space where it is deployed (not system)
-            # - db-data:/var/lib/posgresql/data
-            - ./volumes/db-data:/var/lib/posgresql/data
+            - db-data:/var/lib/postgresql/data
+            # - ./volumes/db-data:/var/lib/postgresql/data
         ports:
             - "5432:5432"
         labels:
             NAME: "timescaledb"
+        logging:
+            driver: "json-file"
+            options:
+                max-file: "5"
+                max-size: "20m"
+
+    pgadmin:
+        image: dpage/pgadmin4:4.20
+        restart: always
+        environment:
+            PGADMIN_DEFAULT_EMAIL: "admin@domain.com"
+            PGADMIN_DEFAULT_PASSWORD: "admin"
+        ports:
+            - "54321:80"
+        volumes:
+            - ./config/pgadmin/servers.json:/pgadmin4/servers.json:ro
+        depends_on:
+            - timescaledb
         logging:
             driver: "json-file"
             options:
@@ -54,6 +72,7 @@ services:
     web:
         build:
             context: web-frontend
+        image: acs-registry.duckdns.org/webui:${VERSION:-latest}
         restart: always
         # For debug
         ports:
@@ -70,6 +89,7 @@ services:
         build:
             context: .
             dockerfile: api_server/Dockerfile
+        image: acs-registry.duckdns.org/apiserver:${VERSION:-latest}
         env_file:
             - "config/.env.${SMART_ENV:-dev}"
         environment:
@@ -101,6 +121,7 @@ services:
         build:
             context: .
             dockerfile: micro_server/Dockerfile
+        image: acs-registry.duckdns.org/microserver:${VERSION:-latest}
         env_file:
             - "config/.env.${SMART_ENV:-dev}"
         restart: always
@@ -119,6 +140,7 @@ services:
     emulator:
         build:
             context: emulator
+        image: acs-registry.duckdns.org/emulator:${VERSION:-latest}
         restart: always
         depends_on:
             - rabbitmq
@@ -129,55 +151,11 @@ services:
                 max-file: "5"
                 max-size: "20m"
 
-    pgadmin:
-        image: dpage/pgadmin4:4.20
-        restart: always
-        environment:
-            PGADMIN_DEFAULT_EMAIL: "admin@domain.com"
-            PGADMIN_DEFAULT_PASSWORD: "admin"
-        ports:
-            - "54321:80"
-        volumes:
-            - ./config/pgadmin/servers.json:/pgadmin4/servers.json:ro
-        depends_on:
-            - timescaledb
-        logging:
-            driver: "json-file"
-            options:
-                max-file: "5"
-                max-size: "20m"
-
-    fluentd:
-        build:
-            context: .
-            dockerfile: ./fluentd/Dockerfile
-        restart: always
-        ports:
-            - 24224:24224
-        logging:
-            driver: "json-file"
-            options:
-                max-file: "5"
-                max-size: "20m"
-
-    loki:
-        image: grafana/loki:latest
-        restart: always
-        ports:
-            - 3100:3100
-        command: -config.file=/etc/loki/local-config.yaml
-        volumes:
-            - loki-data:/data/loki
-        logging:
-            driver: "json-file"
-            options:
-                max-file: "5"
-                max-size: "20m"
-
     state_tracker:
         build:
             context: .
             dockerfile: tracker/Dockerfile
+        image: acs-registry.duckdns.org/tracker:${VERSION:-latest}
         env_file:
             - "config/.env.${SMART_ENV:-dev}"
         environment:
@@ -199,6 +177,7 @@ services:
         build:
             context: .
             dockerfile: tracker/Dockerfile
+        image: acs-registry.duckdns.org/tracker:${VERSION:-latest}
         env_file:
             - "config/.env.${SMART_ENV:-dev}"
         environment:
@@ -220,6 +199,7 @@ services:
         build:
             context: .
             dockerfile: tracker/Dockerfile
+        image: acs-registry.duckdns.org/tracker:${VERSION:-latest}
         env_file:
             - "config/.env.${SMART_ENV:-dev}"
         environment:
@@ -231,6 +211,34 @@ services:
         depends_on:
             - rabbitmq
             - timescaledb
+        logging:
+            driver: "json-file"
+            options:
+                max-file: "5"
+                max-size: "20m"
+
+    fluentd:
+        build:
+            context: .
+            dockerfile: ./fluentd/Dockerfile
+        image: acs-registry.duckdns.org/fluentd:${VERSION:-latest}
+        restart: always
+        ports:
+            - 24224:24224
+        logging:
+            driver: "json-file"
+            options:
+                max-file: "5"
+                max-size: "20m"
+
+    loki:
+        image: grafana/loki:latest
+        restart: always
+        ports:
+            - 3100:3100
+        command: -config.file=/etc/loki/local-config.yaml
+        volumes:
+            - loki-data:/data/loki
         logging:
             driver: "json-file"
             options:

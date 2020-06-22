@@ -12,6 +12,5 @@ RUN gem install fluent-plugin-influxdb
 RUN gem install fluent-plugin-timescaledb
 RUN gem install fluent-plugin-grafana-loki
 RUN mkdir -p /fluentd/log
-COPY ./config/fluentd/fluent.conf /fluentd/etc/fluent.conf
 EXPOSE 24224
 CMD fluentd -c /fluentd/etc/$FLUENTD_CONF -p /fluentd/plugins $FLUENTD_OPT
