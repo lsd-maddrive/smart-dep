@@ -4,6 +4,8 @@ from pprint import pformat
 import uuid
 
 import pytest
+from werkzeug.security import generate_password_hash, check_password_hash
+
 
 import api_server.database as asdb
 from db.models import State, Device, Place, User, Token
@@ -150,7 +152,10 @@ def test_reset_device(timescaleDB):
 
     asdb.reset_device(device_info, timescaleDB)
     reseted_device = timescaleDB.query(Device).get(device_info['id'])
-    # TODO delete new device to not trash temp DB 
+    
+    # remove new device for test to keep temp DB clear 
+    timescaleDB.delete(new_device)
+
     assert reseted_device.place_id == None 
     assert reseted_device.is_installed == False  
 
@@ -179,17 +184,44 @@ def test_delete_device(timescaleDB):
     
     assert check_device == None  
 
+
 def test_get_devices(timescaleDB):
     assert len(asdb.get_devices(1, timescaleDB)) == 3 
 
 
+def test_get_new_devices(timescaleDB):
+    device_info = {
+            'id': uuid.uuid4(),
+            'place_id': 1, 
+            'is_installed': False, 
+            'name': 'New Device',
+        }
+        
+    new_device = Device(
+                        id=device_info['id'],
+                        place_id=device_info['place_id'],
+                        register_date=datetime.now(), 
+                        is_installed=device_info['is_installed'], 
+                        name=device_info['name'],
+            )
+
+    timescaleDB.add(new_device)
+    timescaleDB.commit()
+
+    devices = asdb.get_new_devices(timescaleDB)
+
+
+    assert len(devices) == 1 
+    assert devices[0].place_id == device_info['place_id']
+    assert devices[0].is_installed == device_info['is_installed']
+    assert devices[0].name == device_info['name']   
 
 
 def test_get_user_data(timescaleDB):
     test_query = asdb.get_user_data("test_user", db_session=timescaleDB)
 
     assert test_query.username == 'test_user', "No valid username"
-    assert test_query.check_password('test_password'), "No valid password"
+    assert check_password_hash(test_query.password_hash, 'test_password'), "No valid password"
 
 
 def test_create_user(timescaleDB):
@@ -200,7 +232,9 @@ def test_create_user(timescaleDB):
     )
 
     num_of_users = timescaleDB.query(User).count()
-
+    # remove new user for test to keep temp DB clear 
+    timescaleDB.delete(timescaleDB.query(User).get(2))
+    
     assert num_of_users == 2, "New user wasn't added to DB"
     assert new_user.username == 'new_test_user', "Username is wrong"
     assert new_user.id == 2, "USER ID is wrong"

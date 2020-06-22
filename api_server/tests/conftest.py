@@ -11,11 +11,12 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import testing.postgresql
+from werkzeug.security import generate_password_hash
 
-from api_server.api_v1 import api as ns 
-from api_server.api_func import create_app
-from api_server.database import db 
-from api_server.sockets import socketio
+from api_v1 import api as ns 
+from api_func import create_app
+from database import db 
+from sockets import socketio
 from db.models import Model, State, Device, Place, User
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d/%H:%M:%S')
@@ -73,11 +74,10 @@ def timescaleDB(request, test_db):
                 )
             )
     
+    test_user = User(username='test_user')
+    test_user.password_hash = generate_password_hash('test_password')
 
-    # test_user = User(username="test_user")
-    # test_user.set_password("test_password")
-
-    # db_data.append(test_user)
+    db_data.append(test_user)
 
     logger.debug(f"DB DATA STATES:\n{pformat(db_data)}")
 
