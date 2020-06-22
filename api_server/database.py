@@ -191,7 +191,7 @@ def create_user(username, password, db_session=db.session):
     db_session.add(user)
     db_session.commit()
 
-    logger.debug(f"User \"{user}\" is added to DB")
+    logger.debug(f"User \"{user.username}\" is added to DB")
 
     return user
 
@@ -221,7 +221,7 @@ def save_token(user_id, secret, db_session=db.session, exp_days=7, exp_sec=0):
     db_session.add(new_token)
     db_session.commit()
 
-    logger.debug(f"New token {new_token} is saved")
+    logger.debug(f"New token for User: {new_token.parent_id} is saved")
 
     return new_token
 

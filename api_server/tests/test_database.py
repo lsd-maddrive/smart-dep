@@ -58,6 +58,9 @@ def test_create_place(timescaleDB):
     new_place = asdb.create_place(test_place_info, timescaleDB)
 
     places_num = timescaleDB.query(Place).count()
+    
+    # remove new place to keep temp DB clear 
+    timescaleDB.delete(new_place)
 
     assert new_place.name == test_place_info['name']
     assert new_place.num == test_place_info['num']
