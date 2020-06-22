@@ -3,6 +3,7 @@ import copy
 from datetime import datetime
 import json
 import logging
+import numpy as np
 from pprint import pformat
 import sys 
 sys.path.append("../")
@@ -11,6 +12,7 @@ import uuid
 
 import pytest
 import pytest_env
+from werkzeug.datastructures import FileStorage
 
 from db.models import State, Place, Device, User, Token
 
@@ -117,6 +119,30 @@ def test_place_delete(client, timescaleDB):
 
     assert rv.status_code == 200  
     assert num_places == 1
+
+from io import BytesIO
+
+def test_place_image_post(client, timescaleDB): 
+    data = {}
+
+    with open('./tests/resources/test_img.jpg', 'rb') as fp:
+        file_ = FileStorage(fp)
+        data['image'] = file_ 
+
+        rv = client.post(
+                'http://localhost:5000/api/v1/place/1/image',
+                data=data, content_type='multipart/form-data'
+            )
+
+    check_image = timescaleDB.query(Place).get(1).image
+
+    # to keep temp DB sustainable 
+    place = timescaleDB.query(Place).get(1)
+    place.image = None 
+    timescaleDB.commit()
+
+    assert rv.status_code == 200  
+    assert check_image is not None 
 
 
 def test_device_types_get(client, timescaleDB):

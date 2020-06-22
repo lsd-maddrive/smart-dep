@@ -111,8 +111,11 @@ file_upload.add_argument('image',
 class PlaceImage(Resource):
     @api.expect(file_upload)
     def post(self, id):
+        logger.debug(f"API Place ID: {id}")
         args = file_upload.parse_args()
         # args = request.files['image']
+
+        logger.debug(f"ARGS: {args}")
 
         uploaded_img = args['image'].read()
 
@@ -252,8 +255,6 @@ _model_device_del = api.model('Device_del', {
 })
 
 
-
-
 @api.route('/device', endpoint='device_RUD')
 class Device(Resource):
     @api.expect(_model_device_get_args)
@@ -288,9 +289,10 @@ class Device(Resource):
         logger.debug(f"Request to update device:\n{pformat(device_info)}")
 
         asdb.update_device(device_info)
-        msgs.reset_device(
-            current_app.config['RABBITMQ_URI'],
-            device_info['id'])
+        if not app.config['TESTING']:
+            msgs.reset_device(
+                current_app.config['RABBITMQ_URI'],
+                device_info['id'])
 
 # Test is not written [pytest] because of micropython
     @api.expect(_model_device_del, validate=True)
@@ -302,9 +304,11 @@ class Device(Resource):
             asdb.reset_device(device_info)
         else:
             asdb.delete_device(device_info)
-        msgs.reset_device(
-            current_app.config['RABBITMQ_URI'],
-            device_info['id'])
+        
+        if not app.config['TESTING']:
+            msgs.reset_device(
+                current_app.config['RABBITMQ_URI'],
+                device_info['id'])
 
 
 _model_ping = api.model('Device_ping', {
@@ -319,9 +323,10 @@ class DevicePing(Resource):
         device = request.get_json()
         logger.debug(f'Request to ping: {device}')
 
-        msgs.ping_device(
-            current_app.config['RABBITMQ_URI'],
-            device['id'])
+        if not app.config['TESTING']:
+            msgs.ping_device(
+                current_app.config['RABBITMQ_URI'],
+                device['id'])
 
 
 _model_command = api.model('Device_command', {
@@ -345,14 +350,15 @@ class DeviceCommand(Resource):
         cmd = data['cmd']
         source_id = 'api'
 
-        msgs.send_command(
-            current_app.config['RABBITMQ_URI'],
-            device_id,
-            place_id,
-            type_,
-            cmd,
-            source_id
-        )
+        if not app.config['TESTING']:
+            msgs.send_command(
+                current_app.config['RABBITMQ_URI'],
+                device_id,
+                place_id,
+                type_,
+                cmd,
+                source_id
+            )
 
 _model_user_credentials = api.model('User_credentials', {
     'username': fields.String,
