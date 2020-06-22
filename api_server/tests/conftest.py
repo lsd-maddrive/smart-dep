@@ -60,10 +60,10 @@ def timescaleDB(request, test_db):
                 id=uuid.uuid4(),
                 place_id=1,
                 register_date=datetime.now(), 
-                is_installed=True
+                is_installed=True, 
+                type=types[i]
             )
     )
-
 
     for i in range(3):
         db_data.append(
@@ -107,7 +107,7 @@ def flask_app(test_db, timescaleDB):
     app.config['FLASK_DEBUG'] = False
     app.config['TESTING'] = True
     app.config['PRESERVE_CONTEXT_ON_EXCEPTION'] = False
-    app.config['SECRET_KEY'] = os.getenv('API_SECRET_KEY')
+    app.config['LOGIN_ENABLED'] = os.getenv('LOGIN_ENABLED')
 
     # logger.debug(f'Test App DB: {app.config["SQLALCHEMY_DATABASE_URI"]}')
     db.init_app(app)

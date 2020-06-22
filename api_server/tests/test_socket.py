@@ -3,63 +3,41 @@ from pprint import pformat
 import time
 
 import pytest
+from sqlalchemy import asc
+
+from db.models import Place, Device 
 
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d/%H:%M:%S')
 logger = logging.getLogger(__name__)
 
 
-def test_socketio_data(sio_client):
+def test_socketio_start_states(sio_client, timescaleDB):
     config = {
-        'place_id': '8201',
+        'placeId': 1,
         'period': 1
     }
     time_2_sleep = 3
-
-    expected_obj = {
-        'args': [[
-            {
-                'device_id': '01:01:01:01:01:01',
-                'state': {
-                    'enabled': False
-                },
-                'type': 'env'
-            },
-            {
-                'device_id': '11:11:11:11:11:11',
-                'state': {
-                    'enabled': False
-                },
-                'type': 'light'
-            },
-            {
-                'device_id': 'FF:FF:FF:FF:FF:FF',
-                'state': {
-                    'enabled': False
-                },
-                'type': 'power'
-            }
-        ]],
-        'name': 'state',
-        'namespace': '/'
-    }
-
-    expected_output = []
-
-    for _ in range(time_2_sleep):
-        expected_output.append(expected_obj)
 
     sio_client.emit('start_states', config)
     time.sleep(time_2_sleep)
     data = sio_client.get_received()
     sio_client.emit('disconnect')
 
-    first_time = data[0]['args'][0][3]['emit_time']
-    last_time = data[2]['args'][0][3]['emit_time']
+    first_time = data[0]['args'][0][0]['emit_time']
+    last_time = data[2]['args'][0][2]['emit_time']
+    check_length = len(data[0]['args'][0])
+    check_data = data[0]['args'][0]
 
-    # remove time from data to be able compare only data
-    for d in data:
-        d['args'][0].pop(3)
+    check_places = timescaleDB.query(Place).first()
+    devices = timescaleDB.query(Device). \
+        order_by(Device.register_date.asc()).all()
+    
+    devices_id = [str(devices[i].id) for i in range(len(devices))]
 
-    assert expected_output == data, "data doesn't match"
-    assert (last_time - first_time) == (time_2_sleep - 1), "time delta is incorrect"
+    assert round(last_time - first_time) == (time_2_sleep - 1), "time delta is incorrect"
+    assert len(data) == 3, "Number of sended banch is wrong (1 banch * period)"
+    assert check_length == 3, "Number of Place Data is wrong"
+    assert check_data[0]['device_id'] in devices_id, f"Device ID {check_data[0]['device_id']} is wrong"
+    assert check_data[1]['device_id'] in devices_id, f"Device ID {check_data[1]['device_id']} is wrong"
+    assert check_data[2]['device_id'] in devices_id, f"Device ID {check_data[2]['device_id']} is wrong"

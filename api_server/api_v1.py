@@ -32,6 +32,12 @@ _model_place_new = api.model('Place_new', {
     'name': fields.String,
 })
 
+_model_place_update = api.model('Place_new', {
+    'id': fields.Integer,
+    'num': fields.String,
+    'name': fields.String,
+})
+
 _model_place_del = api.model('Place_del', {
     'id': fields.Integer,
 })
@@ -69,7 +75,7 @@ class Places(Resource):
         new_place = asdb.create_place(place_info)
         logger.debug(f'Created new place: {new_place}')
 
-    @api.expect(_model_place_new, validate=True)
+    @api.expect(_model_place_update, validate=True)
     def put(self):
         place_info = request.get_json()
         logger.debug(f"Request to update place:\n{pformat(place_info)}")
@@ -95,9 +101,11 @@ file_upload = reqparse.RequestParser()
 file_upload.add_argument('image',
                         type=FileStorage,
                         location='files',
+                        help='Place Image',
                         required=True
                         )
 
+# Test is not written [pytest] 
 @api.route('/place/<string:id>/image', endpoint='place_image', methods=['GET', 'POST'])
 @api.param('id', 'ID of place')
 class PlaceImage(Resource):
@@ -244,6 +252,8 @@ _model_device_del = api.model('Device_del', {
 })
 
 
+
+
 @api.route('/device', endpoint='device_RUD')
 class Device(Resource):
     @api.expect(_model_device_get_args)
@@ -271,6 +281,7 @@ class Device(Resource):
         logger.debug(f"Request devices: {result_devices}")
         return result_devices
 
+# Test is not written [pytest] because of micropython
     @api.expect(_model_device, validate=True)
     def put(self):
         device_info = request.get_json()
@@ -281,6 +292,7 @@ class Device(Resource):
             current_app.config['RABBITMQ_URI'],
             device_info['id'])
 
+# Test is not written [pytest] because of micropython
     @api.expect(_model_device_del, validate=True)
     def delete(self):
         device_info = request.get_json()
@@ -299,7 +311,7 @@ _model_ping = api.model('Device_ping', {
     'id': fields.String,
 })
 
-
+# Test is not written [pytest] because of micropython
 @api.route('/device/ping', endpoint='device_ping')
 class DevicePing(Resource):
     @api.expect(_model_ping, validate=True)
@@ -319,7 +331,7 @@ _model_command = api.model('Device_command', {
     'cmd': fields.Raw,
 })
 
-
+# Test is not written [pytest] because of micropython
 @api.route('/device/cmd', endpoint='device_cmd')
 class DeviceCommand(Resource):
     @api.expect(_model_command, validate=True)
@@ -364,12 +376,12 @@ class Signup(Resource):
         try:
             new_user = asdb.create_user(username, password)
         except IntegrityError as err:
-            logger.critical(f"User '{username}' already exist")
+            logger.critical(f"User '{username}' already exists")
             abort(400)
 
         new_token = asdb.save_token(
             new_user.id,
-            current_app.config['SECRET_KEY']
+            current_app.config['LOGIN_ENABLED']
         )
 
         responseObject = {
@@ -403,11 +415,12 @@ class Login(Resource):
 
         if not check_password_hash(user.password_hash, password):
             logger.critical(
-                f"Login failed! User \"{username}\" password is invalid")
+                f"Login failed! User \"{username}\" password is invalid"
+            )
             # Raise a HTTPException for the given http_status_code
             abort(400)
 
-        new_token = asdb.save_token(user.id, current_app.config['SECRET_KEY'])
+        new_token = asdb.save_token(user.id, current_app.config['LOGIN_ENABLED'])
 
         responseObject = {
             'token': new_token.token,
@@ -447,6 +460,7 @@ def verify_request_header():
 # TODO: think about automatic removing expired tokens from DB
 @api.route('/logout', methods=['POST'])
 class Logout(Resource):
+    @api.expect(_model_user_credentials, validate=True)
     def post(self):
         """
             This method is for checking functionality of token and headers
@@ -454,9 +468,13 @@ class Logout(Resource):
         """
         auth_token = verify_request_header()
 
+        data = request.get_json()
+        username = data.get('username')
+        password = data.get('password')
+
         user_id, token_iat = auth.decode_token(
             auth_token,
-            current_app.config['SECRET_KEY']
+            current_app.config['LOGIN_ENABLED']
         )
 
         if isinstance(user_id, int):

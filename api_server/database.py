@@ -50,17 +50,18 @@ def create_place(place_info, db_session=db.session):
         num=place_info['num'],
         create_date=datetime.utcnow(),
 
-        # TODO - use .get() with defaults
-        attr_os=place_info['attr_os'],
-        attr_software=place_info['attr_software'],
-        attr_people=place_info['attr_people'],
-        attr_computers=place_info['attr_computers'],
-        attr_blackboard=place_info['attr_board'],
-        attr_projector=place_info['attr_projector']
+        attr_os=place_info.get('attr_os', list()),
+        attr_software=place_info.get('attr_software', list()),
+        attr_people=place_info.get('attr_people', None),
+        attr_computers=place_info.get('attr_computers', None),
+        attr_blackboard=place_info.get('attr_board', False),
+        attr_projector=place_info.get('attr_projector', False)
     )
 
     db_session.add(place)
     db_session.commit()
+
+    logger.debug(f"{place}")
 
     return place
 
@@ -72,12 +73,12 @@ def update_place(place_info, db_session=db.session):
     place.num = place_info['num']
     place.update_date = datetime.utcnow()
 
-    place.attr_os = place_info['attr_os']
-    place.attr_software = place_info['attr_software']
-    place.attr_people = place_info['attr_people']
-    place.attr_computers = place_info['attr_computers']
-    place.attr_blackboard = place_info['attr_board']
-    place.attr_projector = place_info['attr_projector']
+    place.attr_os = place_info.get('attr_os', list())
+    place.attr_software = place_info.get('attr_software', list())
+    place.attr_people = place_info.get('attr_people', None)
+    place.attr_computers = place_info.get('attr_computers', None)
+    place.attr_blackboard = place_info.get('attr_board', False)
+    place.attr_projector = place_info.get('attr_projector', False)
 
     db_session.commit()
 

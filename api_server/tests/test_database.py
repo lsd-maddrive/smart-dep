@@ -1,12 +1,14 @@
 from datetime import datetime, timedelta
 import logging
 from pprint import pformat
+import sys 
+sys.path.append("../")
 import uuid
 
 import pytest
-from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.security import check_password_hash
 
-import api_server.database as asdb
+import database as asdb
 from db.models import State, Device, Place, User, Token
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d/%H:%M:%S')
@@ -69,7 +71,7 @@ def test_create_place(timescaleDB):
     assert new_place.attr_computers == test_place_info['attr_computers'], "Number of computers for new place is wrong"
     assert new_place.attr_blackboard == test_place_info['attr_board'], "Status of blackboard existance is wrong"
     assert new_place.attr_projector == test_place_info['attr_projector'], "Status of projector existance is wrong"
-    assert places_num == 2 
+    assert places_num == 2, "Number of places is wrong"
 
 
 def test_update_place(timescaleDB):
@@ -247,7 +249,7 @@ def test_create_user(timescaleDB):
 def test_save_token(timescaleDB, flask_app):
     test_token = asdb.save_token(
         user_id=1, 
-        secret=flask_app.config['SECRET_KEY'],
+        secret=flask_app.config['LOGIN_ENABLED'],
         db_session=timescaleDB
     )
 
@@ -260,7 +262,7 @@ def test_delete_token(timescaleDB, flask_app):
     if timescaleDB.query(Token).count() == 0:
         new_token = asdb.save_token(
             user_id=1, 
-            secret=flask_app.config['SECRET_KEY'],
+            secret=flask_app.config['LOGIN_ENABLED'],
             db_session=timescaleDB
         )
 

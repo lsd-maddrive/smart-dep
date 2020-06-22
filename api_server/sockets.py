@@ -129,14 +129,15 @@ def _socket_handle_start_states(config):
     place_manager.start_place(place_id, period_s, session_id, current_db_url)
 
 
+# Are stop_states and disconnect the same thing???
 @socketio.on('stop_states')
-def _socket_handle_start_states(config):
+def _socket_handle_stop_states():
     session_id = request.sid
     logger.debug(f"SESSION ID {session_id}")
-    logger.debug(f'Received config: {config} from {session_id}')
-    place_id = config['placeId']
-    period_s = config['period']
-    current_db_url = current_app.config["SQLALCHEMY_DATABASE_URI"]
+    # logger.debug(f'Received config: {config} from {session_id}')
+    # place_id = config['placeId']
+    # period_s = config['period']
+    # current_db_url = current_app.config["SQLALCHEMY_DATABASE_URI"]
 
     place_manager.stop_place(session_id)
 
