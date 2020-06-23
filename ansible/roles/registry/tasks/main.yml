@@ -13,9 +13,29 @@
     src: nginx.app.conf.j2
     dest: "{{registry_folder}}/nginx/app.conf"
 
-# - name: Make sure we can use htpasswd module
-#   pip:
-#     name: passlib
+# - debug:
+#     var: "{{registry_password}} | password_hash('bcrypt')"
+
+- name: Create empty password file
+  copy:
+    content: ""
+    dest: "{{registry_folder}}/.htpasswd"
+    force: no
+
+- name: Generate password for registry
+  docker_container:
+    name: "registry_pswdgen"
+    # Maybe make it easier, now 2.7.1 - has no htpasswd
+    image: registry:{{registry_version}}
+    detach: no
+    entrypoint: htpasswd
+    command: -bBc /passfile {{registry_user}} {{registry_password}}
+    volumes:
+      - "./{{registry_folder}}/.htpasswd:/passfile"
+  register: pswdgen_out
+
+- debug:
+    var: pswdgen_out
 
 # - name: Generate password for registry
 #   htpasswd:
@@ -59,6 +79,18 @@
   stat:
     path: "{{registry_folder}}/certbot/conf/live/{{inventory_hostname}}/cert.pem"
   register: letsencrypt_cert
+
+- name: Log into private registry and force re-authorization
+  docker_login:
+    registry: "{{inventory_hostname}}"
+    username: "{{registry_user}}"
+    password: "{{registry_password}}"
+    reauthorize: yes
+  register: docker_login
+
+- name: Debug login result
+  debug:
+    var: docker_login
 
 # - name: "Start Certbot container"
 #   when: not letsencrypt_cert.stat.exists

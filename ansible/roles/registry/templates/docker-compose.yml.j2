@@ -7,18 +7,18 @@ networks:
 
 services:
   docker-registry:
-    image: "registry:2"
+    image: "registry:{{registry_version}}"
     restart: always
     ports:
       - "53985:5000"
     environment:
       REGISTRY_AUTH: htpasswd
-      REGISTRY_AUTH_HTPASSWD_REALM: basic-realm
+      REGISTRY_AUTH_HTPASSWD_REALM: Registry Realm
       REGISTRY_AUTH_HTPASSWD_PATH: /auth/.htpasswd
-      REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /data
+    #   REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /var/lib/registry
     volumes:
       - ./.htpasswd:/auth/.htpasswd
-      - ./data:/data
+      - ./data:/var/lib/registry
 
   docker-registry-ui:
     image: konradkleine/docker-registry-frontend:v2
