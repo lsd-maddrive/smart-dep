@@ -1,13 +1,14 @@
 import datetime
+from io import BytesIO
 import json
 import logging
 import os
 
-from flask import request, current_app, jsonify
+from flask import request, current_app, jsonify, send_file
 from flask_restplus import Resource, Namespace, fields, reqparse, abort
 from pprint import pformat
 from sqlalchemy.exc import IntegrityError
-
+from werkzeug.datastructures import FileStorage
 from werkzeug.security import check_password_hash
 
 import messages as msgs
@@ -53,6 +54,7 @@ class Places(Resource):
                 'attr_people': place.attr_people,
                 'attr_board': place.attr_blackboard,
                 'attr_projector': place.attr_projector,
+                'imageURL': None if place.image == None else f"place/{place.id}/image"
             })
 
         logger.debug(f"Request places: {result_places}")
@@ -87,6 +89,38 @@ _model_device_types = api.model('Device_types', {
     'name': fields.String,
     'desc': fields.String,
 })
+
+
+file_upload = reqparse.RequestParser()
+file_upload.add_argument('image',
+                        type=FileStorage,
+                        location='files',
+                        required=True
+                        )
+
+@api.route('/place/<string:id>/image', endpoint='place_image', methods=['GET', 'POST'])
+@api.param('id', 'ID of place')
+class PlaceImage(Resource):
+    @api.expect(file_upload)
+    def post(self, id):
+        args = file_upload.parse_args()
+        # args = request.files['image']
+
+        uploaded_img = args['image'].read()
+
+        # check if place with id - is existed
+        if asdb.get_place_data(id) is None:
+            logger.critical(f"Place with ID: {id} doesn't exist")
+            abort(404)
+
+        # save to DB
+        asdb.save_place_image(id, uploaded_img)
+
+
+    def get(self, id):
+        place = asdb.get_place_data(id)
+
+        return send_file(BytesIO(place.image), mimetype='image/png')
 
 
 @api.route('/device/types', endpoint='device_types')

@@ -8,7 +8,8 @@ from flask_cors import CORS
 from api_v1 import api as ns
 from api_func import create_app
 from sockets import socketio
-from database import db
+from database import db, create_place
+
 
 import messages as msgs
 

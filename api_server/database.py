@@ -1,16 +1,17 @@
-from db.models import metadata, User, Token, State, Command, Config, Place, Device
-from datetime import datetime
-from sqlalchemy.orm import Session
-from sqlalchemy import distinct
-from sqlalchemy import desc
-import jwt
-from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, timedelta
 import logging
 import os
 
+from flask_sqlalchemy import SQLAlchemy
+import jwt
+from sqlalchemy.orm import Session
+from sqlalchemy import distinct
+from sqlalchemy import desc
 from werkzeug.security import generate_password_hash
+
 import auth
+from db.models import metadata, User, Token, State, Command, Config, Place, Device
+
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -37,8 +38,6 @@ def get_last_states(start_ts, place_id, db_session=db.session):
         .order_by(State.device_id, State.timestamp.desc()) \
         .distinct(State.device_id).all()
 
-# Places
-
 
 def get_places(db_session=db.session):
     return db_session.query(Place).all()
@@ -53,8 +52,8 @@ def create_place(place_info, db_session=db.session):
         # TODO - use .get() with defaults
         attr_os=place_info['attr_os'],
         attr_software=place_info['attr_software'],
-        attr_people=place_info['attr_computers'],
-        attr_computers=place_info['attr_people'],
+        attr_people=place_info['attr_people'],
+        attr_computers=place_info['attr_computers'],
         attr_blackboard=place_info['attr_board'],
         attr_projector=place_info['attr_projector']
     )
@@ -87,8 +86,6 @@ def delete_place(place_info, db_session=db.session):
 
     db_session.delete(place)
     db_session.commit()
-
-# Devices
 
 
 def update_device(device_info, db_session=db.session):
@@ -241,3 +238,31 @@ def delete_token(user_id, created_on, db_session=db.session):
     # TODO: fix time from utc to local time (?) only for info representation
     logger.debug(
         f"Token for User ID: {user_id} created: {created_on} was deleted")
+
+
+def save_place_image(id, img, db_session=db.session):
+    place = db_session.query(Place). \
+        filter(Place.id == id).first()
+    
+    place.image = img 
+    
+    # update row 
+    db_session.commit()
+
+    logger.debug(f"Image for Place ID {id} is saved successfully.")
+    
+
+def get_place_data(id, db_session=db.session):
+    """
+        Get all data of specified place 
+
+        Args:
+            id (int):   place id 
+            db_session (sqlalchemy.orm.session.Session): session object
+
+        Returns:
+            place [1 row]
+
+    """
+    return db_session.query(Place). \
+        filter(Place.id == id).first() 

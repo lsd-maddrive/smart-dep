@@ -69,6 +69,7 @@ class Place(Model):
     num = Column(String(20))
     create_date = Column(DateTime)
     update_date = Column(DateTime)
+    image = Column(BYTEA)
 
     attr_os = Column(ARRAY(String(20)), default=[])
     attr_software = Column(ARRAY(String(20)), default=[])
