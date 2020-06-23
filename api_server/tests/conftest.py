@@ -31,7 +31,7 @@ def test_db():
 @pytest.fixture(scope='session')
 def timescaleDB(request, test_db):
     engine = create_engine(test_db.url())
-    logger.debug(f"Engine is creates: {test_db.url()}")
+    logger.debug(f"Engine is created: {test_db.url()}")
     
     Model.metadata.create_all(engine)
     logger.debug('Create all models - done ')
@@ -47,45 +47,75 @@ def timescaleDB(request, test_db):
     ]
 
 
-    db_data = [
-        Place(
-            name='KEMZ', 
-            num='8201'
-    )]
-    
-    # fixed place_id is OK, because other way will never happened
+    place = Place(name='KEMZ', num='8201')
+
+    session.add(place)
+    session.commit() 
+
+    logger.debug(f"Place is added to DB")
+
+    place_id = session.query(Place).first().id 
+
+    logger.debug(f"PLACE ID {place_id}")
+
+    devices = []
     for i in range(3):
-        db_data.append(
+        devices.append(
             Device(
-                id=uuid.uuid4(),
-                place_id=1,
+                # id=uuid.uuid4(),
+                place_id=place_id,
                 register_date=datetime.now(), 
                 is_installed=True, 
                 type=types[i]
             )
     )
 
+    session.bulk_save_objects(
+        objects=devices
+    )
+    session.commit() 
+
+    logger.debug(f"Devices are added to DB")
+
+    devices_id = [device.id for device in session.query(Device).all()]
+
+    states = []
     for i in range(3):
-        db_data.append(
+        states.append(
                 State(
                     timestamp=datetime.now(), 
                     state= {'enabled': False}, 
-                    device_id=db_data[i+1].id, 
+                    device_id=devices_id[i], 
                 )
             )
+    
+    session.bulk_save_objects(
+        objects=states
+    )
+    session.commit()
+
+    logger.debug(f"States are added to DB")
     
     test_user = User(username='test_user')
     test_user.password_hash = generate_password_hash('test_password')
 
-    db_data.append(test_user)
+    session.add(test_user)
+    session.commit()
 
-    logger.debug(f"DB DATA STATES:\n{pformat(db_data)}")
+    logger.debug(f"User is added to DB")
 
-    session.bulk_save_objects(
-        objects=db_data
+    db_users = session.query(User).all()
+    db_places = session.query(Place).all()
+    db_devices = session.query(Device).all()
+    db_states = session.query(State).all()
+
+    logger.debug(
+        f"DB DATA:\n" \
+        f"Users\n{pformat(db_users)}\n" \
+        f"Places\n{pformat(db_places)}\n" \
+        f"Devices\n{pformat(db_devices)}\n" \
+        f"States\n{pformat(db_states)}"
     )
-
-    session.commit() 
 
     
     def resource_teardown():

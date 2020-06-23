@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 import logging
 import os
+from pprint import pformat
 
 from flask_sqlalchemy import SQLAlchemy
 import jwt
@@ -92,9 +93,8 @@ def delete_place(place_info, db_session=db.session):
 
 def update_device(device_info, db_session=db.session):
     device = db_session.query(Device).get(device_info['id'])
-    logger.debug(f"UPDATE FUNC\n{device}")
-
-    logger.debug(f"INFO {device_info}")
+    logger.debug(f"INSIDE DEVICE ID:{device.id}")
+    logger.debug(f"INSIDE DEVICE NAME: {device.name}")
 
     device.is_installed = True
     device.update_date = datetime.utcnow()
@@ -108,8 +108,8 @@ def update_device(device_info, db_session=db.session):
     db_session.commit()
 
     upd_device = db_session.query(Device).get(device_info['id'])
-    logger.debug(f"UPDATED DEVICE: {upd_device}")
-    logger.debug(f"{upd_device.name} | {upd_device.icon_name}")
+    logger.debug(f"UPDATED DEVICE ID: {upd_device.id}")
+    logger.debug(f"UPDATED DEVICE NAME: {upd_device.name}")
 
 
 def reset_device(device_info, db_session=db.session):

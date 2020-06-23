@@ -11,9 +11,9 @@ from sqlalchemy.exc import IntegrityError
 from werkzeug.datastructures import FileStorage
 from werkzeug.security import check_password_hash
 
-import messages as msgs
-import database as asdb
 import auth
+import database as asdb
+import messages as msgs
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -281,22 +281,23 @@ class Device(Resource):
         logger.debug(f"Request devices: {result_devices}")
         return result_devices
 
-# Test is not written [pytest] because of micropython
+# Test is not written [pytest]
     @api.expect(_model_device, validate=True)
     def put(self):
         device_info = request.get_json()
-        logger.debug(f"Request to update device:\n{pformat(device_info)}")
+        # logger.debug(f"Request to update device:\n{pformat(device_info)}")
 
         asdb.update_device(device_info)
 
-        logger.debug(f"API aLL Devices: {asdb.db.session.query(asdb.Device).all()}")
+        logger.debug(f"API Device ID: {asdb.db.session.query(asdb.Device).get(device_info['id']).id}")
+        logger.debug(f"API Device Name: {asdb.db.session.query(asdb.Device).get(device_info['id']).name}")
         
         if not current_app.config['TESTING']:
             msgs.reset_device(
                 current_app.config['RABBITMQ_URI'],
                 device_info['id'])
 
-# Test is not written [pytest] because of micropython
+# Test is not written [pytest]
     @api.expect(_model_device_del, validate=True)
     def delete(self):
         device_info = request.get_json()
