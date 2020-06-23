@@ -1,0 +1,29 @@
+---
+- name: Create directories
+  file:
+    path: "{{item}}"
+    state: directory
+    mode: "0755"
+  with_items:
+    - "{{deploy_directory}}"
+    - "{{deploy_directory}}/config"
+
+- name: Copy telegraf config
+  copy:
+    src: telegraf.conf
+    dest: "{{deploy_directory}}/config/telegraf.conf"
+
+- name: Copy prometheus config
+  copy:
+    src: prometheus.yml
+    dest: "{{deploy_directory}}/config/prometheus.yml"
+
+- name: Copy prometheus config
+  copy:
+    src: grafana
+    dest: "{{deploy_directory}}/config/grafana"
+
+- name: Send docker-compose to deploy
+  template:
+    src: docker-compose.yml.j2
+    dest: "{{deploy_directory}}/docker-compose.yml"

@@ -34,9 +34,6 @@
       - "./{{registry_folder}}/.htpasswd:/passfile"
   register: pswdgen_out
 
-- debug:
-    var: pswdgen_out
-
 # - name: Generate password for registry
 #   htpasswd:
 #     path: "{{registry_folder}}/.htpasswd"

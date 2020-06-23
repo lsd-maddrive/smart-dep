@@ -1,0 +1,46 @@
+version: '3'
+
+volumes:
+    prometheus_data: {}
+
+services:
+  grafana:
+    image: grafana/grafana:6.7.3
+    restart: always
+    ports:
+     - "3001:3000"
+    environment:
+     - GF_USERS_ALLOW_SIGN_UP=false
+     - GF_INSTALL_PLUGINS=grafana-piechart-panel
+    volumes:
+      # - grafana_data:/var/lib/grafana
+      - ./config/grafana/dashboards/:/etc/grafana/provisioning/dashboards/
+      - ./config/grafana/datasources/:/etc/grafana/provisioning/datasources/
+
+  prometheus:
+    image: prom/prometheus:v2.17.2
+    restart: always
+    ports:
+     - "9090:9090"
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command: [ "--config.file=/etc/prometheus/prometheus.yml",
+             "--storage.tsdb.path=/prometheus",
+             "--web.console.libraries=/usr/share/prometheus/console_libraries",
+             "--web.console.templates=/usr/share/prometheus/consoles"]
+
+  telegraf:
+    image: telegraf:1.14.1-alpine
+    restart: always
+    ports:
+     - 9126:9126
+    command: telegraf --debug --config /telegraf.conf
+    volumes:
+     - ./config/telegraf.conf:/telegraf.conf:ro
+     - /var/run/utmp:/var/run/utmp:ro
+     - /var/run/docker.sock:/var/run/docker.sock:ro
+     - /sys:/rootfs/sys:ro
+     - /proc:/rootfs/proc:ro
+     - /etc:/rootfs/etc:ro
+     - /var/log/:/rootfs/var/log
