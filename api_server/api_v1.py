@@ -281,23 +281,20 @@ class Device(Resource):
         logger.debug(f"Request devices: {result_devices}")
         return result_devices
 
-# Test is not written [pytest]
+# PYtest - skipped, because behavior is undefined 
     @api.expect(_model_device, validate=True)
     def put(self):
         device_info = request.get_json()
-        # logger.debug(f"Request to update device:\n{pformat(device_info)}")
+        logger.debug(f"Request to update device:\n{pformat(device_info)}")
 
         asdb.update_device(device_info)
 
-        logger.debug(f"API Device ID: {asdb.db.session.query(asdb.Device).get(device_info['id']).id}")
-        logger.debug(f"API Device Name: {asdb.db.session.query(asdb.Device).get(device_info['id']).name}")
-        
         if not current_app.config['TESTING']:
             msgs.reset_device(
                 current_app.config['RABBITMQ_URI'],
                 device_info['id'])
 
-# Test is not written [pytest]
+# if reset == True -> PYtest - skipped, because behavior is undefined 
     @api.expect(_model_device_del, validate=True)
     def delete(self):
         device_info = request.get_json()
@@ -308,7 +305,7 @@ class Device(Resource):
         else:
             asdb.delete_device(device_info)
         
-        if not app.config['TESTING']:
+        if not current_app.config['TESTING']:
             msgs.reset_device(
                 current_app.config['RABBITMQ_URI'],
                 device_info['id'])
@@ -318,7 +315,7 @@ _model_ping = api.model('Device_ping', {
     'id': fields.String,
 })
 
-# Test is not written [pytest] because of micropython
+
 @api.route('/device/ping', endpoint='device_ping')
 class DevicePing(Resource):
     @api.expect(_model_ping, validate=True)
@@ -326,7 +323,7 @@ class DevicePing(Resource):
         device = request.get_json()
         logger.debug(f'Request to ping: {device}')
 
-        if not app.config['TESTING']:
+        if not current_app.config['TESTING']:
             msgs.ping_device(
                 current_app.config['RABBITMQ_URI'],
                 device['id'])
@@ -339,7 +336,7 @@ _model_command = api.model('Device_command', {
     'cmd': fields.Raw,
 })
 
-# Test is not written [pytest] because of micropython
+
 @api.route('/device/cmd', endpoint='device_cmd')
 class DeviceCommand(Resource):
     @api.expect(_model_command, validate=True)
@@ -353,7 +350,7 @@ class DeviceCommand(Resource):
         cmd = data['cmd']
         source_id = 'api'
 
-        if not app.config['TESTING']:
+        if not current_app.config['TESTING']:
             msgs.send_command(
                 current_app.config['RABBITMQ_URI'],
                 device_id,

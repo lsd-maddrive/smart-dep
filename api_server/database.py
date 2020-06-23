@@ -93,8 +93,6 @@ def delete_place(place_info, db_session=db.session):
 
 def update_device(device_info, db_session=db.session):
     device = db_session.query(Device).get(device_info['id'])
-    logger.debug(f"INSIDE DEVICE ID:{device.id}")
-    logger.debug(f"INSIDE DEVICE NAME: {device.name}")
 
     device.is_installed = True
     device.update_date = datetime.utcnow()
@@ -106,10 +104,6 @@ def update_device(device_info, db_session=db.session):
     device.unit_config = device_info['config']
 
     db_session.commit()
-
-    upd_device = db_session.query(Device).get(device_info['id'])
-    logger.debug(f"UPDATED DEVICE ID: {upd_device.id}")
-    logger.debug(f"UPDATED DEVICE NAME: {upd_device.name}")
 
 
 def reset_device(device_info, db_session=db.session):

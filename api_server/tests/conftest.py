@@ -62,7 +62,6 @@ def timescaleDB(request, test_db):
     for i in range(3):
         devices.append(
             Device(
-                # id=uuid.uuid4(),
                 place_id=place_id,
                 register_date=datetime.now(), 
                 is_installed=True, 

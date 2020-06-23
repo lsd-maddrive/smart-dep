@@ -27,7 +27,10 @@ class Command(Model):
     device = relationship('Device')
 
     def __repr__(self):
-        return f"Command | Device ID: {self.device_id}, DateTime: {self.timestamp}, Cmd: {self.command}, SID: {self.source_id}"
+        return f"Command | Device ID: {self.device_id}, " \
+               f"DateTime: {self.timestamp}, " \
+               f"Cmd: {self.command}, " \
+               f"SID: {self.source_id}"
 
 
 class Config(Model):
@@ -41,7 +44,9 @@ class Config(Model):
     device = relationship('Device')
 
     def __repr__(self):
-        return f"Params | Device ID: {self.device_id}, DateTime: {self.timestamp}, Cfg: {self.config}"
+        return f"Params | Device ID: {self.device_id}, " \
+               f"DateTime: {self.timestamp}, " \
+               f"Cfg: {self.config}"
 
 
 class State(Model):
@@ -58,7 +63,9 @@ class State(Model):
         return str(self.device_id)
 
     def __repr__(self):
-        return f"State | Device ID: {self.device_id}, DateTime: {self.timestamp}, State: {self.state}"
+        return f"State | Device ID: {self.device_id}, " \
+               f"DateTime: {self.timestamp}, " \
+               f"State: {self.state}"
 
 
 class Place(Model):
@@ -82,7 +89,9 @@ class Place(Model):
     devices = relationship("Device", back_populates="place")
 
     def __repr__(self):
-        return f"Place | ID: {self.id}, Name: {self.name}, Num: {self.num}"
+        return f"Place | ID: {self.id}, " \
+               f"Name: {self.name}, " \
+               f"Num: {self.num}"
 
 
 class Device(Model):
@@ -114,9 +123,14 @@ class Device(Model):
         return str(self.id)
 
     def __repr__(self):
-        return f"Device | ID: {self.id}, UID: {self.unique_id}, PlaceID: {self.place_id}, \
-            RegDate: {self.register_date}, IP: {self.ip_addr}, Type: {self.type}, \
-            Installed: {self.is_installed}, Config: {self.unit_config}, Name: {self.name}"
+        return f"Device | ID: {self.id}, " \
+               f"UID: {self.unique_id}, " \
+               f"PlaceID: {self.place_id}, " \
+               f"RegDate: {self.register_date}, " \
+               f"IP: {self.ip_addr}, "\
+               f"Type: {self.type}, " \
+               f"Installed: {self.is_installed}, "\
+               f"Config: {self.unit_config}"
 
 
 class User(Model):
@@ -142,8 +156,10 @@ class User(Model):
         self.avatar_photo = avatar_photo
 
     def __repr__(self):
-        return f"User ID: {self.id}, Username: {self.username}, \
-            Created Date: {self.created_on}, Role: {self.role}"
+        return f"User ID: {self.id}, " \
+               f"Username: {self.username}, " \
+               f"Created Date: {self.created_on}, " \
+               f"Role: {self.role}"
 
 
 class Token(Model):
@@ -164,5 +180,7 @@ class Token(Model):
         self.expired_on = datetime.utcnow() + timedelta(days=days, seconds=secs)
 
     def __repr__(self):
-        return f"ID: {self.id}, User ID: {self.parent_id}, \
-            Creation Date: {self.created_on}, Expiration Date: {self.expired_on}"
+        return f"ID: {self.id}, " \
+               f"User ID: {self.parent_id}, " \
+               f"Creation Date: {self.created_on}, " \
+               f"Expiration Date: {self.expired_on}"
