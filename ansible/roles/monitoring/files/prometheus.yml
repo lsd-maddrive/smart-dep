@@ -18,22 +18,27 @@ global:
 # Here it's Prometheus itself.
 scrape_configs:
   # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
-  - job_name: 'prometheus'
-
+  - job_name: prometheus
     # Override the global default and scrape targets from this job every 5 seconds.
     scrape_interval: 5s
-
     static_configs:
       - targets: ['localhost:9090']
 
   # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
-  - job_name: 'telegraf'
-
+  - job_name: telegraf
     # Override the global default and scrape targets from this job every 5 seconds.
     scrape_interval: 5s
-
     static_configs:
       - targets: ['telegraf:9126']
+        labels:
+          instance: telegraf
+
+  - job_name: rabbitmq
+    honor_labels: true
+    static_configs:
+      - targets: ['tigra-acs.duckdns.org:15692']
+        labels:
+          instance: rabbitmq
 
   # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
   # - job_name: 'mtail'

@@ -26,6 +26,37 @@
     mode: "0755"
     # mode: "u=rw,g=wx,o=rwx"
 
+
+- name: Copy DB folder
+  synchronize:
+    src: ../db/
+    dest: "{{deploy_folder}}/db/"
+    delete: yes
+    rsync_opts:
+      - "--exclude=__pycache__"
+
+- name: Copy config folder
+  synchronize:
+    src: ../config/
+    dest: "{{deploy_folder}}/config/"
+    delete: yes
+
+- name: Send .env
+  template:
+    src: env.j2
+    dest: "{{ deploy_folder }}/config/.env"
+
+- name: Send docker-compose
+  template:
+    src: docker-compose.yml.j2
+    dest: "{{ deploy_folder }}/docker-compose.yml"
+
+- name: Send pgadmin config
+  template:
+    src: pgadmin.servers.json.j2
+    dest: "{{ deploy_folder }}/config/pgadmin/servers.json"
+
+
 - name: "Create a network"
   docker_network:
     name: "{{ containers_network }}"
@@ -70,14 +101,6 @@
   until: db_running is success
   retries: 10
 
-- name: Copy DB folder
-  synchronize:
-    src: ../db/
-    dest: "{{deploy_folder}}/db/"
-    delete: yes
-    rsync_opts:
-      - "--exclude=__pycache__"
-
 # - name: Install packages
 #   pip:
 #     # Fix for venv to be created
@@ -116,27 +139,6 @@
     network_mode: "{{ containers_network }}"
     env:
       DB_URI: "postgresql+psycopg2://{{db_user}}:{{db_password}}@{{db_cont_name}}:5432/smart_dep"
-
-- name: Copy config folder
-  synchronize:
-    src: ../config/
-    dest: "{{deploy_folder}}/config/"
-    delete: yes
-
-- name: Send .env
-  template:
-    src: env.j2
-    dest: "{{ deploy_folder }}/config/.env"
-
-- name: Send docker-compose
-  template:
-    src: docker-compose.yml.j2
-    dest: "{{ deploy_folder }}/docker-compose.yml"
-
-- name: Send pgadmin config
-  template:
-    src: pgadmin.servers.json.j2
-    dest: "{{ deploy_folder }}/config/pgadmin/servers.json"
 
 - name: Start main containers
   docker_compose:

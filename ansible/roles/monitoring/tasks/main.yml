@@ -18,10 +18,10 @@
     src: prometheus.yml
     dest: "{{deploy_directory}}/config"
 
-- name: Copy grafana config
-  copy:
-    src: grafana
-    dest: "{{deploy_directory}}/config/"
+- name: Copy grafana config directory
+  synchronize:
+    src: grafana/
+    dest: "{{deploy_directory}}/config/grafana/"
 
 - name: Send docker-compose to deploy
   template:

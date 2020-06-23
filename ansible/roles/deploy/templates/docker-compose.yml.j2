@@ -34,9 +34,10 @@ services:
         environment:
             RABBITMQ_ERLANG_COOKIE: "SWQOKODSQALRPCLNMEQG"
         ports:
-            - "15672:15672" # RabbitWebInterface
-            - "5672:5672" # AMQP
-            - "1883:1883" # MQTT
+            - 15672:15672 # RabbitWebInterface
+            - 5672:5672 # AMQP
+            - 1883:1883 # MQTT
+            - 15692:15692 # Prometheus
         labels:
             NAME: "rabbitmq"
         volumes:
