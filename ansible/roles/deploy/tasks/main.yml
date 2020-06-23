@@ -25,7 +25,6 @@
     state: directory
     mode: "0755"
     # mode: "u=rw,g=wx,o=rwx"
-  register: folder_create_reg
 
 - name: "Create a network"
   docker_network:
@@ -40,7 +39,6 @@
     project_src: "{{deploy_folder}}"
     project_name: "{{project_name}}"
     stopped: yes
-  register: main_cont_stop_out
 
 - name: "Launch database container"
   docker_container:
@@ -57,9 +55,9 @@
     ports:
       - 5432:5432
     log_driver: json-file
-    log_options: "{{ cont_log_opts }}"
-
-  register: db_cont_out
+    log_options:
+      max-file: "5"
+      max-size: "20m"
 
 - name: Wait for DB to accept connections
   wait_for:
@@ -118,10 +116,6 @@
     network_mode: "{{ containers_network }}"
     env:
       DB_URI: "postgresql+psycopg2://{{db_user}}:{{db_password}}@{{db_cont_name}}:5432/smart_dep"
-    log_driver: json-file
-    log_options: "{{ cont_log_opts }}"
-
-  register: migrate_cont_out
 
 - name: Copy config folder
   synchronize:
@@ -147,4 +141,3 @@
     pull: yes
     scale:
       emulator: 5
-  register: main_cont_start_out

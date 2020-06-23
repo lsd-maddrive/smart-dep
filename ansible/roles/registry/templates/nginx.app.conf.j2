@@ -1,0 +1,44 @@
+server {
+    listen 80;
+    server_name {{inventory_hostname}};
+    location / {
+        return 301 https://$host$request_uri;
+    }
+
+    # For certbot
+    location /.well-known/acme-challenge/ {
+        root /data/letsencrypt;
+    }
+}
+server {
+    listen 443 ssl;
+    server_name {{inventory_hostname}};
+
+    client_max_body_size 0;
+    chunked_transfer_encoding on;
+
+    ssl_certificate /etc/letsencrypt/live/{{inventory_hostname}}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/{{inventory_hostname}}/privkey.pem;
+
+    location / {
+        proxy_pass http://{{inventory_hostname}}:53986/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header  X-Forwarded-Proto $scheme;
+    }
+
+    # Main registry - works like a charm
+    location /v2/ {
+        if ($http_user_agent ~ "^(docker\/1\.(3|4|5(?!\.[0-9]-dev))|Go ).*$" ) {
+            return 404;
+        }
+
+        proxy_pass http://docker-registry:5000;
+        proxy_set_header  Host              $http_host;
+        proxy_set_header  X-Real-IP         $remote_addr;
+        proxy_set_header  X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header  X-Forwarded-Proto $scheme;
+        proxy_read_timeout                  900;
+    }
+}

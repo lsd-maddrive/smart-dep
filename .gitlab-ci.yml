@@ -77,7 +77,7 @@ build-containers:
 deploy_tigra:
   stage: deploy
   script:
-    - cd ansible && echo $ANSIBLE_PASSWORD > vault-pass.txt && ansible-playbook -i hosts site.yml --vault-password-file vault-pass.txt
+    - cd ansible && echo $ANSIBLE_PASSWORD > vault-pass.txt && ansible-playbook -i hosts deploy.yml --vault-password-file vault-pass.txt
   only:
     - develop
     - feature/ci

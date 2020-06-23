@@ -1,0 +1,112 @@
+---
+- name: Create directories
+  file:
+    path: "{{item}}"
+    state: directory
+    mode: "0755"
+  with_items:
+    - "{{registry_folder}}"
+    - "{{registry_folder}}/nginx"
+
+- name: Send nginx config to deploy
+  template:
+    src: nginx.app.conf.j2
+    dest: "{{registry_folder}}/nginx/app.conf"
+
+# - name: Make sure we can use htpasswd module
+#   pip:
+#     name: passlib
+
+# - name: Generate password for registry
+#   htpasswd:
+#     path: "{{registry_folder}}/.htpasswd"
+#     name: "{{registry_user}}"
+#     password: "{{registry_password}}"
+
+- name: "Create a network"
+  docker_network:
+    name: "{{containers_network}}"
+
+- name: Send docker-compose
+  template:
+    src: docker-compose.yml.j2
+    dest: "{{registry_folder}}/docker-compose.yml"
+
+- name: Start registry containers
+  docker_compose:
+    restarted: yes
+    project_src: "{{registry_folder}}"
+    project_name: "registry"
+    build: no
+    pull: yes
+
+- name: "Start NGINX container"
+  docker_container:
+    name: "{{nginx_cont_name}}"
+    image: nginx:1.15-alpine
+    restart: yes
+    volumes:
+      - "./{{registry_folder}}/nginx:/etc/nginx/conf.d"
+      - "./{{registry_folder}}/certbot/conf:/etc/letsencrypt"
+      - "./{{registry_folder}}/certbot/data:/data/letsencrypt"
+    restart_policy: always
+    network_mode: "{{containers_network}}"
+    ports:
+      - 80:80
+      - 443:443
+
+- name: Check if certificate already exists.
+  stat:
+    path: "{{registry_folder}}/certbot/conf/live/{{inventory_hostname}}/cert.pem"
+  register: letsencrypt_cert
+
+# - name: "Start Certbot container"
+#   when: not letsencrypt_cert.stat.exists
+#   docker_container:
+#     name: "{{certbot_cont_name}}"
+#     image: certbot/certbot
+#     detach: no
+#     volumes:
+#       - "./{{registry_folder}}/certbot/log:/var/log/letsencrypt"
+#       - "./{{registry_folder}}/certbot/conf:/etc/letsencrypt"
+#       - "./{{registry_folder}}/certbot/data:/data/letsencrypt"
+#     network_mode: "{{containers_network}}"
+#     command:
+#       [
+#         "certonly",
+#         "--webroot",
+#         "--webroot-path=/data/letsencrypt",
+#         "-d",
+#         "{{inventory_hostname}}",
+#         "--email",
+#         "letisaudep@gmail.com",
+#         "--agree-tos",
+#         "--non-interactive",
+#       ]
+
+# - name: "Update certificate"
+#   when: letsencrypt_cert.stat.exists
+#   docker_container:
+#     name: "{{certbot_cont_name}}"
+#     image: certbot/certbot
+#     detach: no
+#     volumes:
+#       - "./{{registry_folder}}/certbot/log:/var/log/letsencrypt"
+#       - "./{{registry_folder}}/certbot/conf:/etc/letsencrypt"
+#       - "./{{registry_folder}}/certbot/data:/data/letsencrypt"
+#     network_mode: "{{containers_network}}"
+#     command:
+#       [
+#         "certonly",
+#         "--webroot",
+#         "--webroot-path=/data/letsencrypt",
+#         "--expand",
+#         "-d",
+#         "{{inventory_hostname}}",
+#         "--email",
+#         "letisaudep@gmail.com",
+#         "--agree-tos",
+#         "--non-interactive",
+#       ]
+
+

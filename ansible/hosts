@@ -1,2 +1,5 @@
 [stage]
 tigra-acs.duckdns.org
+
+[registry]
+acs-registry.duckdns.org
