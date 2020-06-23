@@ -123,15 +123,20 @@
     dest: "{{deploy_folder}}/config/"
     delete: yes
 
-- name: Send .env to deploy
+- name: Send .env
   template:
     src: env.j2
     dest: "{{ deploy_folder }}/config/.env"
 
-- name: Send docker-compose to deploy
+- name: Send docker-compose
   template:
     src: docker-compose.yml.j2
     dest: "{{ deploy_folder }}/docker-compose.yml"
+
+- name: Send pgadmin config
+  template:
+    src: pgadmin.servers.json.j2
+    dest: "{{ deploy_folder }}/config/pgadmin/servers.json"
 
 - name: Start main containers
   docker_compose:

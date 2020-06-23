@@ -11,19 +11,27 @@
 - name: Copy telegraf config
   copy:
     src: telegraf.conf
-    dest: "{{deploy_directory}}/config/telegraf.conf"
+    dest: "{{deploy_directory}}/config"
 
 - name: Copy prometheus config
   copy:
     src: prometheus.yml
-    dest: "{{deploy_directory}}/config/prometheus.yml"
+    dest: "{{deploy_directory}}/config"
 
-- name: Copy prometheus config
+- name: Copy grafana config
   copy:
     src: grafana
-    dest: "{{deploy_directory}}/config/grafana"
+    dest: "{{deploy_directory}}/config/"
 
 - name: Send docker-compose to deploy
   template:
     src: docker-compose.yml.j2
     dest: "{{deploy_directory}}/docker-compose.yml"
+
+- name: Start containers
+  docker_compose:
+    project_src: "{{deploy_directory}}"
+    project_name: "monitoring"
+    restarted: yes
+    build: no
+    pull: yes
