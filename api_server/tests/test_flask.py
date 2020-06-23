@@ -249,7 +249,7 @@ def test_device_get(client, timescaleDB):
     assert data[0]['place_id'] == 1 
 
 # !!!!!!!!!!!!!!!!!!!!!!!!!!! FIX IT LENA!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-@pytest.mark.skip(reason="F*ck Up with db, guess I need to meditate")
+# @pytest.mark.skip(reason="F*ck Up with db, guess I need to meditate")
 def test_device_put(client, timescaleDB):
     test_device = timescaleDB.query(Device). \
         order_by(Device.register_date.desc()).first()
@@ -268,18 +268,18 @@ def test_device_put(client, timescaleDB):
     }
 
     rv = client.put(
-        'http://localhost:5000/api/v1/device',
+        '/api/v1/device',
         json=inp_json
     )
 
     logger.debug(f"TEST UPDATED DEVICE ID: {timescaleDB.query(Device).get(test_device.id).id}")
     logger.debug(f"TEST UPDATED DEVICE NAME: {timescaleDB.query(Device).get(test_device.id).name}")
 
-    assert True 
+    # assert True 
 
 
     
-    # updated_device = timescaleDB.query(Device).get(test_device.id)
+    updated_device = timescaleDB.query(Device).get(test_device.id)
 
     # logger.debug(f"COMPARE IDs\n{updated_device.id}\n{test_device.id}")
     
@@ -295,8 +295,8 @@ def test_device_put(client, timescaleDB):
 
     
 
-    # assert rv.status_code == 200 
-    # assert updated_device.name == inp_json['name']
+    assert rv.status_code == 200 
+    assert updated_device.name == inp_json['name']
     # assert check_device.id == inp_json['id']
     # assert check_device.name == inp_json['name']
     # assert check_device.icon_name == inp_json['icon_name']
