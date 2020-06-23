@@ -35,6 +35,7 @@ scrape_configs:
 
   - job_name: rabbitmq
     honor_labels: true
+    scrape_interval: 60s
     static_configs:
       - targets: ['tigra-acs.duckdns.org:15692']
         labels:
