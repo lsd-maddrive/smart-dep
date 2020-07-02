@@ -11,7 +11,7 @@ from db.models import Place, Device
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d/%H:%M:%S')
 logger = logging.getLogger(__name__)
 
-@pytest.mark.skip(reason="NEED TO FIX")
+
 def test_socketio_start_states(sio_client, timescaleDB):
     config = {
         'placeId': 1,

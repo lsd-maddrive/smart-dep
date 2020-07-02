@@ -37,8 +37,11 @@ class PlaceStateSender(Thread):
         self.join()
 
     def run(self):
+
+        logger.debug(f"DB URL: {self.db_url}")
         engine = create_engine(self.db_url)
-        session = sessionmaker(bind=engine)()
+        Session = sessionmaker(bind=engine)
+        session = Session()
 
         while self.enabled:
             time_start = time.time()

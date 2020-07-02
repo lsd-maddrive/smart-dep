@@ -113,7 +113,7 @@ def test_place_delete(client, timescaleDB):
 def test_place_image_post(client, timescaleDB): 
     data = {}
 
-    with open('./tests/resources/test_img.jpg', 'rb') as fp:
+    with open('./resources/test_img.jpg', 'rb') as fp:
         file_ = FileStorage(fp)
         data['image'] = file_ 
 
@@ -254,8 +254,6 @@ def test_device_put(client, timescaleDB):
 
     updated_device = timescaleDB.query(Device).get(test_device.id)
 
-    logger.debug(f"UPDATED DEVICE: {updated_device}")
-
     check_data = {
         'id': updated_device.id,
         'name': updated_device.name, 
@@ -266,13 +264,12 @@ def test_device_put(client, timescaleDB):
     }
 
     # reset data in DB to keep DB sustainable 
-    # updated_device.name = None
-    # updated_device.icon_name = None, 
-    # updated_device.type = 'power'
-    # updated_device.place_id = 1
-    # updated_device.unit_config = None 
-    # timescaleDB.commit()
-
+    updated_device.name = None
+    updated_device.icon_name = None, 
+    updated_device.type = 'power'
+    updated_device.place_id = 1
+    updated_device.unit_config = None 
+    timescaleDB.commit()
 
     assert rv.status_code == 200 
     assert check_data['id'] == inp_json['id']
@@ -352,8 +349,6 @@ def test_device_delete_reset(client, timescaleDB):
         'place_id': reseted_device.place_id, 
         'config': reseted_device.unit_config 
     }
-
-    # logger.debug(f"RESET DEVICE\n{reseted_device}")
 
     # remove test device from DB to keep DB sustainable 
     timescaleDB.delete(reseted_device)
@@ -490,9 +485,6 @@ def test_logout(client, timescaleDB):
     rv = client.post('http://localhost:5000/api/v1/logout',
                     headers={'Authorization': 'Bearer ' + token}, 
                     json=test_json)
-    
-    # check_user = timescaleDB.query(User). \
-    #     filter(User.username == test_json['username']).first()
     
     timescaleDB.delete(check_user)
 

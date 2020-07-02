@@ -92,9 +92,6 @@ def delete_place(place_info, db_session=db.session):
 
 
 def update_device(device_info, db_session=db.session):
-
-    # logger.debug(f"DB FUNC INFO: {pformat(device_info)}")
-
     device = db_session.query(Device).get(device_info['id'])
 
     device.is_installed = True
@@ -107,8 +104,6 @@ def update_device(device_info, db_session=db.session):
     device.unit_config = device_info['config']
 
     db_session.commit()
-
-    # return device 
 
 
 def reset_device(device_info, db_session=db.session):

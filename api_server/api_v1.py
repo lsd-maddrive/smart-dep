@@ -289,8 +289,6 @@ class Device(Resource):
 
         asdb.update_device(device_info)
 
-        # logger.debug(f"API {dev}")
-
         if not current_app.config['TESTING']:
             msgs.reset_device(
                 current_app.config['RABBITMQ_URI'],

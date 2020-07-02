@@ -136,7 +136,7 @@ def flask_app(test_db, timescaleDB):
     app.config['PRESERVE_CONTEXT_ON_EXCEPTION'] = False
     app.config['SECRET_KEY'] = os.getenv('API_SECRET_KEY')
 
-    # logger.debug(f'Test App DB: {app.config["SQLALCHEMY_DATABASE_URI"]}')
+    logger.debug(f'Test App DB: {app.config["SQLALCHEMY_DATABASE_URI"]}')
     db.init_app(app)
 
     socketio.init_app(app)
@@ -146,7 +146,7 @@ def flask_app(test_db, timescaleDB):
     return app
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def client(flask_app):
     with flask_app.test_client() as client:
         yield client
