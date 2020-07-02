@@ -76,7 +76,7 @@ class Place(Model):
     num = Column(String(20))
     create_date = Column(DateTime)
     update_date = Column(DateTime)
-    image = Column(BYTEA)
+    image = Column(BYTEA, default=None)
 
     attr_os = Column(ARRAY(String(20)), default=[])
     attr_software = Column(ARRAY(String(20)), default=[])
@@ -125,6 +125,7 @@ class Device(Model):
     def __repr__(self):
         return f"Device | ID: {self.id}, " \
                f"UID: {self.unique_id}, " \
+               f"Name: {self.name}, " \
                f"PlaceID: {self.place_id}, " \
                f"RegDate: {self.register_date}, " \
                f"IP: {self.ip_addr}, "\

@@ -22,11 +22,9 @@ from db.models import Model, State, Device, Place, User
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d/%H:%M:%S')
 logger = logging.getLogger(__name__)
 
-
 @pytest.fixture(scope='session')
 def test_db():
     return testing.postgresql.Postgresql()
-
 
 @pytest.fixture(scope='session')
 def timescaleDB(request, test_db):
@@ -148,7 +146,7 @@ def flask_app(test_db, timescaleDB):
     return app
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope='session')
 def client(flask_app):
     with flask_app.test_client() as client:
         yield client

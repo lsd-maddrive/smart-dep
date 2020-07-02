@@ -7,15 +7,15 @@ import numpy as np
 from pprint import pformat
 import sys 
 sys.path.append("../")
-from time import sleep
+# from time import sleep
 import uuid
 
+from io import BytesIO
 import pytest
 import pytest_env
 from werkzeug.datastructures import FileStorage
 
-
-import database as asdb
+# import database as asdb
 # from api_server.database import db 
 from db.models import State, Place, Device, User, Token
 
@@ -23,38 +23,25 @@ logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %
 logger = logging.getLogger(__name__)
 
 def test_place_get(client, timescaleDB):
-    place = timescaleDB.query(Place). \
-        filter(Place.name == 'KEMZ').first()
-
-    place.attr_os = [] 
-    place.attr_software = []
-    place.attr_computers = 25
-    place.attr_people = 10
-    place.attr_blackboard = False 
-    place.attr_projector = False 
-    place.image = None 
-
-    timescaleDB.commit()
-
     rv = client.get('http://localhost:5000/api/v1/place')
     data = json.loads(rv.data)[0]
 
     assert rv.status_code == 200 
-    assert data['id'] == 1
-    assert data['num'] == '8201'
-    assert data['name'] == 'KEMZ'
-    assert data['attr_os'] == []
-    assert data['attr_software'] == []
-    assert data['attr_computers'] == 25
-    assert data['attr_people'] == 10
-    assert data['attr_board'] == False
-    assert data['attr_projector'] == False 
-    assert data['imageURL'] == None 
+    assert data['id'] == 1, "Place ID is wrong"
+    assert data['num'] == '8201', "Place number is wrong"
+    assert data['name'] == 'KEMZ', "Place name is wrong"
+    assert data['attr_os'] == [], "Place OS arrays is not empty"
+    assert data['attr_software'] == [], "Place software array is not empty"
+    assert data['attr_computers'] == 25, "Computer number is wrong"
+    assert data['attr_people'] == 10, "People number is wrong"
+    assert data['attr_board'] == False, "Blackboar status is wrong"
+    assert data['attr_projector'] == False, "Projector status is wrong"
+    assert data['imageURL'] == None, "There is image, but should not"
 
 
 def test_place_post(client, timescaleDB):
     inp_json = {
-        'num': '8101-3',
+        'num': '8101',
         'name': 'Siemens'
     }
 
@@ -63,7 +50,6 @@ def test_place_post(client, timescaleDB):
         json=inp_json
     )
     
-
     num_places = timescaleDB.query(Place).count()
     new_place = timescaleDB.query(Place). \
         filter(Place.name == inp_json['name']).first()
@@ -72,9 +58,9 @@ def test_place_post(client, timescaleDB):
     timescaleDB.delete(new_place)
 
     assert rv.status_code == 200  
-    assert num_places == 2 
-    assert new_place.name == inp_json['name']
-    assert new_place.num == inp_json['num']
+    assert num_places == 2, "Number of places is wrong"
+    assert new_place.name == inp_json['name'], "Place name is wrong"
+    assert new_place.num == inp_json['num'], "Place number is wrong"
 
 
 def test_place_put(client, timescaleDB):
@@ -91,13 +77,13 @@ def test_place_put(client, timescaleDB):
     
     updated_place = timescaleDB.query(Place).get(inp_json['id'])
     check_name = updated_place.name 
-
     updated_place.name = 'KEMZ'
-    # reset changes to temp DB
+ 
+    # reset changes to keep temp DB sustainable
     timescaleDB.commit()
 
     assert rv.status_code == 200 
-    assert check_name == inp_json['name']
+    assert check_name == inp_json['name'], "Device name wasn't updated"
 
 
 def test_place_delete(client, timescaleDB):
@@ -121,9 +107,8 @@ def test_place_delete(client, timescaleDB):
     num_places = timescaleDB.query(Place).count()
 
     assert rv.status_code == 200  
-    assert num_places == 1
+    assert num_places == 1, "Place wasn't removed from DB"
 
-from io import BytesIO
 
 def test_place_image_post(client, timescaleDB): 
     data = {}
@@ -145,7 +130,7 @@ def test_place_image_post(client, timescaleDB):
     timescaleDB.commit()
 
     assert rv.status_code == 200  
-    assert check_image is not None 
+    assert check_image is not None, "Place image wasn't loaded"
 
 
 def test_device_types_get(client, timescaleDB):
@@ -212,18 +197,16 @@ def test_device_new_get(client, timescaleDB):
         json=inp_json
     )
 
-    logger.debug(f"{rv.status_code}")
-    logger.debug(f"{json.loads(rv.data)}")
-
     data = json.loads(rv.data)[0]
 
     check_device = timescaleDB.query(Device). \
                 filter(Device.is_installed == False).first()
 
     check_id = str(check_device.id)
-
+    
+    # to keep temp DB sustainable 
     timescaleDB.delete(check_device)
-
+    
     assert rv.status_code == 200
     assert data['id'] == check_id
     
@@ -271,6 +254,8 @@ def test_device_put(client, timescaleDB):
 
     updated_device = timescaleDB.query(Device).get(test_device.id)
 
+    logger.debug(f"UPDATED DEVICE: {updated_device}")
+
     check_data = {
         'id': updated_device.id,
         'name': updated_device.name, 
@@ -281,12 +266,12 @@ def test_device_put(client, timescaleDB):
     }
 
     # reset data in DB to keep DB sustainable 
-    updated_device.name = None
-    updated_device.icon_name = None, 
-    updated_device.type = 'power'
-    updated_device.place_id = 1
-    updated_device.unit_config = None 
-    timescaleDB.commit()
+    # updated_device.name = None
+    # updated_device.icon_name = None, 
+    # updated_device.type = 'power'
+    # updated_device.place_id = 1
+    # updated_device.unit_config = None 
+    # timescaleDB.commit()
 
 
     assert rv.status_code == 200 

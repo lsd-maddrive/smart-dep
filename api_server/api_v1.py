@@ -199,7 +199,7 @@ class DevicesStates(Resource):
                 }
             )
 
-        logger.debug(f"Request devices states: {result_states}")
+        logger.debug(f"Request devices states:\n{pformat(result_states)}")
 
         return result_states
 
@@ -288,6 +288,8 @@ class Device(Resource):
         logger.debug(f"Request to update device:\n{pformat(device_info)}")
 
         asdb.update_device(device_info)
+
+        # logger.debug(f"API {dev}")
 
         if not current_app.config['TESTING']:
             msgs.reset_device(

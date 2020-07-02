@@ -58,10 +58,9 @@ def test_create_place(timescaleDB):
     }
 
     new_place = asdb.create_place(test_place_info, timescaleDB)
-
     places_num = timescaleDB.query(Place).count()
-    
-    # remove new place to keep temp DB clear 
+
+    # remove new place to keep temp DB sustainable 
     timescaleDB.delete(new_place)
 
     assert new_place.name == test_place_info['name'], "Name of new place is wrong"
@@ -89,26 +88,59 @@ def test_update_place(timescaleDB):
     }
 
     asdb.update_place(test_place_info, timescaleDB)
-    place = timescaleDB.query(Place).get(test_place_info['id'])
+    test_place = timescaleDB.query(Place).get(test_place_info['id'])
+    
+    check_data = {
+        'attr_os': test_place.attr_os,
+        'attr_software': test_place.attr_software,
+        'attr_people': test_place.attr_people,
+        'attr_computers': test_place.attr_computers,
+        'attr_board': test_place.attr_blackboard,
+        'attr_projector': test_place.attr_projector
+    }
 
-    assert place.name == test_place_info['name'], "Place Name wasn't updated"
-    assert place.num == test_place_info['num'], "Place Number wasn't updated"
+    # reset updated data to keep temp DB sustainable 
+    test_place.attr_os = [] 
+    test_place.attr_software = []
+    test_place.attr_people = 10 
+    test_place.attr_computers = 25 
+    test_place.attr_blackboard = False 
+    test_place.attr_projector = False 
+    timescaleDB.commit() 
+    
+    assert check_data['attr_os'] == test_place_info['attr_os'], "OS array is wrong"
+    assert check_data['attr_software'] == test_place_info['attr_software'], "Software array is wrong"
+    assert check_data['attr_people'] == test_place_info['attr_people'], "People number is wrong"
+    assert check_data['attr_computers'] == test_place_info['attr_computers'], "Computer number is wrong"
+    assert check_data['attr_board'] == test_place_info['attr_board'], "Blackboard status is wrong"
+    assert check_data['attr_projector'] == test_place_info['attr_projector'], "Projector status is wrong"
 
 
 def test_delete_place(timescaleDB):
-    test_place_info = {
-        'name': 'Test', 
-        'num': '111',
-        'attr_os': ['Windows'],
-        'attr_software': ['Matlab'],
-        'attr_people': 20,
-        'attr_computers': 8,
-        'attr_board': False,
-        'attr_projector': True
-    }
+    new_place = Place(
+        name='Test', 
+        num='111', 
+        attr_os=['Windows'],
+        attr_software=['Matlab'],
+        attr_people=20,
+        attr_computers=8,
+        attr_blackboard=False,
+        attr_projector=True
+    )
+    timescaleDB.add(new_place)
+    timescaleDB.commit()
 
-    new_place = asdb.create_place(test_place_info, timescaleDB)
-    test_place_info['id'] = new_place.id 
+    test_place_info = {
+        'id': timescaleDB.query(Place.id).filter(Place.name == 'Test').first(),
+        'name': new_place.name, 
+        'num': new_place.num,
+        'attr_os': new_place.attr_os,
+        'attr_software': new_place.attr_software,
+        'attr_people': new_place.attr_people,
+        'attr_computers': new_place.attr_computers,
+        'attr_board': new_place.attr_blackboard,
+        'attr_projector': new_place.attr_projector
+    }
 
     asdb.delete_place(test_place_info, timescaleDB)
     test_place = timescaleDB.query(Place).get(new_place.id)
@@ -127,14 +159,18 @@ def test_update_device(timescaleDB):
     }
 
     asdb.update_device(test_device_info, timescaleDB)
+    logger.debug(
+        f"ALL DEVICES:\n" \
+        f"{pformat(timescaleDB.query(Device).all())}"
+    )
 
     device = timescaleDB.query(Device).get(test_device_info['id'])
     test_device = copy.deepcopy(device)
 
+    # reset updated data to keep temp DB sustainable 
     device.name = None 
     device.icon_name = None 
     timescaleDB.commit()
-
 
     assert test_device.place_id == test_device_info['place_id'], "Place ID for device wasn't updated"
     assert test_device.type == test_device_info['type'], "Type of device wasn't updated"
@@ -164,7 +200,7 @@ def test_reset_device(timescaleDB):
     asdb.reset_device(device_info, timescaleDB)
     reseted_device = timescaleDB.query(Device).get(device_info['id'])
     
-    # remove new device for test to keep temp DB clear 
+    # remove new device for test to keep temp DB sustainable 
     timescaleDB.delete(new_device)
 
     assert reseted_device.place_id == None, "Place ID for devices wasn't reseted" 
@@ -221,7 +257,7 @@ def test_get_new_devices(timescaleDB):
 
     devices = asdb.get_new_devices(timescaleDB)
 
-    # remove new device for test to keep temp DB clear 
+    # remove new device for test to keep temp DB sustainable 
     timescaleDB.delete(devices[0])
 
     assert len(devices) == 1, "Number of new devices is wrong" 
@@ -245,7 +281,7 @@ def test_create_user(timescaleDB):
     )
 
     num_of_users = timescaleDB.query(User).count()
-    # remove new user for test to keep temp DB clear 
+    # remove new user for test to keep temp DB sustainable 
     timescaleDB.delete(timescaleDB.query(User).get(2))
     
     assert num_of_users == 2, "New user wasn't added to DB"

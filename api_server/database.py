@@ -76,8 +76,8 @@ def update_place(place_info, db_session=db.session):
 
     place.attr_os = place_info.get('attr_os', list())
     place.attr_software = place_info.get('attr_software', list())
-    place.attr_people = place_info.get('attr_people', None)
-    place.attr_computers = place_info.get('attr_computers', None)
+    place.attr_people = place_info.get('attr_people', 10)
+    place.attr_computers = place_info.get('attr_computers', 25)
     place.attr_blackboard = place_info.get('attr_board', False)
     place.attr_projector = place_info.get('attr_projector', False)
 
@@ -92,6 +92,9 @@ def delete_place(place_info, db_session=db.session):
 
 
 def update_device(device_info, db_session=db.session):
+
+    # logger.debug(f"DB FUNC INFO: {pformat(device_info)}")
+
     device = db_session.query(Device).get(device_info['id'])
 
     device.is_installed = True
@@ -104,6 +107,8 @@ def update_device(device_info, db_session=db.session):
     device.unit_config = device_info['config']
 
     db_session.commit()
+
+    # return device 
 
 
 def reset_device(device_info, db_session=db.session):
