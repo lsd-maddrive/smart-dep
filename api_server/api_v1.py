@@ -281,7 +281,7 @@ class Device(Resource):
         logger.debug(f"Request devices: {result_devices}")
         return result_devices
 
-# PYtest - skipped, because behavior is undefined 
+
     @api.expect(_model_device, validate=True)
     def put(self):
         device_info = request.get_json()
@@ -294,7 +294,7 @@ class Device(Resource):
                 current_app.config['RABBITMQ_URI'],
                 device_info['id'])
 
-# if reset == True -> PYtest - skipped, because behavior is undefined 
+
     @api.expect(_model_device_del, validate=True)
     def delete(self):
         device_info = request.get_json()

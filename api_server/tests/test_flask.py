@@ -232,7 +232,6 @@ def test_device_get(client, timescaleDB):
     assert data[0]['place_id'] == 1 
 
 
-@pytest.mark.skip(reason="Data in DB for device won't be updated. db_session issue")
 def test_device_put(client, timescaleDB):
     test_device = timescaleDB.query(Device). \
         order_by(Device.register_date.desc()).first()
@@ -251,6 +250,8 @@ def test_device_put(client, timescaleDB):
         '/api/v1/device',
         json=inp_json
     )
+    # update DB in this transaction 
+    timescaleDB.commit() 
 
     updated_device = timescaleDB.query(Device).get(test_device.id)
 
@@ -313,7 +314,6 @@ def test_device_delete(client, timescaleDB):
     assert len(all_devices) == 3, "Device wasn't removed from DB"  
 
 
-@pytest.mark.skip(reason="Data in DB for device won't be updated. db_session issue")
 def test_device_delete_reset(client, timescaleDB):
     new_device = Device(
         place_id=1,
@@ -341,6 +341,9 @@ def test_device_delete_reset(client, timescaleDB):
         json=inp_json
     )
 
+    # update DB in this transaction 
+    timescaleDB.commit()
+
     reseted_device = timescaleDB.query(Device).get(new_test_device.id)
 
     check_data = {
@@ -354,14 +357,11 @@ def test_device_delete_reset(client, timescaleDB):
     timescaleDB.delete(reseted_device)
     timescaleDB.commit()
 
-    logger.debug(f"All DEVICES:\n{timescaleDB.query(Device).all()}")
-
-
     assert rv.status_code == 200 
-    assert check_data['is_installed'] == False 
-    assert check_data['type'] == None 
-    assert check_data['place_id'] == None 
-    assert check_data['config'] == None 
+    assert check_data['is_installed'] == False, "Device installation status is wrong"
+    assert check_data['type'] == None, "Device Type is wrong"
+    assert check_data['place_id'] == None, "Deivce place ID is wrong" 
+    assert check_data['config'] == None, "Device config is wrong" 
 
 
 def test_device_ping(client, timescaleDB):

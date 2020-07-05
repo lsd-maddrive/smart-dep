@@ -5,5 +5,4 @@
 # sudo apt-get install postgresql  
 
 cd tests 
-pip3 install -r requirements.txt 
 pytest
