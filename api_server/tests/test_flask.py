@@ -1,68 +1,402 @@
 import ast 
+import copy
+from datetime import datetime
 import json
 import logging
-from time import sleep
+import numpy as np
+from pprint import pformat
+import sys 
+sys.path.append("../")
+# from time import sleep
+import uuid
 
+from io import BytesIO
 import pytest
 import pytest_env
+from werkzeug.datastructures import FileStorage
 
-from api_server.database import db, save_token
-from db.models import State, User, Token
+# import database as asdb
+# from api_server.database import db 
+from db.models import State, Place, Device, User, Token
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d/%H:%M:%S')
 logger = logging.getLogger(__name__)
 
-def test_powers_request(timescaleDB, client):
-    _ = timescaleDB.query(State.device_id, State.state, State.type). \
-                    filter(State.type == 'power'). \
-                    order_by(State.device_id)
-    # to store expected rows 
-    right_states = []
-    for right_state in _:
-        right_states.append(
-            {
-            'state': right_state.state,
-            'device_id': right_state.device_id,
-            'type': right_state.type
-            }
-        )
-    
-    rv = client.get('http://localhost:5000/api/v1/place/8201/powers')
-
-    assert right_states == json.loads(rv.data)
-
-
-def test_lights_request(timescaleDB, client):
-    _ = timescaleDB.query(State.device_id, State.state, State.type). \
-                    filter(State.type == 'light'). \
-                    order_by(State.device_id)
-    # to store expected rows 
-    right_states = []
-    for right_state in _:
-        right_states.append(
-            {
-            'state': right_state.state,
-            'device_id': right_state.device_id,
-            'type': right_state.type
-            }
-        )
-    
-    rv = client.get('http://localhost:5000/api/v1/place/8201/lights')
-
-    assert right_states == json.loads(rv.data)
-
-
-def test_place_request(timescaleDB, client):
-    right_states = []
-    right_states.append(
-        {
-            'id': '8201',
-            'name': '8201',
-        }
-    )
+def test_place_get(client, timescaleDB):
     rv = client.get('http://localhost:5000/api/v1/place')
+    data = json.loads(rv.data)[0]
 
-    assert right_states == json.loads(rv.data)
+    assert rv.status_code == 200 
+    assert data['id'] == 1, "Place ID is wrong"
+    assert data['num'] == '8201', "Place number is wrong"
+    assert data['name'] == 'KEMZ', "Place name is wrong"
+    assert data['attr_os'] == [], "Place OS arrays is not empty"
+    assert data['attr_software'] == [], "Place software array is not empty"
+    assert data['attr_computers'] == 25, "Computer number is wrong"
+    assert data['attr_people'] == 10, "People number is wrong"
+    assert data['attr_board'] == False, "Blackboar status is wrong"
+    assert data['attr_projector'] == False, "Projector status is wrong"
+    assert data['imageURL'] == None, "There is image, but should not"
+
+
+def test_place_post(client, timescaleDB):
+    inp_json = {
+        'num': '8101',
+        'name': 'Siemens'
+    }
+
+    rv = client.post(
+        'http://localhost:5000/api/v1/place',
+        json=inp_json
+    )
+    
+    num_places = timescaleDB.query(Place).count()
+    new_place = timescaleDB.query(Place). \
+        filter(Place.name == inp_json['name']).first()
+
+    # to keep temp DB sustainable
+    timescaleDB.delete(new_place)
+
+    assert rv.status_code == 200  
+    assert num_places == 2, "Number of places is wrong"
+    assert new_place.name == inp_json['name'], "Place name is wrong"
+    assert new_place.num == inp_json['num'], "Place number is wrong"
+
+
+def test_place_put(client, timescaleDB):
+    inp_json = {
+        'id': 1,
+        'num': '8201',
+        'name': 'New KEMZ'
+    }
+
+    rv = client.put(
+        'http://localhost:5000/api/v1/place',
+        json=inp_json
+    )
+    
+    updated_place = timescaleDB.query(Place).get(inp_json['id'])
+    check_name = updated_place.name 
+    updated_place.name = 'KEMZ'
+ 
+    # reset changes to keep temp DB sustainable
+    timescaleDB.commit()
+
+    assert rv.status_code == 200 
+    assert check_name == inp_json['name'], "Device name wasn't updated"
+
+
+def test_place_delete(client, timescaleDB):
+    test_place = Place(
+        name='toDelete',
+        num='0000'
+    )
+
+    timescaleDB.add(test_place)
+    timescaleDB.commit()
+
+    inp_json = {
+        'id': timescaleDB.query(Place.id).filter(Place.name == 'toDelete').first()[0]
+    }
+
+    rv = client.delete(
+        'http://localhost:5000/api/v1/place',
+        json=inp_json
+    )
+
+    num_places = timescaleDB.query(Place).count()
+
+    assert rv.status_code == 200  
+    assert num_places == 1, "Place wasn't removed from DB"
+
+
+def test_place_image_post(client, timescaleDB): 
+    data = {}
+
+    with open('./resources/test_img.jpg', 'rb') as fp:
+        file_ = FileStorage(fp)
+        data['image'] = file_ 
+
+        rv = client.post(
+                'http://localhost:5000/api/v1/place/1/image',
+                data=data, content_type='multipart/form-data'
+            )
+
+    check_image = timescaleDB.query(Place).get(1).image
+
+    # to keep temp DB sustainable 
+    place = timescaleDB.query(Place).get(1)
+    place.image = None 
+    timescaleDB.commit()
+
+    assert rv.status_code == 200  
+    assert check_image is not None, "Place image wasn't loaded"
+
+
+def test_device_types_get(client, timescaleDB):
+    test_device = timescaleDB.query(Device). \
+        order_by(Device.register_date.desc()).first()
+
+    inp_json = {
+        'id': test_device.id,
+        'name': test_device.name,
+        'desc': 'Тест'
+    }
+
+    rv = client.get(
+        'http://localhost:5000/api/v1/device/types',
+        json=inp_json
+    )
+
+    assert rv.status_code == 200 
+
+
+def test_device_states_get(client, timescaleDB):
+    test_device = timescaleDB.query(Device). \
+        order_by(Device.register_date.desc()).first()
+
+    inp_json = {
+        'device_id': test_device.id,
+        'type': test_device.type,
+        'name': test_device.name,
+        'icon_name': test_device.icon_name,
+        'ts': None, 
+        'state': None
+    }
+
+    rv = client.get(
+        'http://localhost:5000/api/v1/device/states/1',
+        json=inp_json
+    )
+
+    data = json.loads(rv.data)
+
+    assert rv.status_code == 200 
+    assert len(data) == 3 
+
+
+def test_device_new_get(client, timescaleDB):
+    new_device = Device(
+        id=uuid.uuid4(),
+        place_id=1,
+        register_date=datetime.now(), 
+        is_installed=False
+    )
+
+    timescaleDB.add(new_device)
+    timescaleDB.commit()
+
+    inp_json = {
+        'id': None, 
+        'ip_addr': None,
+        'reg_ts': None
+    }
+
+    rv = client.get(
+        'http://localhost:5000/api/v1/device/new',
+        json=inp_json
+    )
+
+    data = json.loads(rv.data)[0]
+
+    check_device = timescaleDB.query(Device). \
+                filter(Device.is_installed == False).first()
+
+    check_id = str(check_device.id)
+    
+    # to keep temp DB sustainable 
+    timescaleDB.delete(check_device)
+    
+    assert rv.status_code == 200
+    assert data['id'] == check_id
+    
+
+def test_device_get(client, timescaleDB):
+    test_device = timescaleDB.query(Device). \
+        order_by(Device.register_date.desc()).first()
+
+    inp_json = {
+        'id': test_device.id,
+        'reset': False 
+    }
+
+    rv = client.get(
+        'http://localhost:5000/api/v1/device',
+        json=inp_json
+    )
+
+    data = json.loads(rv.data)
+    
+    assert rv.status_code == 200 
+    assert len(data) == 3 
+    assert data[0]['place_id'] == 1 
+
+
+def test_device_put(client, timescaleDB):
+    test_device = timescaleDB.query(Device). \
+        order_by(Device.register_date.desc()).first()
+
+    inp_json = {
+        'id': test_device.id,
+        'name': 'New_device',
+        'icon_name': 'New_Icon',
+        'type': 'env', 
+        'place_id': test_device.place_id, 
+        'last_ts': 0.0, 
+        'config': dict()
+    }
+
+    rv = client.put(
+        '/api/v1/device',
+        json=inp_json
+    )
+    # update DB in this transaction 
+    timescaleDB.commit() 
+
+    updated_device = timescaleDB.query(Device).get(test_device.id)
+
+    check_data = {
+        'id': updated_device.id,
+        'name': updated_device.name, 
+        'icon_name': updated_device.icon_name,
+        'type': updated_device.type, 
+        'place_id': updated_device.place_id, 
+        'config': updated_device.unit_config
+    }
+
+    # reset data in DB to keep DB sustainable 
+    updated_device.name = None
+    updated_device.icon_name = None, 
+    updated_device.type = 'power'
+    updated_device.place_id = 1
+    updated_device.unit_config = None 
+    timescaleDB.commit()
+
+    assert rv.status_code == 200 
+    assert check_data['id'] == inp_json['id']
+    assert check_data['name'] == inp_json['name']
+    assert check_data['icon_name'] == inp_json['icon_name']
+    assert check_data['type'] == inp_json['type']
+    assert check_data['place_id'] == inp_json['place_id']
+    assert check_data['config'] == inp_json['config']
+
+
+def test_device_delete(client, timescaleDB):
+    new_device = Device(
+        place_id=1,
+        register_date=datetime.now(), 
+        is_installed=False, 
+        type='light', 
+        name='New_test_device', 
+        icon_name="New_test_icon"
+    )
+
+    timescaleDB.add(new_device)
+    timescaleDB.commit()
+
+    new_test_device = timescaleDB.query(Device). \
+                            filter(Device.name == 'New_test_device'). \
+                                first()
+    
+    inp_json = {
+        'id': new_test_device.id,
+        'reset': False 
+    }
+
+    rv = client.delete(
+        '/api/v1/device',
+        json=inp_json
+    )
+
+    all_devices = timescaleDB.query(Device).all()
+
+    assert rv.status_code == 200 
+    assert len(all_devices) == 3, "Device wasn't removed from DB"  
+
+
+def test_device_delete_reset(client, timescaleDB):
+    new_device = Device(
+        place_id=1,
+        register_date=datetime.now(), 
+        is_installed=False, 
+        type='light', 
+        name='Reset_device', 
+        icon_name="Reset_icon"
+    )
+
+    timescaleDB.add(new_device)
+    timescaleDB.commit()
+
+    new_test_device = timescaleDB.query(Device). \
+                            filter(Device.name == 'Reset_device'). \
+                                first()
+    
+    inp_json = {
+        'id': new_test_device.id,
+        'reset': True 
+    }
+
+    rv = client.delete(
+        '/api/v1/device',
+        json=inp_json
+    )
+
+    # update DB in this transaction 
+    timescaleDB.commit()
+
+    reseted_device = timescaleDB.query(Device).get(new_test_device.id)
+
+    check_data = {
+        'is_installed': reseted_device.is_installed,
+        'type': reseted_device.type,
+        'place_id': reseted_device.place_id, 
+        'config': reseted_device.unit_config 
+    }
+
+    # remove test device from DB to keep DB sustainable 
+    timescaleDB.delete(reseted_device)
+    timescaleDB.commit()
+
+    assert rv.status_code == 200 
+    assert check_data['is_installed'] == False, "Device installation status is wrong"
+    assert check_data['type'] == None, "Device Type is wrong"
+    assert check_data['place_id'] == None, "Deivce place ID is wrong" 
+    assert check_data['config'] == None, "Device config is wrong" 
+
+
+def test_device_ping(client, timescaleDB):
+    test_device = timescaleDB.query(Device). \
+        order_by(Device.register_date.desc()).first()
+    
+    inp_json = {
+        'id': str(test_device.id) 
+    }
+
+    rv = client.post(
+        '/api/v1/device/ping', 
+        json=inp_json
+    )
+
+    assert rv.status_code == 200  
+
+
+def test_device_cmd(client, timescaleDB):
+    test_device = timescaleDB.query(Device). \
+        order_by(Device.register_date.desc()).first()
+
+    inp_json = {
+        'device_id': str(test_device.id),
+        'place_id': test_device.place_id, 
+        'type': test_device.type,
+        'cmd': { 'enable': True }
+    }
+
+    rv = client.post(
+        '/api/v1/device/cmd', 
+        json=inp_json
+    )
+
+    assert rv.status_code == 200  
 
 
 def test_register_missing_data(client):
@@ -82,7 +416,7 @@ def test_register_missing_data(client):
     assert rv_password.status_code == 400 
 
 
-def test_register(client):
+def test_register(client, timescaleDB):
     existing_user = {
         'username': 'test_user',
         'password': 'test_password'
@@ -93,8 +427,15 @@ def test_register(client):
         'username': 'new_user',
         'password': 'new_password'
     }
+
     rv_new = client.post('http://localhost:5000/api/v1/register', json=test_user)
 
+    test_user_obj = timescaleDB.query(User). \
+        filter(User.username == test_user['username']). \
+            first()
+    
+    # to keep temp DB sustainable
+    timescaleDB.delete(test_user_obj)
 
     assert rv_existing.status_code == 400
     assert rv_new.status_code == 200 
@@ -127,30 +468,30 @@ def test_login_post_non_existing_user(client):
 def test_logout(client, timescaleDB):
 
     test_json = {
-        'username': 'new_user', 
-        'password': 'test_password'
+        'username': 'newer_user', 
+        'password': 'newer_password'
     }
 
     rv = client.post('http://localhost:5000/api/v1/register',
                     json=test_json)
 
-
-    user_id = timescaleDB.query(User.id). \
-        filter(User.username == test_json['username'])
+    check_user = timescaleDB.query(User). \
+        filter(User.username == test_json['username']).first()
 
     token_result = timescaleDB.query(Token.token). \
-        filter(Token.parent_id == user_id).first()
+        filter(Token.parent_id == check_user.id).first()
     token = [str(tkn) for tkn in token_result][0]
     
     rv = client.post('http://localhost:5000/api/v1/logout',
                     headers={'Authorization': 'Bearer ' + token}, 
                     json=test_json)
     
+    timescaleDB.delete(check_user)
+
     assert rv.status_code == 200  
     assert ast.literal_eval(rv.data.decode('utf-8'))['status'] == 'success'
     assert ast.literal_eval(rv.data.decode('utf-8'))['message'] == 'Successfully logged out.'
     assert ast.literal_eval(rv.data.decode('utf-8'))['username'] == test_json['username']
-
 
 
 def test_logout_missing_data(client):
@@ -184,7 +525,7 @@ def test_expiring_token(client, timescaleDB):
 
     rv = client.post('http://localhost:5000/api/v1/register',
                     json=test_json)
-
+    # HERE 5 SECOND, life time = 7 days! 
     sleep(5)
     user_id = timescaleDB.query(User.id). \
         filter(User.username == test_json['username'])

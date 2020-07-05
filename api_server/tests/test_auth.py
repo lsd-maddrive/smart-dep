@@ -1,9 +1,11 @@
 import logging
+import sys 
+sys.path.append("../")
 
 import pytest
 
-import api_server.auth as auth
-import api_server.database as asdb
+import auth as auth
+import database as asdb
 from db.models import Token
 
 def test_decode_token(timescaleDB, flask_app):

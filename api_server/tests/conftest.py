@@ -11,26 +11,25 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import testing.postgresql
+from werkzeug.security import generate_password_hash
 
-from api_server.api_v1 import api as ns 
-from api_server.api_func import create_app
-from api_server.database import db 
-from api_server.sockets import socketio
+from api_v1 import api as ns 
+from api_func import create_app
+from database import db 
+from sockets import socketio
 from db.models import Model, State, Device, Place, User
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d/%H:%M:%S')
 logger = logging.getLogger(__name__)
 
-
 @pytest.fixture(scope='session')
 def test_db():
     return testing.postgresql.Postgresql()
 
-
 @pytest.fixture(scope='session')
 def timescaleDB(request, test_db):
     engine = create_engine(test_db.url())
-    logger.debug(f"Engine is creates: {test_db.url()}")
+    logger.debug(f"Engine is created: {test_db.url()}")
     
     Model.metadata.create_all(engine)
     logger.debug('Create all models - done ')
@@ -39,56 +38,81 @@ def timescaleDB(request, test_db):
     session = Session()
     logger.debug('session - done')
     
-    devices = [
-        uuid.uuid4(), 
-        uuid.uuid4(), 
-        uuid.uuid4()
-    ]
-
     types = [
         'light', 
         'env', 
         'power'
     ]
 
-    db_data = [Place(id=1)]
+
+    place = Place(name='KEMZ', num='8201')
+
+    session.add(place)
+    session.commit() 
+
+    logger.debug(f"Place is added to DB")
+
+    place_id = session.query(Place).first().id 
+
+    logger.debug(f"PLACE ID {place_id}")
+
+    devices = []
     for i in range(3):
-        db_data.append(
+        devices.append(
             Device(
-                id=devices[i],
-                place_id=db_data[0].id,
-                register_date=datetime.now()
+                place_id=place_id,
+                register_date=datetime.now(), 
+                is_installed=True, 
+                type=types[i]
             )
-)       
+    )
 
+    session.bulk_save_objects(
+        objects=devices
+    )
+    session.commit() 
 
-    for i in range(len(devices)):
-        db_data.append(
+    logger.debug(f"Devices are added to DB")
+
+    devices_id = [device.id for device in session.query(Device).all()]
+
+    states = []
+    for i in range(3):
+        states.append(
                 State(
                     timestamp=datetime.now(), 
                     state= {'enabled': False}, 
-                    device_id=db_data[i+1].id, 
+                    device_id=devices_id[i], 
                 )
             )
-        # db_data.append(
-        #         Device(
-        #             id=devices[i]
-        #         )
-        # )
     
-
-    # test_user = User(username="test_user")
-    # test_user.set_password("test_password")
-
-    # db_data.append(test_user)
-
-    logger.debug(f"DB DATA STATES:\n{pformat(db_data)}")
-
     session.bulk_save_objects(
-        objects=db_data
+        objects=states
     )
+    session.commit()
 
-    session.commit() 
+    logger.debug(f"States are added to DB")
+    
+    test_user = User(username='test_user')
+    test_user.password_hash = generate_password_hash('test_password')
+
+    session.add(test_user)
+    session.commit()
+
+    logger.debug(f"User is added to DB")
+
+    db_users = session.query(User).all()
+    db_places = session.query(Place).all()
+    db_devices = session.query(Device).all()
+    db_states = session.query(State).all()
+
+    logger.debug(
+        f"DB DATA:\n" \
+        f"Users\n{pformat(db_users)}\n" \
+        f"Places\n{pformat(db_places)}\n" \
+        f"Devices\n{pformat(db_devices)}\n" \
+        f"States\n{pformat(db_states)}"
+    )
 
     
     def resource_teardown():

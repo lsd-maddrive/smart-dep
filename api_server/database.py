@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 import logging
 import os
+from pprint import pformat
 
 from flask_sqlalchemy import SQLAlchemy
 import jwt
@@ -23,7 +24,8 @@ db = SQLAlchemy(metadata=metadata)
 def get_last_states(start_ts, place_id, db_session=db.session):
     """
         Get last states from DB in defined period of time
-        from check time till now for defined place and type
+        from check time till now for defined place
+
         Args:
             start_ts (timestamp):    the lower bound of time
             place_id (str):          number/name of place
@@ -49,17 +51,18 @@ def create_place(place_info, db_session=db.session):
         num=place_info['num'],
         create_date=datetime.utcnow(),
 
-        # TODO - use .get() with defaults
-        attr_os=place_info['attr_os'],
-        attr_software=place_info['attr_software'],
-        attr_people=place_info['attr_people'],
-        attr_computers=place_info['attr_computers'],
-        attr_blackboard=place_info['attr_board'],
-        attr_projector=place_info['attr_projector']
+        attr_os=place_info.get('attr_os', list()),
+        attr_software=place_info.get('attr_software', list()),
+        attr_people=place_info.get('attr_people', None),
+        attr_computers=place_info.get('attr_computers', None),
+        attr_blackboard=place_info.get('attr_board', False),
+        attr_projector=place_info.get('attr_projector', False)
     )
 
     db_session.add(place)
     db_session.commit()
+
+    logger.debug(f"{place}")
 
     return place
 
@@ -71,12 +74,12 @@ def update_place(place_info, db_session=db.session):
     place.num = place_info['num']
     place.update_date = datetime.utcnow()
 
-    place.attr_os = place_info['attr_os']
-    place.attr_software = place_info['attr_software']
-    place.attr_people = place_info['attr_people']
-    place.attr_computers = place_info['attr_computers']
-    place.attr_blackboard = place_info['attr_board']
-    place.attr_projector = place_info['attr_projector']
+    place.attr_os = place_info.get('attr_os', list())
+    place.attr_software = place_info.get('attr_software', list())
+    place.attr_people = place_info.get('attr_people', 10)
+    place.attr_computers = place_info.get('attr_computers', 25)
+    place.attr_blackboard = place_info.get('attr_board', False)
+    place.attr_projector = place_info.get('attr_projector', False)
 
     db_session.commit()
 
@@ -190,7 +193,7 @@ def create_user(username, password, db_session=db.session):
     db_session.add(user)
     db_session.commit()
 
-    logger.debug(f"User \"{user}\" is added to DB")
+    logger.debug(f"User \"{user.username}\" is added to DB")
 
     return user
 
@@ -220,7 +223,7 @@ def save_token(user_id, secret, db_session=db.session, exp_days=7, exp_sec=0):
     db_session.add(new_token)
     db_session.commit()
 
-    logger.debug(f"New token {new_token} is saved")
+    logger.debug(f"New token for User: {new_token.parent_id} is saved")
 
     return new_token
 

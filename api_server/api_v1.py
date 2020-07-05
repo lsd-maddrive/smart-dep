@@ -11,9 +11,9 @@ from sqlalchemy.exc import IntegrityError
 from werkzeug.datastructures import FileStorage
 from werkzeug.security import check_password_hash
 
-import messages as msgs
-import database as asdb
 import auth
+import database as asdb
+import messages as msgs
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -28,6 +28,12 @@ _model_place_get = api.model('Place_get', {
 })
 
 _model_place_new = api.model('Place_new', {
+    'num': fields.String,
+    'name': fields.String,
+})
+
+_model_place_update = api.model('Place_new', {
+    'id': fields.Integer,
     'num': fields.String,
     'name': fields.String,
 })
@@ -69,7 +75,7 @@ class Places(Resource):
         new_place = asdb.create_place(place_info)
         logger.debug(f'Created new place: {new_place}')
 
-    @api.expect(_model_place_new, validate=True)
+    @api.expect(_model_place_update, validate=True)
     def put(self):
         place_info = request.get_json()
         logger.debug(f"Request to update place:\n{pformat(place_info)}")
@@ -95,6 +101,7 @@ file_upload = reqparse.RequestParser()
 file_upload.add_argument('image',
                         type=FileStorage,
                         location='files',
+                        help='Place Image',
                         required=True
                         )
 
@@ -103,8 +110,11 @@ file_upload.add_argument('image',
 class PlaceImage(Resource):
     @api.expect(file_upload)
     def post(self, id):
+        logger.debug(f"API Place ID: {id}")
         args = file_upload.parse_args()
         # args = request.files['image']
+
+        logger.debug(f"ARGS: {args}")
 
         uploaded_img = args['image'].read()
 
@@ -189,7 +199,7 @@ class DevicesStates(Resource):
                 }
             )
 
-        logger.debug(f"Request devices states: {result_states}")
+        logger.debug(f"Request devices states:\n{pformat(result_states)}")
 
         return result_states
 
@@ -271,15 +281,19 @@ class Device(Resource):
         logger.debug(f"Request devices: {result_devices}")
         return result_devices
 
+
     @api.expect(_model_device, validate=True)
     def put(self):
         device_info = request.get_json()
         logger.debug(f"Request to update device:\n{pformat(device_info)}")
 
         asdb.update_device(device_info)
-        msgs.reset_device(
-            current_app.config['RABBITMQ_URI'],
-            device_info['id'])
+
+        if not current_app.config['TESTING']:
+            msgs.reset_device(
+                current_app.config['RABBITMQ_URI'],
+                device_info['id'])
+
 
     @api.expect(_model_device_del, validate=True)
     def delete(self):
@@ -290,9 +304,11 @@ class Device(Resource):
             asdb.reset_device(device_info)
         else:
             asdb.delete_device(device_info)
-        msgs.reset_device(
-            current_app.config['RABBITMQ_URI'],
-            device_info['id'])
+        
+        if not current_app.config['TESTING']:
+            msgs.reset_device(
+                current_app.config['RABBITMQ_URI'],
+                device_info['id'])
 
 
 _model_ping = api.model('Device_ping', {
@@ -307,9 +323,10 @@ class DevicePing(Resource):
         device = request.get_json()
         logger.debug(f'Request to ping: {device}')
 
-        msgs.ping_device(
-            current_app.config['RABBITMQ_URI'],
-            device['id'])
+        if not current_app.config['TESTING']:
+            msgs.ping_device(
+                current_app.config['RABBITMQ_URI'],
+                device['id'])
 
 
 _model_command = api.model('Device_command', {
@@ -333,14 +350,15 @@ class DeviceCommand(Resource):
         cmd = data['cmd']
         source_id = 'api'
 
-        msgs.send_command(
-            current_app.config['RABBITMQ_URI'],
-            device_id,
-            place_id,
-            type_,
-            cmd,
-            source_id
-        )
+        if not current_app.config['TESTING']:
+            msgs.send_command(
+                current_app.config['RABBITMQ_URI'],
+                device_id,
+                place_id,
+                type_,
+                cmd,
+                source_id
+            )
 
 _model_user_credentials = api.model('User_credentials', {
     'username': fields.String,
@@ -364,7 +382,7 @@ class Signup(Resource):
         try:
             new_user = asdb.create_user(username, password)
         except IntegrityError as err:
-            logger.critical(f"User '{username}' already exist")
+            logger.critical(f"User '{username}' already exists")
             abort(400)
 
         new_token = asdb.save_token(
@@ -403,7 +421,8 @@ class Login(Resource):
 
         if not check_password_hash(user.password_hash, password):
             logger.critical(
-                f"Login failed! User \"{username}\" password is invalid")
+                f"Login failed! User \"{username}\" password is invalid"
+            )
             # Raise a HTTPException for the given http_status_code
             abort(400)
 
@@ -426,7 +445,7 @@ def verify_request_header():
         Returns:
             token (string)
     """
-    if not current_app.config['LOGIN_ENABLED']:
+    if not current_app.config['SECRET_KEY']:
         return
 
     auth_header = request.headers.get('Authorization')
@@ -447,12 +466,17 @@ def verify_request_header():
 # TODO: think about automatic removing expired tokens from DB
 @api.route('/logout', methods=['POST'])
 class Logout(Resource):
+    @api.expect(_model_user_credentials, validate=True)
     def post(self):
         """
             This method is for checking functionality of token and headers
             Maybe in the future it will be removed
         """
         auth_token = verify_request_header()
+
+        data = request.get_json()
+        username = data.get('username')
+        password = data.get('password')
 
         user_id, token_iat = auth.decode_token(
             auth_token,
