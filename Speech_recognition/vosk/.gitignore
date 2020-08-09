@@ -9,13 +9,17 @@ first.py
 second.py
 third.py
 trying_dict.py
-
+pyaudio_issue_1.py
+pyttsx_try.py
+pyttsx_try_2.py
+testing_voice.py
+try_2.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
-
+*.sh
 # C extensions
 *.so
 
