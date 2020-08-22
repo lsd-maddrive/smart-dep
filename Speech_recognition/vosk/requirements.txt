@@ -1,2 +1,7 @@
-vosk==0.3.6
-pyaudio==0.2.11
+docopt==0.6.2
+num2words==0.5.10
+psutil==5.7.2
+py-espeak-ng==0.1.8
+PyAudio==0.2.11
+pyttsx3==2.90
+vosk==0.3.7
