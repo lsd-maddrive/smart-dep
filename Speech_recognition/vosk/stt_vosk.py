@@ -54,7 +54,7 @@ def activate_vosk():
                     frames_per_buffer=30000) # 30000
     stream.start_stream()
     
-    return stream#, rec, p, model
+    return stream, p#, rec, p, model
 
 #
 engine = pyttsx3.init()
@@ -71,5 +71,18 @@ while True:
     s = {}
     #
     cycle_trigger = True
+    stream, p = activate_vosk()
     time.sleep(3)
-    activate_vosk()
+    data = stream.read(1024,exception_on_overflow = False)
+    
+    
+    stream.close()
+    p.terminate()
+    print(stream)
+    rec = None
+    data = None
+    model = None
+    stream = None
+    time.sleep(5)
+    # KaldiRecognizer.CleanUp()
+print(rec.FinalResult())
