@@ -103,26 +103,23 @@ def vosk_main():
                     kws = False
     print(rec.FinalResult())
 
-def checking(vosk):
+
+if __name__ == '__main__':
+    vosk = Process(target = vosk_main)
+    vosk.start()
     while True:
         cpu = psutil.cpu_percent()
         ozu = psutil.virtual_memory().percent
-        print(f'CPU = {cpu}%, OZU = {ozu}%')
-        if ozu > 47.0: #70.0:
+        if ozu > 80.5: #70.0:
             print(f'{datetime.datetime.now().strftime("%H:%M:%S")}')
             print('OZU problem')
             vosk.terminate()
             time.sleep(1)
+            vosk = Process(target = vosk_main)
             vosk.start()
             # print(f'CPU = {cpu}%, OZU = {ozu}%')
         if cpu > 50.0:
+            print(f'{datetime.datetime.now().strftime("%H:%M:%S")}')
             print('CPU problem')
-        time.sleep(0.5)
-
-if __name__ == '__main__':
-    vosk = Process(target = vosk_main)
-    checker = Process(target = checking, args=(vosk,))
-    vosk.start()
-    checker.start()
-    checker.join()
+        time.sleep(1)
 
