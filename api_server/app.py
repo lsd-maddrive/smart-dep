@@ -1,7 +1,7 @@
 import logging
 import os
 
-from flask import Blueprint
+from flask import Blueprint, jsonify
 from flask_restplus import Api
 from flask_cors import CORS
 
@@ -9,7 +9,6 @@ from api_v1 import api as ns
 from api_func import create_app
 from sockets import socketio
 from database import db, create_place
-
 
 import messages as msgs
 
@@ -33,5 +32,9 @@ api = Api(app)
 api.add_namespace(ns)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
+@app.route("/spec")
+def spec():
+    return jsonify(swagger(app))
+
 if __name__ == '__main__':
-    socketio.run(app, debug=False, use_reloader=True)
+    socketio.run(app, host='0.0.0.0', port=5000, debug=False, use_reloader=True)

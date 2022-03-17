@@ -13,7 +13,7 @@
       - curl
       - gnupg-agent
       - software-properties-common
-    USER: alex
+    USER: user
 
   tasks:
   - name: Update apt packages

@@ -27,6 +27,22 @@
     # mode: "u=rw,g=wx,o=rwx"
   register: folder_create_reg
 
+- name: Copy config folder
+  synchronize:
+    src: ../config/
+    dest: "{{deploy_folder}}/config/"
+    delete: yes
+
+- name: Send .env to deploy
+  template:
+    src: env.j2
+    dest: "{{ deploy_folder }}/config/.env"
+
+- name: Send docker-compose to deploy
+  template:
+    src: docker-compose.yml.j2
+    dest: "{{ deploy_folder }}/docker-compose.yml"
+
 - name: "Create a network"
   docker_network:
     name: "{{ containers_network }}"
@@ -51,7 +67,7 @@
     restart_policy: always
     network_mode: "{{ containers_network }}"
     env:
-      POSTGRES_DB: "smart_dep"
+      POSTGRES_DB: "{{db_name}}"
       POSTGRES_USER: "{{db_user}}"
       POSTGRES_PASSWORD: "{{db_password}}"
     ports:
@@ -114,36 +130,20 @@
     detach: no
     command: python3 migration_manager.py db upgrade
     volumes:
-      - "./{{deploy_folder}}/db/migrations:/app/migrations"
+      - "{{deploy_folder}}/db/migrations:/app/migrations"
     network_mode: "{{ containers_network }}"
     env:
-      DB_URI: "postgresql+psycopg2://{{db_user}}:{{db_password}}@{{db_cont_name}}:5432/smart_dep"
+      DB_URI: "postgresql+psycopg2://{{db_user}}:{{db_password}}@{{db_cont_name}}:5432/{{db_name}}"
     log_driver: json-file
     log_options: "{{ cont_log_opts }}"
 
   register: migrate_cont_out
 
-- name: Copy config folder
-  synchronize:
-    src: ../config/
-    dest: "{{deploy_folder}}/config/"
-    delete: yes
-
-- name: Send .env to deploy
-  template:
-    src: env.j2
-    dest: "{{ deploy_folder }}/config/.env"
-
-- name: Send docker-compose to deploy
-  template:
-    src: docker-compose.yml.j2
-    dest: "{{ deploy_folder }}/docker-compose.yml"
-
 - name: Start main containers
   docker_compose:
     project_src: "{{deploy_folder}}"
     project_name: "{{project_name}}"
-    build: no
+    build: yes
     pull: yes
     scale:
       emulator: 5

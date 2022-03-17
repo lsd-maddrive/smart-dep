@@ -74,7 +74,9 @@ services:
                 max-size: "20m"
 
     web:
-        image: acs-registry.duckdns.org/webui:{{smartdep_version}}
+        build:
+            context: web-frontend
+        # image: acs-registry.duckdns.org/webui:{{smartdep_version}}
         restart: always
         ports:
             - "81:80"

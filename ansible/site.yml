@@ -1,4 +1,5 @@
 ---
-- hosts: stage
+- hosts: localhost
+  connection: local 
   roles:
     - deploy
